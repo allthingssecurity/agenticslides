@@ -8,8 +8,7 @@ Learn: SubAgent definition, task() tool, context isolation.
 
 Run: python lab3a_first_subagent.py
 """
-import json
-import httpx
+from openai import OpenAI
 from langchain_core.tools import tool
 from langchain_core.messages import HumanMessage
 from deepagents import create_deep_agent
@@ -25,19 +24,13 @@ def web_search(query: str) -> str:
         query: Search query string
     """
     try:
-        resp = httpx.get(
-            "https://api.duckduckgo.com/",
-            params={"q": query, "format": "json", "no_html": 1},
-            timeout=10
+        client = OpenAI()
+        response = client.responses.create(
+            model="gpt-4o-mini",
+            tools=[{"type": "web_search_preview"}],
+            input=query
         )
-        data = resp.json()
-        results = []
-        if data.get("Abstract"):
-            results.append(f"**{data['Heading']}**: {data['Abstract']}")
-        for t in data.get("RelatedTopics", [])[:3]:
-            if isinstance(t, dict) and "Text" in t:
-                results.append(f"- {t['Text']}")
-        return "\n".join(results) if results else "No results found."
+        return response.output_text
     except Exception as e:
         return f"Search error: {e}"
 

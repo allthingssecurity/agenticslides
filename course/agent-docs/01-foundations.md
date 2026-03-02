@@ -92,7 +92,7 @@ where python    # windows: should show .venv\Scripts\python.exe
 **OS[mac/linux/windows]:**
 ```bash
 pip install --upgrade pip
-pip install "deepagents>=0.4.3" "langchain-openai>=1.1.8" "httpx>=0.27.0"
+pip install "deepagents>=0.4.3" "langchain-openai>=1.1.8" "openai>=1.66.0"
 ```
 
 ### Step 5: Set the OpenAI API key
@@ -117,7 +117,7 @@ set OPENAI_API_KEY=sk-your-key-here
 python -c "import sys; assert sys.version_info >= (3,11), f'Need 3.11+, got {sys.version}'; print(f'Python {sys.version} OK')"
 python -c "from deepagents import create_deep_agent; print('deepagents OK')"
 python -c "import langchain_openai; print('langchain-openai OK')"
-python -c "import httpx; print('httpx OK')"
+python -c "import openai; print('openai OK')"
 python -c "import os; key=os.getenv('OPENAI_API_KEY',''); assert key.startswith('sk-'), 'OPENAI_API_KEY not set'; print('API key OK')"
 ```
 **Expected:** Five lines of "OK" output. If any line fails, fix that issue before proceeding.
@@ -231,14 +231,14 @@ def check_setup():
         print("✗ (not set or invalid)")
         errors.append("Run: export OPENAI_API_KEY='sk-your-key-here'")
 
-    # Check httpx
-    print("[5] httpx package:", end=" ")
+    # Check openai
+    print("[5] openai package:", end=" ")
     try:
-        import httpx
+        import openai
         print("✓")
     except ImportError:
         print("✗")
-        errors.append("Run: pip install httpx")
+        errors.append("Run: pip install openai>=1.66.0")
 
     print("\n" + "=" * 50)
     if errors:
@@ -308,7 +308,7 @@ python my-agents/lab0_setup.py
 [2] deepagents package: ✓
 [3] langchain-openai package: ✓
 [4] OPENAI_API_KEY: ✓ (starts with sk-...XXXX)
-[5] httpx package: ✓
+[5] openai package: ✓
 
 ==================================================
  ALL CHECKS PASSED — Ready to go!

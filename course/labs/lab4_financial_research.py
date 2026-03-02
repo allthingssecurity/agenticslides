@@ -15,7 +15,7 @@ Data flow: agents write to /data/, report reads from /data/ → /report/
 Run: python lab4_financial_research.py
 """
 import json
-import httpx
+from openai import OpenAI
 from datetime import datetime
 from langchain_core.tools import tool
 from langchain_core.messages import HumanMessage
@@ -34,19 +34,13 @@ def search_financial_news(query: str) -> str:
         query: Financial search query (e.g., "NVIDIA earnings 2025")
     """
     try:
-        resp = httpx.get(
-            "https://api.duckduckgo.com/",
-            params={"q": f"{query} finance stock market", "format": "json", "no_html": 1},
-            timeout=10
+        client = OpenAI()
+        response = client.responses.create(
+            model="gpt-4o-mini",
+            tools=[{"type": "web_search_preview"}],
+            input=f"{query} finance stock market"
         )
-        data = resp.json()
-        results = []
-        if data.get("Abstract"):
-            results.append(f"**{data['Heading']}**: {data['Abstract']}")
-        for t in data.get("RelatedTopics", [])[:5]:
-            if isinstance(t, dict) and "Text" in t:
-                results.append(f"- {t['Text']}")
-        return "\n".join(results) if results else "No financial news found."
+        return response.output_text
     except Exception as e:
         return f"Search error: {e}"
 

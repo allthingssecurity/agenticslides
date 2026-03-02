@@ -12,7 +12,7 @@ A hands-on course where **your AI coding agent builds AI agents for you**. You p
 |-------------|---------|
 | **An AI coding agent** | [Claude Code](https://claude.ai/code), [Codex](https://openai.com/codex), [Cursor](https://cursor.com), or similar |
 | **An OpenAI API key** | Starts with `sk-` — get one at [platform.openai.com](https://platform.openai.com) |
-| **Internet access** | Labs use DuckDuckGo's free search API |
+| **Internet access** | Labs use OpenAI's web search via your API key |
 
 > **Python, venv, and dependencies are installed automatically** by the agent in Module 1. You don't need to set anything up manually.
 

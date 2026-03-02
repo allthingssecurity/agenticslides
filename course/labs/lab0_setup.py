@@ -53,14 +53,14 @@ def check_setup():
         print("✗ (not set or invalid)")
         errors.append("Run: export OPENAI_API_KEY='sk-your-key-here'")
 
-    # Check httpx (used by our search tools)
-    print("[5] httpx package:", end=" ")
+    # Check openai (used by our search tools)
+    print("[5] openai package:", end=" ")
     try:
-        import httpx
+        import openai
         print("✓")
     except ImportError:
         print("✗")
-        errors.append("Run: pip install httpx")
+        errors.append("Run: pip install openai>=1.66.0")
 
     print("\n" + "=" * 50)
     if errors:

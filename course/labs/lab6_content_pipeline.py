@@ -8,8 +8,7 @@ Learn: Sequential pipeline, quality control loop, agent specialization.
 
 Run: python lab6_content_pipeline.py
 """
-import json
-import httpx
+from openai import OpenAI
 from langchain_core.tools import tool
 from langchain_core.messages import HumanMessage
 from deepagents import create_deep_agent
@@ -25,19 +24,13 @@ def web_search(query: str) -> str:
         query: Search query
     """
     try:
-        resp = httpx.get(
-            "https://api.duckduckgo.com/",
-            params={"q": query, "format": "json", "no_html": 1},
-            timeout=10
+        client = OpenAI()
+        response = client.responses.create(
+            model="gpt-4o-mini",
+            tools=[{"type": "web_search_preview"}],
+            input=query
         )
-        data = resp.json()
-        parts = []
-        if data.get("Abstract"):
-            parts.append(data["Abstract"])
-        for t in data.get("RelatedTopics", [])[:5]:
-            if isinstance(t, dict) and "Text" in t:
-                parts.append(f"- {t['Text']}")
-        return "\n".join(parts) if parts else "No results found."
+        return response.output_text
     except Exception as e:
         return f"Error: {e}"
 

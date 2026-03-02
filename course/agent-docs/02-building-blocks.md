@@ -11,7 +11,7 @@ First complete the Environment Setup section (skip if already done), then build
 Lab 2 from scratch in the my-agents/ directory. Run it and verify it works.
 
 This module builds a research agent that searches the web, takes structured notes
-to files, and writes a report. You need internet access for the DuckDuckGo API.
+to files, and writes a report. You need internet access and an OpenAI API key.
 
 If you get stuck, consult the reference at course/labs/lab2_research_agent.py
 but try building it yourself first.
@@ -46,7 +46,7 @@ mkdir -p my-agents
 [ -d .venv ] || python3 -m venv .venv
 source .venv/bin/activate
 pip install --upgrade pip
-pip install "deepagents>=0.4.3" "langchain-openai>=1.1.8" "httpx>=0.27.0"
+pip install "deepagents>=0.4.3" "langchain-openai>=1.1.8" "openai>=1.66.0"
 export OPENAI_API_KEY="sk-your-key-here"
 ```
 **OS[windows]:**
@@ -55,7 +55,7 @@ mkdir my-agents 2>nul
 if not exist .venv python -m venv .venv
 .venv\Scripts\activate
 pip install --upgrade pip
-pip install "deepagents>=0.4.3" "langchain-openai>=1.1.8" "httpx>=0.27.0"
+pip install "deepagents>=0.4.3" "langchain-openai>=1.1.8" "openai>=1.66.0"
 set OPENAI_API_KEY=sk-your-key-here
 ```
 
@@ -65,14 +65,14 @@ set OPENAI_API_KEY=sk-your-key-here
 ```bash
 python -c "import sys; assert sys.version_info >= (3,11); print(f'Python {sys.version} OK')"
 python -c "from deepagents import create_deep_agent; print('deepagents OK')"
-python -c "import httpx; print('httpx OK')"
+python -c "import openai; print('openai OK')"
 python -c "import os; assert os.getenv('OPENAI_API_KEY','').startswith('sk-'); print('API key OK')"
 ```
 **Expected:** Four lines of "OK".
 
 ### Prerequisites
 - Module 1 completed (Lab 0 + Lab 1 built and ran successfully)
-- Internet access (this lab uses DuckDuckGo's API)
+- Internet access (this lab uses OpenAI's web search)
 
 ---
 
@@ -132,7 +132,7 @@ This is why every research agent must be told: **"Write notes to files IMMEDIATE
 ### Goal
 Create an agent that:
 1. Plans its research with `write_todos`
-2. Searches the web via a DuckDuckGo tool you build
+2. Searches the web via an OpenAI web search tool you build
 3. Takes structured notes to `/research/` files
 4. Synthesizes a final report to `/output/report.md`
 
@@ -147,8 +147,7 @@ LAB 2: Research Agent
 ======================
 Searches the web, takes notes to files, writes a research report.
 """
-import json
-import httpx
+from openai import OpenAI
 from langchain_core.tools import tool
 from langchain_core.messages import HumanMessage
 from deepagents import create_deep_agent
@@ -165,52 +164,28 @@ from deepagents import create_deep_agent
 # ─── TOOL: Web Search ──────────────────────────────────
 
 @tool
-def web_search(query: str, num_results: int = 5) -> str:
-    """Search the web for information.
+def web_search(query: str) -> str:
+    """Search the web for current information on any topic.
 
     Args:
         query: The search query
-        num_results: Number of results to return (default 5)
     """
     try:
-        response = httpx.get(
-            "https://api.duckduckgo.com/",
-            params={"q": query, "format": "json", "no_html": 1},
-            timeout=10
+        client = OpenAI()
+        response = client.responses.create(
+            model="gpt-4o-mini",
+            tools=[{"type": "web_search_preview"}],
+            input=query
         )
-        data = response.json()
-        results = []
-
-        # Main abstract result
-        if data.get("Abstract"):
-            results.append({
-                "title": data.get("Heading", "Main Result"),
-                "snippet": data["Abstract"],
-                "source": data.get("AbstractURL", "")
-            })
-
-        # Related topic results
-        for topic in data.get("RelatedTopics", [])[:num_results]:
-            if isinstance(topic, dict) and "Text" in topic:
-                results.append({
-                    "title": topic.get("Text", "")[:80],
-                    "snippet": topic.get("Text", ""),
-                    "source": topic.get("FirstURL", "")
-                })
-
-        if not results:
-            return f"No results found for: {query}"
-
-        return json.dumps(results, indent=2)
-
+        return response.output_text
     except Exception as e:
         return f"Search error: {e}"
 ```
 
 **How this works:**
-- Uses DuckDuckGo's **Instant Answer API** — free, no API key needed
-- Returns JSON with `title`, `snippet`, `source` fields
-- `httpx.get()` with a 10-second timeout
+- Uses OpenAI's **web search** via the Responses API — uses your existing API key
+- `gpt-4o-mini` keeps search costs low while returning high-quality results
+- The model decides when to search and returns a summarized answer with sources
 - Graceful error handling — returns an error string instead of crashing
 
 ### Step 3: Build the research agent with a detailed system prompt
@@ -363,7 +338,7 @@ FINAL RESPONSE:
 - Internally, the agent wrote notes to `/research/` and a report to `/output/report.md` (in its filesystem sandbox)
 
 ### What You Built
-- **A web search tool** using DuckDuckGo's free API — no API key needed
+- **A web search tool** using OpenAI's Responses API with web search
 - **A research agent** with a detailed system prompt defining a 5-step workflow
 - **The planning pattern** — `write_todos` decomposes the task before execution
 - **The write-immediately pattern** — notes go to files right after each search
@@ -375,4 +350,4 @@ FINAL RESPONSE:
 | `write_todos` | Agent creates a task plan before starting — prevents random-walk behavior |
 | Context offloading | Research written to files survives context summarization |
 | System prompt workflow | Numbered steps + file paths + quality rules = reliable agent behavior |
-| DuckDuckGo API | Free search API at `api.duckduckgo.com` — returns JSON with abstracts and related topics |
+| OpenAI Web Search | `client.responses.create()` with `web_search_preview` tool — uses your existing API key for live web results |

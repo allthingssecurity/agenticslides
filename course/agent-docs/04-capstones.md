@@ -46,7 +46,7 @@ mkdir -p my-agents
 [ -d .venv ] || python3 -m venv .venv
 source .venv/bin/activate
 pip install --upgrade pip
-pip install "deepagents>=0.4.3" "langchain-openai>=1.1.8" "httpx>=0.27.0"
+pip install "deepagents>=0.4.3" "langchain-openai>=1.1.8" "openai>=1.66.0"
 export OPENAI_API_KEY="sk-your-key-here"
 ```
 **OS[windows]:**
@@ -55,7 +55,7 @@ mkdir my-agents 2>nul
 if not exist .venv python -m venv .venv
 .venv\Scripts\activate
 pip install --upgrade pip
-pip install "deepagents>=0.4.3" "langchain-openai>=1.1.8" "httpx>=0.27.0"
+pip install "deepagents>=0.4.3" "langchain-openai>=1.1.8" "openai>=1.66.0"
 set OPENAI_API_KEY=sk-your-key-here
 ```
 
@@ -65,7 +65,7 @@ set OPENAI_API_KEY=sk-your-key-here
 ```bash
 python -c "import sys; assert sys.version_info >= (3,11); print(f'Python {sys.version} OK')"
 python -c "from deepagents import create_deep_agent; print('deepagents OK')"
-python -c "import httpx; print('httpx OK')"
+python -c "import openai; print('openai OK')"
 python -c "import os; assert os.getenv('OPENAI_API_KEY','').startswith('sk-'); print('API key OK')"
 ```
 **Expected:** Four lines of "OK".
@@ -101,7 +101,7 @@ LAB 4 — CAPSTONE: Financial Deep Research System
 4 sub-agents + orchestrator with phased execution.
 """
 import json
-import httpx
+from openai import OpenAI
 from datetime import datetime
 from langchain_core.tools import tool
 from langchain_core.messages import HumanMessage
@@ -128,19 +128,13 @@ def search_financial_news(query: str) -> str:
         query: Financial search query (e.g., "NVIDIA earnings 2025")
     """
     try:
-        resp = httpx.get(
-            "https://api.duckduckgo.com/",
-            params={"q": f"{query} finance stock market", "format": "json", "no_html": 1},
-            timeout=10
+        client = OpenAI()
+        response = client.responses.create(
+            model="gpt-4o-mini",
+            tools=[{"type": "web_search_preview"}],
+            input=f"{query} finance stock market"
         )
-        data = resp.json()
-        results = []
-        if data.get("Abstract"):
-            results.append(f"**{data['Heading']}**: {data['Abstract']}")
-        for t in data.get("RelatedTopics", [])[:5]:
-            if isinstance(t, dict) and "Text" in t:
-                results.append(f"- {t['Text']}")
-        return "\n".join(results) if results else "No financial news found."
+        return response.output_text
     except Exception as e:
         return f"Search error: {e}"
 ```
@@ -962,8 +956,7 @@ LAB 6 — BONUS: Automated Content Pipeline
 ============================================
 Researcher → Writer → Editor/Reviewer → Final Output
 """
-import json
-import httpx
+from openai import OpenAI
 from langchain_core.tools import tool
 from langchain_core.messages import HumanMessage
 from deepagents import create_deep_agent
@@ -979,19 +972,13 @@ def web_search(query: str) -> str:
         query: Search query
     """
     try:
-        resp = httpx.get(
-            "https://api.duckduckgo.com/",
-            params={"q": query, "format": "json", "no_html": 1},
-            timeout=10
+        client = OpenAI()
+        response = client.responses.create(
+            model="gpt-4o-mini",
+            tools=[{"type": "web_search_preview"}],
+            input=query
         )
-        data = resp.json()
-        parts = []
-        if data.get("Abstract"):
-            parts.append(data["Abstract"])
-        for t in data.get("RelatedTopics", [])[:5]:
-            if isinstance(t, dict) and "Text" in t:
-                parts.append(f"- {t['Text']}")
-        return "\n".join(parts) if parts else "No results found."
+        return response.output_text
     except Exception as e:
         return f"Error: {e}"
 

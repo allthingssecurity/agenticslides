@@ -9,14 +9,14 @@
 **OS[mac/linux]:**
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
-pip install deepagents "langchain-openai>=1.1.8" httpx
+pip install deepagents "langchain-openai>=1.1.8" "openai>=1.66.0"
 export OPENAI_API_KEY="sk-your-key-here"
 ```
 
 **OS[windows]:**
 ```cmd
 python -m venv .venv && .venv\Scripts\activate
-pip install deepagents "langchain-openai>=1.1.8" httpx
+pip install deepagents "langchain-openai>=1.1.8" "openai>=1.66.0"
 set OPENAI_API_KEY=sk-your-key-here
 ```
 
@@ -235,9 +235,9 @@ Reference implementations (if stuck): `course/labs/lab*.py`
 |-------|-----|
 | `ModuleNotFoundError: No module named 'deepagents'` | `pip install deepagents>=0.4.3` |
 | `ModuleNotFoundError: No module named 'langchain_openai'` | `pip install "langchain-openai>=1.1.8"` |
-| `ModuleNotFoundError: No module named 'httpx'` | `pip install httpx>=0.27.0` |
+| `ModuleNotFoundError: No module named 'openai'` | `pip install "openai>=1.66.0"` |
 | `OPENAI_API_KEY not set` | `export OPENAI_API_KEY="sk-..."` (mac/linux) or `set OPENAI_API_KEY=sk-...` (windows) |
 | `openai.AuthenticationError` | API key is invalid or expired — check at platform.openai.com |
 | `openai.RateLimitError` | Wait 60 seconds and retry, or check your OpenAI usage limits |
-| Timeout on web search | DuckDuckGo API may be slow — the 10-second timeout will produce a search error, and the agent retries |
+| Timeout on web search | OpenAI web search may be slow — if it times out, the agent will retry automatically |
 | Lab 5 database error | Delete `my-agents/sample_analytics.db` and re-run — the script recreates it |

@@ -8,8 +8,7 @@ Learn: Filesystem tools, planning with todos, context offloading.
 
 Run: python lab2_research_agent.py
 """
-import json
-import httpx
+from openai import OpenAI
 from langchain_core.tools import tool
 from langchain_core.messages import HumanMessage
 from deepagents import create_deep_agent
@@ -18,42 +17,20 @@ from deepagents import create_deep_agent
 # ─── TOOL: Web Search ──────────────────────────────────
 
 @tool
-def web_search(query: str, num_results: int = 5) -> str:
-    """Search the web for information.
+def web_search(query: str) -> str:
+    """Search the web for current information on any topic.
 
     Args:
         query: The search query
-        num_results: Number of results to return (default 5)
     """
     try:
-        response = httpx.get(
-            "https://api.duckduckgo.com/",
-            params={"q": query, "format": "json", "no_html": 1},
-            timeout=10
+        client = OpenAI()
+        response = client.responses.create(
+            model="gpt-4o-mini",
+            tools=[{"type": "web_search_preview"}],
+            input=query
         )
-        data = response.json()
-        results = []
-
-        if data.get("Abstract"):
-            results.append({
-                "title": data.get("Heading", "Main Result"),
-                "snippet": data["Abstract"],
-                "source": data.get("AbstractURL", "")
-            })
-
-        for topic in data.get("RelatedTopics", [])[:num_results]:
-            if isinstance(topic, dict) and "Text" in topic:
-                results.append({
-                    "title": topic.get("Text", "")[:80],
-                    "snippet": topic.get("Text", ""),
-                    "source": topic.get("FirstURL", "")
-                })
-
-        if not results:
-            return f"No results found for: {query}"
-
-        return json.dumps(results, indent=2)
-
+        return response.output_text
     except Exception as e:
         return f"Search error: {e}"
 

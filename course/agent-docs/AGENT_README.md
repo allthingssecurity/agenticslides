@@ -47,7 +47,7 @@ Students should do modules in order:
 
 - **Python 3.11+** installed
 - **An OpenAI API key** (starts with `sk-`)
-- **Internet access** (labs use DuckDuckGo API)
+- **Internet access** (labs use OpenAI web search)
 - **An AI coding agent** (Codex, Claude Code, Cursor, etc.)
 
 ---
