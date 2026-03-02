@@ -1,0 +1,1359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agentic AI - Day 1</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a0a2e;color:#fff;overflow:hidden;height:100vh;width:100vw}
+.slide{display:none;width:100vw;height:100vh;padding:60px;flex-direction:column;justify-content:center;align-items:center;text-align:center;position:relative;overflow:hidden}
+.slide.active{display:flex}
+h1{font-size:3em;margin-bottom:20px;background:linear-gradient(135deg,#00d2ff,#7a5fff,#ff6b9d);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1.2}
+h2{font-size:2.2em;margin-bottom:15px;color:#7a5fff}
+h3{font-size:1.6em;color:#00d2ff;margin-bottom:10px}
+p,.desc{font-size:1.25em;color:#ccc;max-width:900px;line-height:1.7;margin:10px auto}
+.highlight{color:#ff6b9d;font-weight:bold}
+.box{background:rgba(122,95,255,0.1);border:1px solid rgba(122,95,255,0.3);border-radius:16px;padding:30px;margin:15px;max-width:800px;width:90%}
+.grid{display:grid;gap:20px;width:90%;max-width:1000px}
+.grid-2{grid-template-columns:1fr 1fr}
+.grid-3{grid-template-columns:1fr 1fr 1fr}
+.card{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:20px;text-align:left;transition:transform 0.3s,box-shadow 0.3s}
+.card:hover{transform:translateY(-5px);box-shadow:0 10px 30px rgba(122,95,255,0.3)}
+.card h3{margin-bottom:8px;font-size:1.2em}
+.card p{font-size:1em;color:#aaa}
+.emoji{font-size:3em;margin-bottom:15px}
+.flow{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;margin:20px 0}
+.flow-box{background:linear-gradient(135deg,rgba(122,95,255,0.2),rgba(0,210,255,0.2));border:1px solid rgba(122,95,255,0.4);border-radius:10px;padding:12px 20px;font-size:1em;min-width:100px}
+.flow-arrow{font-size:1.5em;color:#ff6b9d}
+.tag{display:inline-block;background:rgba(255,107,157,0.15);border:1px solid rgba(255,107,157,0.3);border-radius:20px;padding:5px 15px;margin:5px;font-size:0.9em;color:#ff6b9d}
+.nav{position:fixed;bottom:20px;right:30px;display:flex;gap:10px;z-index:100}
+.nav button{background:rgba(122,95,255,0.3);border:1px solid rgba(122,95,255,0.5);color:#fff;padding:10px 20px;border-radius:8px;cursor:pointer;font-size:1em;transition:background 0.3s}
+.nav button:hover{background:rgba(122,95,255,0.6)}
+.counter{position:fixed;bottom:25px;left:30px;color:#666;font-size:0.9em;z-index:100}
+.animate-in{animation:fadeUp 0.6s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+.animate-in:nth-child(2){animation-delay:0.15s}
+.animate-in:nth-child(3){animation-delay:0.3s}
+.animate-in:nth-child(4){animation-delay:0.45s}
+.animate-in:nth-child(5){animation-delay:0.6s}
+.animate-in:nth-child(6){animation-delay:0.75s}
+ul{text-align:left;max-width:800px;margin:10px auto;list-style:none}
+ul li{padding:8px 0;font-size:1.15em;color:#ccc;position:relative;padding-left:25px}
+ul li::before{content:'▸';position:absolute;left:0;color:#7a5fff}
+.diagram{background:rgba(0,0,0,0.3);border-radius:16px;padding:25px;margin:15px auto;max-width:900px;width:90%}
+.versus{display:flex;align-items:center;justify-content:center;gap:30px;margin:20px 0}
+.vs-box{background:rgba(122,95,255,0.1);border-radius:12px;padding:20px 30px;flex:1;max-width:350px}
+.vs-text{font-size:2em;color:#ff6b9d;font-weight:bold}
+.subtitle{font-size:1.4em;color:#aaa;margin-bottom:20px}
+.big-emoji{font-size:5em;margin:10px 0}
+.step{display:flex;align-items:center;gap:15px;margin:10px 0;text-align:left}
+.step-num{background:linear-gradient(135deg,#7a5fff,#00d2ff);border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;font-weight:bold;flex-shrink:0}
+.step-text{font-size:1.1em;color:#ccc}
+.progress-bar{position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,#00d2ff,#7a5fff,#ff6b9d);z-index:200;transition:width 0.3s}
+.section-label{position:fixed;top:10px;right:30px;color:#555;font-size:0.8em;z-index:100}
+canvas.bg{position:fixed;top:0;left:0;z-index:-1;width:100vw;height:100vh}
+.timeline{position:relative;max-width:700px;margin:15px auto;padding-left:30px;border-left:2px solid rgba(122,95,255,0.3)}
+.timeline-item{position:relative;margin:12px 0;padding:10px 15px;background:rgba(255,255,255,0.03);border-radius:8px;text-align:left}
+.timeline-item::before{content:'';position:absolute;left:-37px;top:15px;width:12px;height:12px;border-radius:50%;background:#7a5fff}
+.timeline-item .year{color:#ff6b9d;font-weight:bold;margin-right:10px}
+.code-block{background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:20px;text-align:left;font-family:'Courier New',monospace;font-size:0.95em;max-width:800px;margin:15px auto;overflow-x:auto}
+.code-block .keyword{color:#7a5fff}
+.code-block .string{color:#ff6b9d}
+.code-block .comment{color:#666}
+.loop-diagram{position:relative;width:300px;height:300px;margin:10px auto}
+</style>
+</head>
+<body>
+<canvas class="bg" id="bgCanvas"></canvas>
+<div class="progress-bar" id="progressBar"></div>
+<div class="counter" id="counter"></div>
+<div class="section-label" id="sectionLabel"></div>
+
+<!-- SECTION 1: WELCOME & ML BASICS (Slides 1-10) -->
+
+<div class="slide" data-section="Welcome">
+<h1 class="animate-in">Agentic AI</h1>
+<p class="animate-in subtitle">From Machine Learning to Autonomous Agents</p>
+<p class="animate-in">Day 1 - The Complete Journey</p>
+<div class="animate-in" style="margin-top:30px">
+<div class="tag">ML</div><div class="tag">Deep Learning</div><div class="tag">GenAI</div><div class="tag">LLMs</div><div class="tag">Agents</div><div class="tag">LangGraph</div>
+</div>
+</div>
+
+<div class="slide" data-section="ML Basics">
+<div class="big-emoji animate-in">🤔</div>
+<h1 class="animate-in">What Even Is AI?</h1>
+<p class="animate-in">Imagine teaching a <span class="highlight">child</span> to recognize cats...</p>
+<p class="animate-in">You don't give them a rulebook. You show them <span class="highlight">thousands of cats</span>.</p>
+<p class="animate-in">They figure out the pattern on their own. That's AI in a nutshell!</p>
+</div>
+
+<div class="slide" data-section="ML Basics">
+<h2 class="animate-in">Traditional Programming vs ML</h2>
+<div class="versus animate-in">
+<div class="vs-box">
+<h3>Traditional</h3>
+<p>Rules + Data → Answers</p>
+<p style="color:#ff6b9d;margin-top:10px">You write the rules</p>
+</div>
+<div class="vs-text">VS</div>
+<div class="vs-box">
+<h3>Machine Learning</h3>
+<p>Data + Answers → Rules</p>
+<p style="color:#00d2ff;margin-top:10px">Machine finds the rules</p>
+</div>
+</div>
+<p class="animate-in">ML flips the script - instead of programming rules, we let machines <span class="highlight">discover patterns</span> from data!</p>
+</div>
+
+<div class="slide" data-section="ML Basics">
+<h2 class="animate-in">The 3 Flavors of ML</h2>
+<div class="grid grid-3 animate-in">
+<div class="card">
+<div class="emoji">👨‍🏫</div>
+<h3>Supervised</h3>
+<p>Learning with a teacher. "This is a cat, this is a dog."</p>
+<p style="color:#7a5fff;margin-top:8px">Labeled data → Predictions</p>
+</div>
+<div class="card">
+<div class="emoji">🔍</div>
+<h3>Unsupervised</h3>
+<p>Finding hidden patterns. "Group similar customers together."</p>
+<p style="color:#7a5fff;margin-top:8px">No labels → Clusters/Patterns</p>
+</div>
+<div class="card">
+<div class="emoji">🎮</div>
+<h3>Reinforcement</h3>
+<p>Learning by trial & error. Like training a dog with treats!</p>
+<p style="color:#7a5fff;margin-top:8px">Actions → Rewards → Policy</p>
+</div>
+</div>
+</div>
+
+<div class="slide" data-section="ML Basics">
+<h2 class="animate-in">Real-World ML Examples</h2>
+<div class="grid grid-2 animate-in">
+<div class="card">
+<div class="emoji">📧</div>
+<h3>Spam Filter</h3>
+<p>Learns from millions of emails what spam looks like</p>
+</div>
+<div class="card">
+<div class="emoji">🎬</div>
+<h3>Netflix Recommendations</h3>
+<p>"You watched X, you'll love Y!"</p>
+</div>
+<div class="card">
+<div class="emoji">🏠</div>
+<h3>House Price Prediction</h3>
+<p>Bedrooms + Location + Size → Price</p>
+</div>
+<div class="card">
+<div class="emoji">🗣️</div>
+<h3>Voice Assistants</h3>
+<p>Converting your speech into text and actions</p>
+</div>
+</div>
+</div>
+
+<!-- SECTION 2: DEEP LEARNING (Slides 6-12) -->
+
+<div class="slide" data-section="Deep Learning">
+<h2 class="animate-in">From ML to Deep Learning</h2>
+<p class="animate-in">ML works great... but has limits.</p>
+<div class="box animate-in">
+<p>Traditional ML needs humans to pick the right <span class="highlight">features</span></p>
+<p style="margin-top:10px">For images: "Look at edges, colors, textures..."</p>
+<p style="margin-top:10px;color:#00d2ff">Deep Learning says: <strong>"I'll figure out the features myself!"</strong></p>
+</div>
+<p class="animate-in">Think of it as ML on <span class="highlight">steroids</span> 💪</p>
+</div>
+
+<div class="slide" data-section="Deep Learning">
+<div class="big-emoji animate-in">🧠</div>
+<h1 class="animate-in">Neural Networks</h1>
+<p class="animate-in">Inspired by the human brain (loosely!)</p>
+<p class="animate-in">A brain has ~86 billion neurons connected by synapses.</p>
+<p class="animate-in">We mimic this with <span class="highlight">artificial neurons</span> connected by <span class="highlight">weights</span>.</p>
+</div>
+
+<div class="slide" data-section="Deep Learning">
+<h2 class="animate-in">How a Single Neuron Works</h2>
+<div class="diagram animate-in">
+<div class="flow">
+<div class="flow-box">Input 1 × Weight 1</div>
+<div class="flow-box">Input 2 × Weight 2</div>
+<div class="flow-box">Input 3 × Weight 3</div>
+</div>
+<div class="flow">
+<div class="flow-arrow">↓ ↓ ↓</div>
+</div>
+<div class="flow">
+<div class="flow-box" style="background:linear-gradient(135deg,rgba(255,107,157,0.2),rgba(122,95,255,0.2))">SUM → Activation → Output</div>
+</div>
+</div>
+<p class="animate-in">Like a tiny decision maker: "Based on these inputs and how important each one is... here's my answer!"</p>
+</div>
+
+<div class="slide" data-section="Deep Learning">
+<h2 class="animate-in">Layers = Levels of Understanding</h2>
+<div class="diagram animate-in">
+<div class="flow">
+<div class="flow-box" style="border-color:#00d2ff">Input Layer<br><small>Raw pixels</small></div>
+<div class="flow-arrow">→</div>
+<div class="flow-box" style="border-color:#7a5fff">Hidden Layer 1<br><small>Edges & lines</small></div>
+<div class="flow-arrow">→</div>
+<div class="flow-box" style="border-color:#7a5fff">Hidden Layer 2<br><small>Shapes & parts</small></div>
+<div class="flow-arrow">→</div>
+<div class="flow-box" style="border-color:#ff6b9d">Output Layer<br><small>"It's a cat!"</small></div>
+</div>
+</div>
+<p class="animate-in">Each layer learns more <span class="highlight">abstract</span> features.</p>
+<p class="animate-in">Pixels → Edges → Eyes/Ears → Whole Cat! 🐱</p>
+<p class="animate-in" style="color:#aaa"><em>"Deep" learning = many layers deep</em></p>
+</div>
+
+<div class="slide" data-section="Deep Learning">
+<h2 class="animate-in">How Does It Learn? (No Math, Promise!)</h2>
+<div class="animate-in">
+<div class="step"><div class="step-num">1</div><div class="step-text"><strong>Forward Pass:</strong> Data flows through → makes a prediction</div></div>
+<div class="step"><div class="step-num">2</div><div class="step-text"><strong>Check Error:</strong> Compare prediction vs actual answer → "How wrong was I?"</div></div>
+<div class="step"><div class="step-num">3</div><div class="step-text"><strong>Backpropagation:</strong> Send error backwards → adjust weights</div></div>
+<div class="step"><div class="step-num">4</div><div class="step-text"><strong>Repeat:</strong> Do this millions of times → get really good!</div></div>
+</div>
+<p class="animate-in" style="margin-top:20px">It's like a student taking exams, getting feedback, and improving each time! 📝</p>
+</div>
+
+<!-- SECTION 3: NN ARCHITECTURES (Slides 11-18) -->
+
+<div class="slide" data-section="NN Architectures">
+<h1 class="animate-in">Neural Network Architectures</h1>
+<p class="animate-in subtitle">Different problems need different network designs</p>
+<p class="animate-in">Just like you wouldn't use a sports car to carry furniture...</p>
+<p class="animate-in">You pick the right architecture for the right job! 🏗️</p>
+</div>
+
+<div class="slide" data-section="NN Architectures">
+<h2 class="animate-in">Feed-Forward Network (FFN)</h2>
+<div class="diagram animate-in">
+<div class="flow">
+<div class="flow-box">Input</div>
+<div class="flow-arrow">→</div>
+<div class="flow-box">Layer 1</div>
+<div class="flow-arrow">→</div>
+<div class="flow-box">Layer 2</div>
+<div class="flow-arrow">→</div>
+<div class="flow-box">Output</div>
+</div>
+</div>
+<p class="animate-in">The simplest: data flows in <span class="highlight">one direction only</span></p>
+<p class="animate-in">Like a factory assembly line — no going back!</p>
+<p class="animate-in"><strong>Good for:</strong> Classification, regression, tabular data</p>
+</div>
+
+<div class="slide" data-section="NN Architectures">
+<h2 class="animate-in">CNN - Convolutional Neural Network</h2>
+<div class="diagram animate-in">
+<div class="flow">
+<div class="flow-box">🖼️ Image</div>
+<div class="flow-arrow">→</div>
+<div class="flow-box">🔍 Filter scans<br>across image</div>
+<div class="flow-arrow">→</div>
+<div class="flow-box">📊 Feature<br>Maps</div>
+<div class="flow-arrow">→</div>
+<div class="flow-box">🏷️ "Cat!"</div>
+</div>
+</div>
+<p class="animate-in">The <span class="highlight">king of image processing</span> 👑</p>
+<p class="animate-in">Uses sliding "filters" that scan across images like a magnifying glass</p>
+<p class="animate-in"><strong>Think:</strong> Instagram filters, self-driving cars, face recognition</p>
+</div>
+
+<div class="slide" data-section="NN Architectures">
+<h2 class="animate-in">RNN - Recurrent Neural Network</h2>
+<div class="diagram animate-in">
+<div class="flow">
+<div class="flow-box">Word 1</div>
+<div class="flow-arrow">→</div>
+<div class="flow-box" style="border-color:#ff6b9d">🔄 Memory<br>Cell</div>
+<div class="flow-arrow">→</div>
+<div class="flow-box">Word 2</div>
+<div class="flow-arrow">→</div>
+<div class="flow-box" style="border-color:#ff6b9d">🔄 Memory<br>Cell</div>
+<div class="flow-arrow">→</div>
+<div class="flow-box">...</div>
+</div>
+</div>
+<p class="animate-in">Has <span class="highlight">memory</span>! Remembers previous inputs.</p>
+<p class="animate-in">Like reading a book — each word makes sense because you remember what came before.</p>
+<p class="animate-in"><strong>Good for:</strong> Text, speech, time series, music</p>
+</div>
+
+<div class="slide" data-section="NN Architectures">
+<h2 class="animate-in">The Architecture Zoo 🦁</h2>
+<div class="grid grid-2 animate-in">
+<div class="card">
+<h3>FFN</h3>
+<p>📊 Simple, one-direction flow. Tabular data champion.</p>
+</div>
+<div class="card">
+<h3>CNN</h3>
+<p>🖼️ Sliding filters for images. Sees spatial patterns.</p>
+</div>
+<div class="card">
+<h3>RNN</h3>
+<p>🔄 Has memory. Great for sequences.</p>
+</div>
+<div class="card">
+<h3>GAN</h3>
+<p>🎨 Two networks compete: one creates, one judges. Makes fake images!</p>
+</div>
+</div>
+<p class="animate-in" style="margin-top:15px">Each architecture was designed to solve a <span class="highlight">specific type</span> of problem</p>
+</div>
+
+<!-- SECTION 4: SEQUENTIAL DATA (Slides 17-23) -->
+
+<div class="slide" data-section="Sequential Data">
+<h1 class="animate-in">The Challenge of Sequential Data</h1>
+<p class="animate-in subtitle">When ORDER matters</p>
+<p class="animate-in">"Dog bites man" ≠ "Man bites dog"</p>
+<p class="animate-in">Language, music, stock prices, weather — all <span class="highlight">sequences</span>!</p>
+</div>
+
+<div class="slide" data-section="Sequential Data">
+<h2 class="animate-in">RNN: The First Attempt</h2>
+<div class="box animate-in">
+<p><strong>The Idea:</strong> Process one word at a time, pass memory forward</p>
+<div class="flow" style="margin-top:15px">
+<div class="flow-box">"The"</div>
+<div class="flow-arrow">→</div>
+<div class="flow-box">"cat"</div>
+<div class="flow-arrow">→</div>
+<div class="flow-box">"sat"</div>
+<div class="flow-arrow">→</div>
+<div class="flow-box">"on"</div>
+<div class="flow-arrow">→</div>
+<div class="flow-box">"the"</div>
+<div class="flow-arrow">→</div>
+<div class="flow-box">"mat"</div>
+</div>
+</div>
+<p class="animate-in" style="color:#ff6b9d;margin-top:15px"><strong>Problem:</strong> Forgets early words by the time it reaches the end! 😵</p>
+<p class="animate-in">"The cat who lived in the house that Jack built... <em>wait, what cat?</em>"</p>
+</div>
+
+<div class="slide" data-section="Sequential Data">
+<h2 class="animate-in">LSTM: Long Short-Term Memory</h2>
+<div class="diagram animate-in">
+<p style="font-size:1.3em;margin-bottom:15px">The <span class="highlight">smart notepad</span> solution!</p>
+<div class="grid grid-3" style="max-width:700px;margin:0 auto">
+<div class="card" style="text-align:center">
+<p style="font-size:2em">🚪</p>
+<h3>Forget Gate</h3>
+<p>"What should I erase from my notes?"</p>
+</div>
+<div class="card" style="text-align:center">
+<p style="font-size:2em">📝</p>
+<h3>Input Gate</h3>
+<p>"What new info should I write down?"</p>
+</div>
+<div class="card" style="text-align:center">
+<p style="font-size:2em">📤</p>
+<h3>Output Gate</h3>
+<p>"What should I share right now?"</p>
+</div>
+</div>
+</div>
+<p class="animate-in">LSTM can remember important things for <span class="highlight">long periods</span> and forget unimportant stuff!</p>
+</div>
+
+<div class="slide" data-section="Sequential Data">
+<h2 class="animate-in">RNN vs LSTM — A Story</h2>
+<div class="box animate-in">
+<p style="font-size:1.1em;text-align:left"><span class="highlight">RNN:</span> Like a student who can only remember the last few sentences of a lecture.</p>
+<p style="font-size:1.1em;text-align:left;margin-top:15px"><span class="highlight">LSTM:</span> Like a student who takes smart notes — writes down key points and reviews them when needed.</p>
+<p style="font-size:1.1em;text-align:left;margin-top:15px;color:#00d2ff"><strong>But both still read one word at a time... 🐌</strong></p>
+<p style="font-size:1.1em;text-align:left;margin-top:15px">What if you could read the <em>entire page at once</em>?</p>
+</div>
+</div>
+
+<div class="slide" data-section="Sequential Data">
+<h1 class="animate-in">⚡ Transformers</h1>
+<p class="animate-in subtitle">"Attention Is All You Need" (2017)</p>
+<p class="animate-in">The paper that <span class="highlight">changed everything</span></p>
+<div class="box animate-in">
+<p><strong>Key Insight:</strong> Don't read words one by one. Look at <span class="highlight">ALL words simultaneously</span> and figure out which ones are related to each other.</p>
+</div>
+<p class="animate-in">This is called <span class="highlight">Self-Attention</span> 🎯</p>
+</div>
+
+<div class="slide" data-section="Sequential Data">
+<h2 class="animate-in">Attention: The Restaurant Analogy 🍽️</h2>
+<div class="box animate-in" style="text-align:left">
+<p><strong>Sentence:</strong> "The <span class="highlight">cat</span> sat on the mat because <span class="highlight">it</span> was tired"</p>
+<p style="margin-top:15px"><strong>Question:</strong> What does "it" refer to?</p>
+<p style="margin-top:15px"><strong>Attention mechanism:</strong> Looks at ALL words and scores their relevance:</p>
+<p style="margin-top:10px;padding-left:20px">• "cat" → <span style="color:#00ff88">HIGH attention score</span> ✓</p>
+<p style="padding-left:20px">• "mat" → <span style="color:#ff6b6b">low attention</span></p>
+<p style="padding-left:20px">• "sat" → <span style="color:#ff6b6b">low attention</span></p>
+</div>
+<p class="animate-in">Like a spotlight that shines on the most <span class="highlight">relevant</span> parts! 🔦</p>
+</div>
+
+<div class="slide" data-section="Sequential Data">
+<h2 class="animate-in">Why Transformers Won</h2>
+<div class="grid grid-3 animate-in">
+<div class="card" style="text-align:center">
+<p style="font-size:2em">⚡</p>
+<h3>Parallel Processing</h3>
+<p>Process ALL words at once, not one by one. Way faster!</p>
+</div>
+<div class="card" style="text-align:center">
+<p style="font-size:2em">🧠</p>
+<h3>Long Memory</h3>
+<p>Can connect word 1 to word 10,000. No forgetting!</p>
+</div>
+<div class="card" style="text-align:center">
+<p style="font-size:2em">📈</p>
+<h3>Scales Up</h3>
+<p>More data + more compute = better results. Always.</p>
+</div>
+</div>
+<p class="animate-in" style="margin-top:15px">Transformers <span class="highlight">killed</span> RNN/LSTM for most tasks overnight! 🪦</p>
+</div>
+
+<!-- SECTION 5: GENERATIVE AI (Slides 24-32) -->
+
+<div class="slide" data-section="Generative AI">
+<h1 class="animate-in">Generative AI</h1>
+<p class="animate-in subtitle">From Understanding to Creating</p>
+<p class="animate-in">So far: AI that <strong>classifies</strong> things (cat or dog?)</p>
+<p class="animate-in">Now: AI that <span class="highlight">creates</span> things (write a poem, draw a picture!)</p>
+<div class="big-emoji animate-in">🎨</div>
+</div>
+
+<div class="slide" data-section="Generative AI">
+<h2 class="animate-in">GenAI Architectures</h2>
+<div class="grid grid-3 animate-in">
+<div class="card" style="text-align:center">
+<p style="font-size:2em">🔄</p>
+<h3>VAE</h3>
+<p>Variational Auto-Encoder</p>
+<p style="color:#7a5fff;margin-top:5px">Compress → Random point → Decompress</p>
+</div>
+<div class="card" style="text-align:center">
+<p style="font-size:2em">⚔️</p>
+<h3>GAN</h3>
+<p>Generative Adversarial Network</p>
+<p style="color:#7a5fff;margin-top:5px">Artist vs Critic battle</p>
+</div>
+<div class="card" style="text-align:center">
+<p style="font-size:2em">🌫️</p>
+<h3>Diffusion</h3>
+<p>Diffusion Models</p>
+<p style="color:#7a5fff;margin-top:5px">Add noise → Learn to remove it</p>
+</div>
+</div>
+</div>
+
+<div class="slide" data-section="Generative AI">
+<h2 class="animate-in">VAE: The Compression Artist</h2>
+<div class="diagram animate-in">
+<div class="flow">
+<div class="flow-box">🖼️ Real Image</div>
+<div class="flow-arrow">→</div>
+<div class="flow-box" style="border-color:#7a5fff">Encoder<br><small>Compress to tiny code</small></div>
+<div class="flow-arrow">→</div>
+<div class="flow-box" style="border-color:#ff6b9d">Latent Space<br><small>🎲 Add randomness</small></div>
+<div class="flow-arrow">→</div>
+<div class="flow-box" style="border-color:#00d2ff">Decoder<br><small>Rebuild image</small></div>
+<div class="flow-arrow">→</div>
+<div class="flow-box">🖼️ New Image!</div>
+</div>
+</div>
+<p class="animate-in"><strong>Analogy:</strong> Like learning to describe a face in 10 words, then drawing it from just those words.</p>
+<p class="animate-in">The <span class="highlight">randomness</span> means every generation is slightly different!</p>
+</div>
+
+<div class="slide" data-section="Generative AI">
+<h2 class="animate-in">Diffusion Models: The Magic Eraser</h2>
+<div class="diagram animate-in">
+<h3 style="margin-bottom:15px">Training: Learn to denoise</h3>
+<div class="flow">
+<div class="flow-box">🖼️ Clean</div>
+<div class="flow-arrow">→</div>
+<div class="flow-box">🌫️ + noise</div>
+<div class="flow-arrow">→</div>
+<div class="flow-box">🌫️🌫️ + noise</div>
+<div class="flow-arrow">→</div>
+<div class="flow-box">📺 Pure static</div>
+</div>
+<h3 style="margin:20px 0 15px">Generation: Reverse the process!</h3>
+<div class="flow">
+<div class="flow-box">📺 Random noise</div>
+<div class="flow-arrow">→</div>
+<div class="flow-box">🌫️ Remove noise</div>
+<div class="flow-arrow">→</div>
+<div class="flow-box">🖼️ Remove more</div>
+<div class="flow-arrow">→</div>
+<div class="flow-box">✨ Beautiful image!</div>
+</div>
+</div>
+<p class="animate-in">This is how <span class="highlight">DALL-E, Midjourney, Stable Diffusion</span> work!</p>
+</div>
+
+<div class="slide" data-section="Generative AI">
+<h2 class="animate-in">The GenAI Revolution — Timeline</h2>
+<div class="timeline animate-in">
+<div class="timeline-item"><span class="year">2014</span> GANs invented — first realistic face generation</div>
+<div class="timeline-item"><span class="year">2017</span> Transformers paper — "Attention Is All You Need"</div>
+<div class="timeline-item"><span class="year">2018</span> GPT-1 — first large language model</div>
+<div class="timeline-item"><span class="year">2020</span> GPT-3 — 175 billion parameters, shocks the world</div>
+<div class="timeline-item"><span class="year">2022</span> ChatGPT & Stable Diffusion — GenAI goes mainstream</div>
+<div class="timeline-item"><span class="year">2023</span> GPT-4, Claude, Gemini — multimodal AI arrives</div>
+<div class="timeline-item"><span class="year">2024</span> Agentic AI — from chatbots to autonomous agents</div>
+</div>
+</div>
+
+<!-- SECTION 6: LANGUAGE MODELS (Slides 30-40) -->
+
+<div class="slide" data-section="Language Models">
+<h1 class="animate-in">The Road to Modern LLMs</h1>
+<p class="animate-in subtitle">From counting words to understanding language</p>
+<p class="animate-in">Let's trace the evolution step by step...</p>
+</div>
+
+<div class="slide" data-section="Language Models">
+<h2 class="animate-in">Bigram: The Simplest Language Model</h2>
+<div class="box animate-in">
+<p><strong>Idea:</strong> Predict the next word based on <span class="highlight">just the previous word</span></p>
+<p style="margin-top:15px;text-align:left">Training text: "The cat sat on the mat"</p>
+<p style="margin-top:10px;text-align:left">Learns: "The" → "cat" (50%), "mat" (50%)</p>
+<p style="text-align:left">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"cat" → "sat" (100%)</p>
+<p style="text-align:left">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"sat" → "on" (100%)</p>
+</div>
+<p class="animate-in" style="color:#ff6b9d">Problem: "The" could be followed by ANYTHING. No context!</p>
+</div>
+
+<div class="slide" data-section="Language Models">
+<h2 class="animate-in">Trigram & N-grams: More Context</h2>
+<div class="grid grid-2 animate-in">
+<div class="card">
+<h3>Bigram (n=2)</h3>
+<p>"___ <span class="highlight">sat</span>" → ? </p>
+<p style="color:#aaa;margin-top:5px">Only looks at 1 previous word</p>
+</div>
+<div class="card">
+<h3>Trigram (n=3)</h3>
+<p>"___ <span class="highlight">cat sat</span>" → ?</p>
+<p style="color:#aaa;margin-top:5px">Looks at 2 previous words</p>
+</div>
+</div>
+<div class="box animate-in" style="margin-top:15px">
+<p><strong>The curse of N-grams:</strong></p>
+<p>More context = better predictions BUT exponentially more data needed!</p>
+<p style="color:#ff6b9d;margin-top:10px">For n=5 with 50,000 word vocabulary: 50,000⁵ = impossible combinations!</p>
+</div>
+</div>
+
+<div class="slide" data-section="Language Models">
+<h2 class="animate-in">RNN Language Models</h2>
+<div class="diagram animate-in">
+<div class="flow">
+<div class="flow-box">"The"</div>
+<div class="flow-arrow">→</div>
+<div class="flow-box" style="border-color:#7a5fff">🧠 RNN<br><small>memory</small></div>
+<div class="flow-arrow">→</div>
+<div class="flow-box">"cat"</div>
+<div class="flow-arrow">→</div>
+<div class="flow-box" style="border-color:#7a5fff">🧠 RNN<br><small>memory</small></div>
+<div class="flow-arrow">→</div>
+<div class="flow-box">"sat"</div>
+<div class="flow-arrow">→</div>
+<div class="flow-box" style="border-color:#7a5fff">🧠 RNN<br><small>memory</small></div>
+<div class="flow-arrow">→</div>
+<div class="flow-box">?</div>
+</div>
+</div>
+<p class="animate-in"><span class="highlight">Breakthrough:</span> No fixed window! Memory carries forward.</p>
+<p class="animate-in" style="color:#ff6b9d">But still processes <strong>one word at a time</strong> (slow 🐌) and <strong>forgets</strong> early words</p>
+</div>
+
+<div class="slide" data-section="Language Models">
+<h2 class="animate-in">LSTM Language Models</h2>
+<div class="box animate-in">
+<p style="font-size:1.2em"><strong>Improvement over RNN:</strong></p>
+<p style="margin-top:10px">✅ Can remember important context for longer</p>
+<p>✅ Gates control what to remember and forget</p>
+<p>✅ Powered early machine translation (Google Translate 2016)</p>
+<p style="margin-top:15px;color:#ff6b9d">❌ Still sequential — can't parallelize</p>
+<p style="color:#ff6b9d">❌ Still struggles with very long documents</p>
+</div>
+<p class="animate-in">We needed something <span class="highlight">radically different</span>...</p>
+</div>
+
+<div class="slide" data-section="Language Models">
+<h2 class="animate-in">Transformer Language Models</h2>
+<div class="diagram animate-in">
+<p style="font-size:1.3em;margin-bottom:15px">The <span class="highlight">game changer</span></p>
+<div class="flow">
+<div class="flow-box">"The cat sat on the"</div>
+<div class="flow-arrow">→</div>
+<div class="flow-box" style="border-color:#ff6b9d;min-width:200px">🔮 Transformer<br><small>Sees ALL words at once</small><br><small>Attention finds relationships</small></div>
+<div class="flow-arrow">→</div>
+<div class="flow-box">"mat" (95%)<br>"floor" (3%)<br>"rug" (2%)</div>
+</div>
+</div>
+<p class="animate-in">✅ Parallel processing ✅ Unlimited context ✅ Scales beautifully</p>
+<p class="animate-in">This is the foundation of <span class="highlight">every modern LLM</span>!</p>
+</div>
+
+<div class="slide" data-section="Language Models">
+<h2 class="animate-in">Evolution Summary</h2>
+<div class="diagram animate-in">
+<div class="flow" style="flex-direction:column;gap:5px">
+<div class="flow-box" style="width:80%">N-grams (Bigram/Trigram) — Count word pairs 📊</div>
+<div class="flow-arrow">↓</div>
+<div class="flow-box" style="width:80%">RNN — Add memory, process sequentially 🔄</div>
+<div class="flow-arrow">↓</div>
+<div class="flow-box" style="width:80%">LSTM — Better memory with gates 🚪</div>
+<div class="flow-arrow">↓</div>
+<div class="flow-box" style="width:80%;border-color:#ff6b9d">Transformer — Attention, parallel, scales ⚡</div>
+<div class="flow-arrow">↓</div>
+<div class="flow-box" style="width:80%;border-color:#00d2ff;background:rgba(0,210,255,0.1)">LLM — Giant Transformers trained on the internet 🌍</div>
+</div>
+</div>
+</div>
+
+<!-- SECTION 7: LLMs IN DETAIL (Slides 38-47) -->
+
+<div class="slide" data-section="LLMs">
+<div class="big-emoji animate-in">🤖</div>
+<h1 class="animate-in">Large Language Models</h1>
+<p class="animate-in">What makes a language model "large"?</p>
+<div class="grid grid-3 animate-in" style="margin-top:15px">
+<div class="card" style="text-align:center">
+<h3>Parameters</h3>
+<p>Billions of learned weights</p>
+</div>
+<div class="card" style="text-align:center">
+<h3>Data</h3>
+<p>Trillions of words from the internet</p>
+</div>
+<div class="card" style="text-align:center">
+<h3>Compute</h3>
+<p>Thousands of GPUs for weeks</p>
+</div>
+</div>
+</div>
+
+<div class="slide" data-section="LLMs">
+<h2 class="animate-in">Encoder vs Decoder</h2>
+<div class="versus animate-in">
+<div class="vs-box">
+<h3 style="color:#00d2ff">Encoder</h3>
+<p style="font-size:1.1em">Reads & <strong>understands</strong> text</p>
+<p style="margin-top:10px">Sees ALL words at once (bidirectional)</p>
+<p style="margin-top:10px;color:#aaa">Like reading a full paragraph to answer a question</p>
+<p style="margin-top:10px"><strong>Example:</strong> BERT</p>
+</div>
+<div class="vs-text">vs</div>
+<div class="vs-box">
+<h3 style="color:#ff6b9d">Decoder</h3>
+<p style="font-size:1.1em">Reads & <strong>generates</strong> text</p>
+<p style="margin-top:10px">Sees only PREVIOUS words (left to right)</p>
+<p style="margin-top:10px;color:#aaa">Like writing a story, one word at a time</p>
+<p style="margin-top:10px"><strong>Example:</strong> GPT, Claude</p>
+</div>
+</div>
+</div>
+
+<div class="slide" data-section="LLMs">
+<h2 class="animate-in">Encoder-Decoder Together</h2>
+<div class="diagram animate-in">
+<div class="flow">
+<div class="flow-box" style="border-color:#00d2ff">Encoder<br><small>"Translate: Hello world"</small><br><small>Understands the input</small></div>
+<div class="flow-arrow">→</div>
+<div class="flow-box" style="border-color:#7a5fff">Context<br><small>Rich understanding<br>passed across</small></div>
+<div class="flow-arrow">→</div>
+<div class="flow-box" style="border-color:#ff6b9d">Decoder<br><small>"Bonjour le monde"</small><br><small>Generates the output</small></div>
+</div>
+</div>
+<p class="animate-in"><strong>Example:</strong> T5, BART — great for translation, summarization</p>
+<p class="animate-in">Modern LLMs (GPT, Claude) are <span class="highlight">decoder-only</span> — turns out that's enough!</p>
+</div>
+
+<div class="slide" data-section="LLMs">
+<h1 class="animate-in">🎯 Next Token Prediction</h1>
+<p class="animate-in subtitle">The SECRET behind all LLMs</p>
+<div class="box animate-in">
+<p style="font-size:1.3em">The <span class="highlight">entire magic</span> of GPT, Claude, Gemini is just one simple task:</p>
+<p style="font-size:1.5em;color:#ff6b9d;margin-top:15px"><strong>Given some text, predict the next word.</strong></p>
+</div>
+<p class="animate-in">That's it. Really. The rest is just <span class="highlight">scale</span>.</p>
+</div>
+
+<div class="slide" data-section="LLMs">
+<h2 class="animate-in">Next Token Prediction in Action</h2>
+<div class="diagram animate-in" style="text-align:left">
+<p><strong>Prompt:</strong> "The capital of France is"</p>
+<p style="margin-top:15px"><strong>Model calculates probabilities:</strong></p>
+<p style="margin-top:10px;padding-left:20px">"Paris" → <span style="color:#00ff88">92%</span> ✓</p>
+<p style="padding-left:20px">"Lyon" → <span style="color:#ffaa00">3%</span></p>
+<p style="padding-left:20px">"a" → <span style="color:#ff6b6b">2%</span></p>
+<p style="padding-left:20px">"Berlin" → <span style="color:#ff6b6b">0.1%</span></p>
+<p style="margin-top:15px"><strong>Picks:</strong> "Paris" → now predict next after "...France is Paris"</p>
+<p style="margin-top:10px"><strong>Autoregressive:</strong> Output feeds back as input, word by word! 🔄</p>
+</div>
+</div>
+
+<div class="slide" data-section="LLMs">
+<h2 class="animate-in">Why Does Prediction = Intelligence?</h2>
+<div class="animate-in">
+<div class="step"><div class="step-num">1</div><div class="step-text">To predict the next word well, you need to <strong>understand</strong> the text</div></div>
+<div class="step"><div class="step-num">2</div><div class="step-text">To understand text, you need to learn <strong>facts, grammar, logic, reasoning</strong></div></div>
+<div class="step"><div class="step-num">3</div><div class="step-text">Train on the <strong>entire internet</strong> → learn almost everything humans have written</div></div>
+<div class="step"><div class="step-num">4</div><div class="step-text">Scale to <strong>billions of parameters</strong> → emergent abilities appear!</div></div>
+</div>
+<p class="animate-in" style="margin-top:20px;color:#00d2ff">"Compression of the internet into a neural network" — that's an LLM!</p>
+</div>
+
+<div class="slide" data-section="LLMs">
+<h2 class="animate-in">The Training Recipe 🍳</h2>
+<div class="animate-in">
+<div class="step"><div class="step-num">1</div><div class="step-text"><strong>Pre-training:</strong> Read the entire internet. Learn language, facts, patterns. (Months on thousands of GPUs)</div></div>
+<div class="step"><div class="step-num">2</div><div class="step-text"><strong>Fine-tuning (SFT):</strong> Show it conversations: "When asked X, respond like Y". Learn to be helpful.</div></div>
+<div class="step"><div class="step-num">3</div><div class="step-text"><strong>RLHF/RL:</strong> Humans rate responses. Model learns which answers humans prefer.</div></div>
+</div>
+<div class="box animate-in" style="margin-top:15px">
+<p>Pre-training = <span class="highlight">knowledge</span></p>
+<p>Fine-tuning = <span class="highlight">behavior</span></p>
+<p>RL = <span class="highlight">alignment with human preferences</span></p>
+</div>
+</div>
+
+<!-- SECTION 8: CoT, REASONING, FINETUNING (Slides 45-52) -->
+
+<div class="slide" data-section="Reasoning">
+<h1 class="animate-in">Chain of Thought (CoT)</h1>
+<p class="animate-in subtitle">Teaching AI to "think step by step"</p>
+<div class="versus animate-in">
+<div class="vs-box">
+<h3 style="color:#ff6b6b">Without CoT</h3>
+<p>Q: "If I have 3 apples and give away 1, then buy 5 more, how many?"</p>
+<p style="margin-top:10px">A: "8" ❌ (might get wrong)</p>
+</div>
+<div class="vs-text">vs</div>
+<div class="vs-box">
+<h3 style="color:#00ff88">With CoT</h3>
+<p>Q: Same question + "Think step by step"</p>
+<p style="margin-top:10px">A: "Start: 3, give 1: 2, buy 5: 7" ✅</p>
+</div>
+</div>
+</div>
+
+<div class="slide" data-section="Reasoning">
+<h2 class="animate-in">Reasoning Models</h2>
+<div class="box animate-in">
+<p style="font-size:1.2em"><strong>The evolution:</strong></p>
+<p style="margin-top:10px"><strong>GPT-3:</strong> "Just answer" → often wrong on complex tasks</p>
+<p style="margin-top:8px"><strong>CoT Prompting:</strong> "Think step by step" → much better!</p>
+<p style="margin-top:8px"><strong>o1/o3/DeepSeek R1:</strong> Built-in reasoning → thinks before answering</p>
+<p style="margin-top:8px"><strong>Claude:</strong> Extended thinking → shows its work</p>
+</div>
+<p class="animate-in" style="margin-top:15px">Key insight: <span class="highlight">More "thinking" tokens = better answers</span></p>
+<p class="animate-in">Just like humans — rushing through a math problem vs. working it out on paper 📝</p>
+</div>
+
+<div class="slide" data-section="Finetuning">
+<h2 class="animate-in">Fine-Tuning: Teaching New Tricks 🎓</h2>
+<p class="animate-in">A pre-trained LLM knows a lot, but you might want it to:</p>
+<div class="grid grid-2 animate-in">
+<div class="card">
+<div class="emoji">🏥</div>
+<h3>Speak Medical</h3>
+<p>Answer like a doctor, not a general assistant</p>
+</div>
+<div class="card">
+<div class="emoji">⚖️</div>
+<h3>Know Your Company</h3>
+<p>Understand your internal docs and policies</p>
+</div>
+<div class="card">
+<div class="emoji">🤝</div>
+<h3>Follow Instructions</h3>
+<p>Be helpful, harmless, and honest</p>
+</div>
+<div class="card">
+<div class="emoji">🎨</div>
+<h3>Match a Style</h3>
+<p>Write like your brand voice</p>
+</div>
+</div>
+</div>
+
+<div class="slide" data-section="Finetuning">
+<h2 class="animate-in">SFT: Supervised Fine-Tuning</h2>
+<div class="box animate-in" style="text-align:left">
+<p style="font-size:1.2em"><strong>The "Show by Example" Method</strong></p>
+<p style="margin-top:15px">You give the model conversation examples:</p>
+<p style="margin-top:10px;padding-left:20px;color:#00d2ff"><strong>User:</strong> "What's the refund policy?"</p>
+<p style="padding-left:20px;color:#ff6b9d"><strong>Assistant:</strong> "Our refund policy allows returns within 30 days..."</p>
+<p style="margin-top:15px">Do this for thousands of examples → model learns the pattern!</p>
+</div>
+<p class="animate-in"><strong>Analogy:</strong> Like training a new employee by showing them how experienced people handle calls 📞</p>
+</div>
+
+<div class="slide" data-section="Finetuning">
+<h2 class="animate-in">RL: Reinforcement Learning (RLHF)</h2>
+<div class="diagram animate-in">
+<p style="font-size:1.2em;margin-bottom:15px"><strong>The "Rate My Answer" Method</strong></p>
+<div class="flow" style="flex-direction:column;gap:5px">
+<div class="flow-box" style="width:70%">Step 1: Model generates 2+ different answers</div>
+<div class="flow-arrow">↓</div>
+<div class="flow-box" style="width:70%">Step 2: Human says "Answer A is better than B" 👍👎</div>
+<div class="flow-arrow">↓</div>
+<div class="flow-box" style="width:70%">Step 3: Train a "reward model" from these preferences</div>
+<div class="flow-arrow">↓</div>
+<div class="flow-box" style="width:70%">Step 4: LLM learns to maximize the reward! 🏆</div>
+</div>
+</div>
+<p class="animate-in"><strong>Analogy:</strong> Like a chef getting Yelp reviews and adjusting recipes! 👨‍🍳</p>
+</div>
+
+<div class="slide" data-section="Finetuning">
+<h2 class="animate-in">SFT vs RL — Quick Comparison</h2>
+<div class="versus animate-in">
+<div class="vs-box">
+<h3 style="color:#00d2ff">SFT</h3>
+<p>"Do it exactly like this"</p>
+<p style="margin-top:10px">✅ Simple & reliable</p>
+<p>✅ Full control over outputs</p>
+<p style="margin-top:10px;color:#aaa">Like a recipe book</p>
+</div>
+<div class="vs-text">+</div>
+<div class="vs-box">
+<h3 style="color:#ff6b9d">RLHF</h3>
+<p>"This answer is better"</p>
+<p style="margin-top:10px">✅ Captures human preferences</p>
+<p>✅ Handles nuance better</p>
+<p style="margin-top:10px;color:#aaa">Like taste testing</p>
+</div>
+</div>
+<p class="animate-in">Modern LLMs use <span class="highlight">BOTH</span>: SFT first, then RL to polish! 💎</p>
+</div>
+
+<!-- SECTION 9: LANGUAGE ACTION MODELS (Slides 52-57) -->
+
+<div class="slide" data-section="Action Models">
+<h1 class="animate-in">From Words to Actions</h1>
+<p class="animate-in subtitle">Language Action Models</p>
+<p class="animate-in">LLMs generate <span class="highlight">tokens</span> (words).</p>
+<p class="animate-in">But what if they could generate <span class="highlight">ACTIONS</span>? 🤯</p>
+<div class="big-emoji animate-in">🎬</div>
+</div>
+
+<div class="slide" data-section="Action Models">
+<h2 class="animate-in">Tokens → Actions</h2>
+<div class="grid grid-2 animate-in">
+<div class="card">
+<h3 style="color:#00d2ff">Language Model</h3>
+<p>"Book a flight to Paris" →</p>
+<p style="color:#aaa;margin-top:5px">Output: "Sure, I can help you book a flight to Paris. Here are some options..."</p>
+<p style="color:#ff6b9d;margin-top:5px">Just words! 😐</p>
+</div>
+<div class="card">
+<h3 style="color:#ff6b9d">Language Action Model</h3>
+<p>"Book a flight to Paris" →</p>
+<p style="color:#aaa;margin-top:5px">Output: <code>search_flights("Paris", "March 15")</code> → <code>select_cheapest()</code> → <code>book()</code></p>
+<p style="color:#00ff88;margin-top:5px">Real actions! 🚀</p>
+</div>
+</div>
+</div>
+
+<div class="slide" data-section="Action Models">
+<h2 class="animate-in">Examples of Language Action Models</h2>
+<div class="grid grid-2 animate-in">
+<div class="card">
+<div class="emoji">🌐</div>
+<h3>Web Agents</h3>
+<p>Click buttons, fill forms, navigate websites on your behalf</p>
+</div>
+<div class="card">
+<div class="emoji">💻</div>
+<h3>Code Agents</h3>
+<p>Write code, run it, debug errors, commit to GitHub</p>
+</div>
+<div class="card">
+<div class="emoji">🤖</div>
+<h3>Robot Control</h3>
+<p>"Pick up the red cup" → motor commands</p>
+</div>
+<div class="card">
+<div class="emoji">📊</div>
+<h3>Data Analysis</h3>
+<p>"Analyze sales data" → runs SQL, makes charts, writes report</p>
+</div>
+</div>
+<p class="animate-in">The key shift: from <span class="highlight">answering questions</span> to <span class="highlight">doing things</span>!</p>
+</div>
+
+<div class="slide" data-section="Action Models">
+<h2 class="animate-in">How? Tool Use / Function Calling</h2>
+<div class="diagram animate-in" style="text-align:left">
+<p><strong>User:</strong> "What's the weather in Tokyo?"</p>
+<p style="margin-top:10px"><strong>LLM thinks:</strong> "I need to call a weather API"</p>
+<p style="margin-top:10px"><strong>LLM outputs:</strong></p>
+<div class="code-block" style="margin:10px 0">
+<span class="keyword">function_call</span>: get_weather<br>
+<span class="keyword">arguments</span>: { <span class="string">"city"</span>: <span class="string">"Tokyo"</span> }
+</div>
+<p><strong>System:</strong> Executes the function → returns "22°C, Sunny"</p>
+<p style="margin-top:10px"><strong>LLM:</strong> "It's currently 22°C and sunny in Tokyo! ☀️"</p>
+</div>
+<p class="animate-in">The LLM becomes the <span class="highlight">brain</span> that decides WHICH tools to use and WHEN!</p>
+</div>
+
+<!-- SECTION 10: AGENTIC AI (Slides 57-65) -->
+
+<div class="slide" data-section="Agentic AI">
+<h1 class="animate-in">🔥 Agentic AI</h1>
+<p class="animate-in subtitle">LLM in a Loop = Agent</p>
+<p class="animate-in">The most exciting frontier in AI right now!</p>
+</div>
+
+<div class="slide" data-section="Agentic AI">
+<h2 class="animate-in">The Simple Insight</h2>
+<div class="box animate-in">
+<p style="font-size:1.3em">What if the LLM could:</p>
+<div class="animate-in" style="margin-top:15px">
+<div class="step"><div class="step-num">1</div><div class="step-text"><strong>Think</strong> about what to do</div></div>
+<div class="step"><div class="step-num">2</div><div class="step-text"><strong>Act</strong> — call tools, write code, search the web</div></div>
+<div class="step"><div class="step-num">3</div><div class="step-text"><strong>Observe</strong> the result</div></div>
+<div class="step"><div class="step-num">4</div><div class="step-text"><strong>Loop back</strong> and decide what to do next?</div></div>
+</div>
+</div>
+<p class="animate-in">This is the <span class="highlight">ReAct pattern</span>: Reason + Act, in a loop! 🔄</p>
+</div>
+
+<div class="slide" data-section="Agentic AI">
+<h2 class="animate-in">The Coding Agent Example</h2>
+<div class="diagram animate-in" style="text-align:left">
+<p><strong>Task:</strong> "Fix the bug in login.py"</p>
+<p style="margin-top:12px"><span class="highlight">Think:</span> "I need to read the file first"</p>
+<p><span style="color:#00d2ff">Act:</span> <code>read_file("login.py")</code></p>
+<p><span style="color:#aaa">Observe:</span> sees the code...</p>
+<p style="margin-top:8px"><span class="highlight">Think:</span> "I see the bug — wrong variable name on line 42"</p>
+<p><span style="color:#00d2ff">Act:</span> <code>edit_file("login.py", line=42, fix="...")</code></p>
+<p><span style="color:#aaa">Observe:</span> file updated</p>
+<p style="margin-top:8px"><span class="highlight">Think:</span> "Let me verify by running tests"</p>
+<p><span style="color:#00d2ff">Act:</span> <code>run_tests()</code></p>
+<p><span style="color:#aaa">Observe:</span> "All 15 tests passed ✅"</p>
+<p style="margin-top:8px"><span class="highlight">Think:</span> "Bug fixed! Let me report back."</p>
+</div>
+</div>
+
+<div class="slide" data-section="Agentic AI">
+<h2 class="animate-in">Generation + Verification = Agency</h2>
+<div class="diagram animate-in">
+<div class="flow" style="flex-direction:column;gap:5px">
+<div class="flow-box" style="width:70%;border-color:#7a5fff">🧠 LLM GENERATES a plan/code/answer</div>
+<div class="flow-arrow">↓</div>
+<div class="flow-box" style="width:70%;border-color:#00d2ff">🔍 VERIFIER checks the output (compiler, tests, tools)</div>
+<div class="flow-arrow">↓</div>
+<div class="flow-box" style="width:70%;border-color:#ff6b9d">❌ Error? → Feedback to LLM → Try again!</div>
+<div class="flow-arrow">↓</div>
+<div class="flow-box" style="width:70%;border-color:#00ff88;color:#00ff88">✅ Success? → Deliver result!</div>
+</div>
+</div>
+<p class="animate-in">The <span class="highlight">feedback loop</span> is what makes it an agent, not just a chatbot!</p>
+<p class="animate-in">Like a programmer with a compiler — write, compile, fix errors, repeat! 🔄</p>
+</div>
+
+<div class="slide" data-section="Agentic AI">
+<h2 class="animate-in">Chatbot vs Agent</h2>
+<div class="versus animate-in">
+<div class="vs-box">
+<h3 style="color:#aaa">Chatbot</h3>
+<p>You ask → It answers → Done</p>
+<p style="margin-top:10px">One-shot</p>
+<p>No tools</p>
+<p>No verification</p>
+<p style="margin-top:10px;color:#ff6b6b">Like texting a smart friend</p>
+</div>
+<div class="vs-text">→</div>
+<div class="vs-box">
+<h3 style="color:#00ff88">Agent</h3>
+<p>You ask → It plans → Acts → Checks → Iterates → Done</p>
+<p style="margin-top:10px">Multi-step loops</p>
+<p>Uses tools</p>
+<p>Self-corrects</p>
+<p style="margin-top:10px;color:#00ff88">Like hiring an employee</p>
+</div>
+</div>
+</div>
+
+<div class="slide" data-section="Agentic AI">
+<h2 class="animate-in">Key Components of an AI Agent</h2>
+<div class="grid grid-2 animate-in">
+<div class="card">
+<div class="emoji">🧠</div>
+<h3>LLM (The Brain)</h3>
+<p>Reasons, plans, and decides what to do next</p>
+</div>
+<div class="card">
+<div class="emoji">🔧</div>
+<h3>Tools</h3>
+<p>APIs, code execution, web search, file access, databases</p>
+</div>
+<div class="card">
+<div class="emoji">💾</div>
+<h3>Memory</h3>
+<p>Conversation history, retrieved documents, past actions</p>
+</div>
+<div class="card">
+<div class="emoji">📋</div>
+<h3>Planning</h3>
+<p>Break complex tasks into steps, prioritize, adapt</p>
+</div>
+</div>
+</div>
+
+<div class="slide" data-section="Agentic AI">
+<h2 class="animate-in">Agentic Design Patterns</h2>
+<div class="grid grid-2 animate-in">
+<div class="card">
+<h3>🔄 ReAct</h3>
+<p>Reason → Act → Observe → Repeat</p>
+<p style="color:#7a5fff;margin-top:5px">Most common pattern</p>
+</div>
+<div class="card">
+<h3>🗺️ Plan & Execute</h3>
+<p>Make full plan first → execute steps → replan if needed</p>
+<p style="color:#7a5fff;margin-top:5px">For complex multi-step tasks</p>
+</div>
+<div class="card">
+<h3>🤝 Multi-Agent</h3>
+<p>Multiple specialized agents collaborate on a task</p>
+<p style="color:#7a5fff;margin-top:5px">Researcher + Coder + Reviewer</p>
+</div>
+<div class="card">
+<h3>🔀 Routing</h3>
+<p>Classify the request, send to the right specialist agent</p>
+<p style="color:#7a5fff;margin-top:5px">Like a company receptionist</p>
+</div>
+</div>
+</div>
+
+<!-- SECTION 11: LANGGRAPH (Slides 65-70) -->
+
+<div class="slide" data-section="LangGraph">
+<h1 class="animate-in">LangGraph</h1>
+<p class="animate-in subtitle">The Framework for Building Agents</p>
+<p class="animate-in">Okay, so agents are cool. But how do we actually BUILD them?</p>
+<p class="animate-in">Enter <span class="highlight">LangGraph</span> — agents as graphs! 📊</p>
+</div>
+
+<div class="slide" data-section="LangGraph">
+<h2 class="animate-in">Why LangGraph?</h2>
+<div class="box animate-in" style="text-align:left">
+<p>Simple agents: just a while loop + LLM call. Easy!</p>
+<p style="margin-top:10px">But real-world agents need:</p>
+<ul style="margin-top:10px">
+<li><strong>Complex control flow</strong> — branching, parallel steps, conditional logic</li>
+<li><strong>State management</strong> — tracking what happened, what to do next</li>
+<li><strong>Human-in-the-loop</strong> — pause, ask user, resume</li>
+<li><strong>Persistence</strong> — save state, resume later</li>
+<li><strong>Streaming</strong> — show progress in real-time</li>
+</ul>
+</div>
+<p class="animate-in">LangGraph handles all this with an elegant <span class="highlight">graph-based</span> model</p>
+</div>
+
+<div class="slide" data-section="LangGraph">
+<h2 class="animate-in">LangGraph Core Concepts</h2>
+<div class="grid grid-3 animate-in">
+<div class="card" style="text-align:center">
+<p style="font-size:2em">🟢</p>
+<h3>Nodes</h3>
+<p>The "workers" — each node does one thing (call LLM, use tool, check result)</p>
+</div>
+<div class="card" style="text-align:center">
+<p style="font-size:2em">➡️</p>
+<h3>Edges</h3>
+<p>The "connections" — define flow between nodes, including conditions</p>
+</div>
+<div class="card" style="text-align:center">
+<p style="font-size:2em">📦</p>
+<h3>State</h3>
+<p>Shared memory — all nodes can read/write to it as data flows through</p>
+</div>
+</div>
+</div>
+
+<div class="slide" data-section="LangGraph">
+<h2 class="animate-in">A LangGraph Agent — Visualized</h2>
+<div class="diagram animate-in">
+<div class="flow" style="flex-direction:column;gap:5px">
+<div class="flow-box" style="width:50%;border-color:#00d2ff">📥 START: User Input</div>
+<div class="flow-arrow">↓</div>
+<div class="flow-box" style="width:50%;border-color:#7a5fff">🧠 LLM Node: Decide what to do</div>
+<div class="flow-arrow">↓</div>
+<div class="flow-box" style="width:60%">🔀 Conditional Edge: Need a tool?</div>
+<div class="flow" style="margin:5px 0">
+<div class="flow-box" style="border-color:#00ff88">Yes → 🔧 Tool Node</div>
+<div style="width:40px"></div>
+<div class="flow-box" style="border-color:#ff6b9d">No → 📤 Respond</div>
+</div>
+<div class="flow-arrow">↓ (tool result)</div>
+<div class="flow-box" style="width:50%;border-color:#7a5fff">🧠 Back to LLM Node (LOOP!)</div>
+</div>
+</div>
+<p class="animate-in">The graph keeps looping until the LLM decides it's <span class="highlight">done</span>!</p>
+</div>
+
+<div class="slide" data-section="LangGraph">
+<h2 class="animate-in">LangGraph Code — It's Simple!</h2>
+<div class="code-block animate-in">
+<span class="comment"># Define the graph</span><br>
+<span class="keyword">from</span> langgraph.graph <span class="keyword">import</span> StateGraph<br><br>
+graph = StateGraph(AgentState)<br><br>
+<span class="comment"># Add nodes (the workers)</span><br>
+graph.add_node(<span class="string">"agent"</span>, call_llm)<br>
+graph.add_node(<span class="string">"tools"</span>, execute_tools)<br><br>
+<span class="comment"># Add edges (the flow)</span><br>
+graph.add_edge(START, <span class="string">"agent"</span>)<br>
+graph.add_conditional_edges(<span class="string">"agent"</span>, should_use_tool,<br>
+&nbsp;&nbsp;{<span class="string">"yes"</span>: <span class="string">"tools"</span>, <span class="string">"no"</span>: END})<br>
+graph.add_edge(<span class="string">"tools"</span>, <span class="string">"agent"</span>)  <span class="comment"># Loop back!</span><br><br>
+<span class="comment"># Compile and run!</span><br>
+app = graph.compile()
+</div>
+</div>
+
+<div class="slide" data-section="LangGraph">
+<h2 class="animate-in">Multi-Agent with LangGraph</h2>
+<div class="diagram animate-in">
+<div class="flow">
+<div class="flow-box" style="border-color:#00d2ff">👤 User<br>Request</div>
+<div class="flow-arrow">→</div>
+<div class="flow-box" style="border-color:#7a5fff">🗺️ Supervisor<br>Agent</div>
+<div class="flow-arrow">→</div>
+<div style="display:flex;flex-direction:column;gap:10px">
+<div class="flow-box" style="border-color:#ff6b9d">🔍 Researcher</div>
+<div class="flow-box" style="border-color:#00ff88">💻 Coder</div>
+<div class="flow-box" style="border-color:#ffaa00">📝 Writer</div>
+</div>
+<div class="flow-arrow">→</div>
+<div class="flow-box" style="border-color:#7a5fff">🗺️ Supervisor<br>combines results</div>
+<div class="flow-arrow">→</div>
+<div class="flow-box" style="border-color:#00d2ff">✅ Final<br>Output</div>
+</div>
+</div>
+<p class="animate-in">Each agent is a <span class="highlight">subgraph</span> — the supervisor orchestrates them like a manager!</p>
+</div>
+
+<!-- SECTION 12: WHAT'S NEXT & WRAP-UP (Slides 70+) -->
+
+<div class="slide" data-section="RAG & More">
+<h2 class="animate-in">Bonus: RAG — Retrieval Augmented Generation</h2>
+<div class="diagram animate-in">
+<div class="flow" style="flex-direction:column;gap:5px">
+<div class="flow-box" style="width:70%">📝 User Question</div>
+<div class="flow-arrow">↓</div>
+<div class="flow-box" style="width:70%;border-color:#00d2ff">🔍 Search your documents (vector database)</div>
+<div class="flow-arrow">↓</div>
+<div class="flow-box" style="width:70%;border-color:#7a5fff">📄 Relevant chunks found</div>
+<div class="flow-arrow">↓</div>
+<div class="flow-box" style="width:70%;border-color:#ff6b9d">🧠 LLM answers using YOUR data as context</div>
+</div>
+</div>
+<p class="animate-in">RAG = Give the LLM your private data <span class="highlight">without retraining</span>!</p>
+<p class="animate-in">Essential for enterprise AI agents 🏢</p>
+</div>
+
+<div class="slide" data-section="Guardrails">
+<h2 class="animate-in">Bonus: Guardrails & Safety</h2>
+<div class="grid grid-2 animate-in">
+<div class="card">
+<div class="emoji">🛡️</div>
+<h3>Input Guardrails</h3>
+<p>Filter harmful prompts before they reach the LLM</p>
+</div>
+<div class="card">
+<div class="emoji">✅</div>
+<h3>Output Guardrails</h3>
+<p>Validate LLM responses before showing to users</p>
+</div>
+<div class="card">
+<div class="emoji">🔒</div>
+<h3>Tool Permissions</h3>
+<p>Control which tools agents can access and when</p>
+</div>
+<div class="card">
+<div class="emoji">👤</div>
+<h3>Human-in-the-Loop</h3>
+<p>Require human approval for critical actions</p>
+</div>
+</div>
+<p class="animate-in">Agents with real-world actions need real-world <span class="highlight">safety</span>!</p>
+</div>
+
+<div class="slide" data-section="Wrap-Up">
+<h2 class="animate-in">Day 1 — The Complete Picture</h2>
+<div class="diagram animate-in">
+<div class="flow" style="flex-direction:column;gap:3px;font-size:0.95em">
+<div class="flow-box" style="width:80%">ML: Machines learn from data 📊</div>
+<div class="flow-arrow">↓</div>
+<div class="flow-box" style="width:80%">Deep Learning: Neural nets with many layers 🧠</div>
+<div class="flow-arrow">↓</div>
+<div class="flow-box" style="width:80%">Architectures: CNN, RNN, LSTM for different tasks 🏗️</div>
+<div class="flow-arrow">↓</div>
+<div class="flow-box" style="width:80%">Transformers: Attention is all you need ⚡</div>
+<div class="flow-arrow">↓</div>
+<div class="flow-box" style="width:80%">GenAI: From understanding to creating 🎨</div>
+<div class="flow-arrow">↓</div>
+<div class="flow-box" style="width:80%">LLMs: Giant transformers predicting next tokens 🤖</div>
+<div class="flow-arrow">↓</div>
+<div class="flow-box" style="width:80%;border-color:#ff6b9d">Agents: LLMs in a loop with tools = Agentic AI 🔥</div>
+</div>
+</div>
+</div>
+
+<div class="slide" data-section="Wrap-Up">
+<h1 class="animate-in">What's Coming Next?</h1>
+<p class="animate-in subtitle">Day 2 Preview</p>
+<div class="grid grid-2 animate-in">
+<div class="card">
+<div class="emoji">🔧</div>
+<h3>Hands-On LangGraph</h3>
+<p>Build your first agent from scratch</p>
+</div>
+<div class="card">
+<div class="emoji">🏗️</div>
+<h3>Advanced Patterns</h3>
+<p>Multi-agent systems, human-in-loop, memory</p>
+</div>
+<div class="card">
+<div class="emoji">📦</div>
+<h3>RAG + Agents</h3>
+<p>Build agents over your own data</p>
+</div>
+<div class="card">
+<div class="emoji">🚀</div>
+<h3>Production Deploy</h3>
+<p>Take agents from notebook to production</p>
+</div>
+</div>
+</div>
+
+<div class="slide" data-section="Wrap-Up">
+<h1 class="animate-in">Thank You! 🙏</h1>
+<p class="animate-in subtitle">Day 1 Complete</p>
+<p class="animate-in" style="font-size:1.5em;margin-top:20px">From <span class="highlight">ML basics</span> to <span class="highlight">Agentic AI</span></p>
+<p class="animate-in" style="margin-top:20px;color:#aaa">Any Questions?</p>
+<div class="animate-in" style="margin-top:30px">
+<div class="tag">ML ✓</div><div class="tag">DL ✓</div><div class="tag">Transformers ✓</div><div class="tag">GenAI ✓</div><div class="tag">LLMs ✓</div><div class="tag">Agents ✓</div><div class="tag">LangGraph ✓</div>
+</div>
+</div>
+
+<!-- NAVIGATION -->
+<div class="nav">
+<button onclick="prevSlide()">← Prev</button>
+<button onclick="nextSlide()">Next →</button>
+</div>
+
+<script>
+// Background animation
+const canvas = document.getElementById('bgCanvas');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+const particles = [];
+for(let i=0;i<60;i++){
+  particles.push({
+    x:Math.random()*canvas.width,
+    y:Math.random()*canvas.height,
+    vx:(Math.random()-0.5)*0.5,
+    vy:(Math.random()-0.5)*0.5,
+    size:Math.random()*2+1,
+    alpha:Math.random()*0.3+0.1
+  });
+}
+
+function drawBg(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  particles.forEach(p=>{
+    p.x+=p.vx;p.y+=p.vy;
+    if(p.x<0)p.x=canvas.width;if(p.x>canvas.width)p.x=0;
+    if(p.y<0)p.y=canvas.height;if(p.y>canvas.height)p.y=0;
+    ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,Math.PI*2);
+    ctx.fillStyle=`rgba(122,95,255,${p.alpha})`;ctx.fill();
+  });
+  // Draw connections
+  for(let i=0;i<particles.length;i++){
+    for(let j=i+1;j<particles.length;j++){
+      const dx=particles[i].x-particles[j].x;
+      const dy=particles[i].y-particles[j].y;
+      const d=Math.sqrt(dx*dx+dy*dy);
+      if(d<150){
+        ctx.beginPath();ctx.moveTo(particles[i].x,particles[i].y);
+        ctx.lineTo(particles[j].x,particles[j].y);
+        ctx.strokeStyle=`rgba(122,95,255,${0.1*(1-d/150)})`;
+        ctx.stroke();
+      }
+    }
+  }
+  requestAnimationFrame(drawBg);
+}
+drawBg();
+
+// Slide navigation
+let current=0;
+const slides=document.querySelectorAll('.slide');
+const progressBar=document.getElementById('progressBar');
+const counter=document.getElementById('counter');
+const sectionLabel=document.getElementById('sectionLabel');
+
+function showSlide(n){
+  slides.forEach(s=>{s.classList.remove('active');s.style.display='none'});
+  slides[n].classList.add('active');
+  slides[n].style.display='flex';
+  // Re-trigger animations
+  slides[n].querySelectorAll('.animate-in').forEach(el=>{
+    el.style.animation='none';
+    el.offsetHeight;
+    el.style.animation='';
+  });
+  progressBar.style.width=((n+1)/slides.length*100)+'%';
+  counter.textContent=`${n+1} / ${slides.length}`;
+  sectionLabel.textContent=slides[n].dataset.section||'';
+}
+
+function nextSlide(){if(current<slides.length-1){current++;showSlide(current)}}
+function prevSlide(){if(current>0){current--;showSlide(current)}}
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key===' ')nextSlide();
+  if(e.key==='ArrowLeft')prevSlide();
+});
+
+// Touch support
+let touchStartX=0;
+document.addEventListener('touchstart',e=>{touchStartX=e.touches[0].clientX});
+document.addEventListener('touchend',e=>{
+  const diff=e.changedTouches[0].clientX-touchStartX;
+  if(diff<-50)nextSlide();if(diff>50)prevSlide();
+});
+
+// Resize
+window.addEventListener('resize',()=>{canvas.width=window.innerWidth;canvas.height=window.innerHeight});
+
+showSlide(0);
+</script>
+</body>
+</html>
+
