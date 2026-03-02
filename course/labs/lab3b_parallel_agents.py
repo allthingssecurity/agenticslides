@@ -8,10 +8,10 @@ Learn: Parallel execution, specialist agents, synthesis pattern.
 
 Run: python lab3b_parallel_agents.py
 """
-from openai import OpenAI
 from langchain_core.tools import tool
 from langchain_core.messages import HumanMessage
 from deepagents import create_deep_agent
+from trace_utils import run_with_trace, interactive_mode, resilient_web_search
 
 
 # ─── TOOL ──────────────────────────────────────────────
@@ -23,16 +23,7 @@ def web_search(query: str) -> str:
     Args:
         query: Search query
     """
-    try:
-        client = OpenAI()
-        response = client.responses.create(
-            model="gpt-4o-mini",
-            tools=[{"type": "web_search_preview"}],
-            input=query
-        )
-        return response.output_text
-    except Exception as e:
-        return f"Error: {e}"
+    return resilient_web_search(query)
 
 
 # ─── SPECIALIST SUB-AGENTS ─────────────────────────────
@@ -92,7 +83,7 @@ subagents = [
 # ─── ORCHESTRATOR ──────────────────────────────────────
 
 agent = create_deep_agent(
-    model="openai:gpt-4o",
+    model="openai:gpt-4o-mini",
     tools=[],
     subagents=subagents,
     system_prompt="""You are an orchestrator that produces comprehensive analysis reports.
@@ -130,18 +121,7 @@ if __name__ == "__main__":
     print(f"\n QUERY: {question}")
     print(f"\n Launching 3 parallel research agents...\n")
 
-    result = agent.invoke(
-        {"messages": [HumanMessage(content=question)]},
-        config={"configurable": {"thread_id": "parallel-lab"}}
-    )
-
-    for msg in reversed(result["messages"]):
-        if msg.type == "ai" and msg.content:
-            print(f"\n{'─'*60}")
-            print("SYNTHESIZED REPORT:")
-            print(f"{'─'*60}")
-            print(msg.content)
-            break
+    run_with_trace(agent, question, thread_id="parallel-lab")
 
     print(f"\n{'='*60}")
     print(" LAB 3B COMPLETE!")
@@ -162,3 +142,5 @@ if __name__ == "__main__":
 
     NEXT: python lab3c_file_sharing.py
     """)
+
+    interactive_mode(agent, "Lab 3b: Parallel Agents")

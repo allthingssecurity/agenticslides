@@ -15,11 +15,11 @@ Data flow: agents write to /data/, report reads from /data/ → /report/
 Run: python lab4_financial_research.py
 """
 import json
-from openai import OpenAI
 from datetime import datetime
 from langchain_core.tools import tool
 from langchain_core.messages import HumanMessage
 from deepagents import create_deep_agent
+from trace_utils import run_with_trace, interactive_mode, resilient_web_search
 
 
 # ═════════════════════════════════════════════════════════
@@ -33,16 +33,7 @@ def search_financial_news(query: str) -> str:
     Args:
         query: Financial search query (e.g., "NVIDIA earnings 2025")
     """
-    try:
-        client = OpenAI()
-        response = client.responses.create(
-            model="gpt-4o-mini",
-            tools=[{"type": "web_search_preview"}],
-            input=f"{query} finance stock market"
-        )
-        return response.output_text
-    except Exception as e:
-        return f"Search error: {e}"
+    return resilient_web_search(f"{query} finance stock market")
 
 
 @tool
@@ -257,7 +248,7 @@ JOB:
 
 IMPORTANT: Read the data files FIRST, then calculate.""",
     "tools": [calculate_financial_metrics],
-    "model": "openai:gpt-4o",
+    "model": "openai:gpt-4o-mini",
 }
 
 report_writer_agent = {
@@ -303,7 +294,7 @@ REPORT STRUCTURE:
 *Disclaimer: AI-generated educational content. Not financial advice.*
 """,
     "tools": [],
-    "model": "openai:gpt-4o",
+    "model": "openai:gpt-4o-mini",
 }
 
 
@@ -312,7 +303,7 @@ REPORT STRUCTURE:
 # ═════════════════════════════════════════════════════════
 
 financial_system = create_deep_agent(
-    model="openai:gpt-4o",
+    model="openai:gpt-4o-mini",
     tools=[],
     subagents=[market_data_agent, news_analyst_agent, finance_analyst_agent, report_writer_agent],
     system_prompt="""You are the lead orchestrator of a financial deep research system.
@@ -358,18 +349,8 @@ def research(question: str):
     print(f" Thread: {thread}")
     print(f" Agents: market_data → news → finance_analyst → report_writer")
     print(f"{'='*70}\n")
-    print("Running multi-agent analysis (1-2 minutes)...\n")
 
-    result = financial_system.invoke(
-        {"messages": [HumanMessage(content=question)]},
-        config={"configurable": {"thread_id": thread}}
-    )
-
-    for msg in reversed(result["messages"]):
-        if msg.type == "ai" and msg.content:
-            print(f"\n{'─'*70}")
-            print(msg.content)
-            break
+    run_with_trace(financial_system, question, thread_id=thread)
 
 
 if __name__ == "__main__":
@@ -416,3 +397,5 @@ if __name__ == "__main__":
 
     NEXT: python lab5_text_to_sql.py
     """)
+
+    interactive_mode(financial_system, "Lab 4: Financial Research")

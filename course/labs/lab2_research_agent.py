@@ -8,10 +8,10 @@ Learn: Filesystem tools, planning with todos, context offloading.
 
 Run: python lab2_research_agent.py
 """
-from openai import OpenAI
 from langchain_core.tools import tool
 from langchain_core.messages import HumanMessage
 from deepagents import create_deep_agent
+from trace_utils import run_with_trace, interactive_mode, resilient_web_search
 
 
 # ─── TOOL: Web Search ──────────────────────────────────
@@ -23,22 +23,13 @@ def web_search(query: str) -> str:
     Args:
         query: The search query
     """
-    try:
-        client = OpenAI()
-        response = client.responses.create(
-            model="gpt-4o-mini",
-            tools=[{"type": "web_search_preview"}],
-            input=query
-        )
-        return response.output_text
-    except Exception as e:
-        return f"Search error: {e}"
+    return resilient_web_search(query)
 
 
 # ─── AGENT: Research Agent ─────────────────────────────
 
 research_agent = create_deep_agent(
-    model="openai:gpt-4o",
+    model="openai:gpt-4o-mini",  # Use mini to avoid rate limits on free-tier keys
     tools=[web_search],
     system_prompt="""You are a research agent that produces well-organized reports.
 
@@ -88,20 +79,8 @@ def research(question: str, thread: str = "lab2"):
     print(f"\n{'='*60}")
     print(f" RESEARCH QUERY: {question}")
     print(f"{'='*60}\n")
-    print("Agent is researching (this may take 30-60 seconds)...\n")
 
-    result = research_agent.invoke(
-        {"messages": [HumanMessage(content=question)]},
-        config={"configurable": {"thread_id": thread}}
-    )
-
-    for msg in reversed(result["messages"]):
-        if msg.type == "ai" and msg.content:
-            print(f"\n{'─'*60}")
-            print("FINAL RESPONSE:")
-            print(f"{'─'*60}")
-            print(msg.content)
-            return
+    run_with_trace(research_agent, question, thread_id=thread)
 
 
 if __name__ == "__main__":
@@ -134,3 +113,5 @@ if __name__ == "__main__":
 
     NEXT: python lab3a_first_subagent.py
     """)
+
+    interactive_mode(research_agent, "Lab 2: Research Agent")

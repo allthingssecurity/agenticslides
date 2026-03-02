@@ -21,6 +21,7 @@ import random
 from langchain_core.tools import tool
 from langchain_core.messages import HumanMessage
 from deepagents import create_deep_agent
+from trace_utils import run_with_trace, interactive_mode
 
 
 # ═════════════════════════════════════════════════════════
@@ -257,7 +258,7 @@ def run_sql_query(query: str) -> str:
 # ═════════════════════════════════════════════════════════
 
 sql_agent = create_deep_agent(
-    model="openai:gpt-4o",
+    model="openai:gpt-4o-mini",
     tools=[explore_schema, run_sql_query],
     system_prompt="""You are a data analytics agent that converts natural language to SQL.
 
@@ -311,19 +312,7 @@ SELECT ...
 
 def ask_data(question: str, thread: str = "sql-lab"):
     """Ask the analytics agent a question about the data."""
-    print(f"\n{'─'*60}")
-    print(f" Q: {question}")
-    print(f"{'─'*60}\n")
-
-    result = sql_agent.invoke(
-        {"messages": [HumanMessage(content=question)]},
-        config={"configurable": {"thread_id": thread}}
-    )
-
-    for msg in reversed(result["messages"]):
-        if msg.type == "ai" and msg.content:
-            print(msg.content)
-            return
+    run_with_trace(sql_agent, question, thread_id=thread)
 
 
 if __name__ == "__main__":
@@ -390,3 +379,5 @@ if __name__ == "__main__":
 
     NEXT: python lab6_content_pipeline.py (Bonus!)
     """)
+
+    interactive_mode(sql_agent, "Lab 5: Text-to-SQL", thread_id="sql-lab")

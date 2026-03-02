@@ -12,6 +12,7 @@ import math
 from langchain_core.tools import tool
 from langchain_core.messages import HumanMessage
 from deepagents import create_deep_agent
+from trace_utils import run_with_trace, interactive_mode
 
 
 # ─── TOOL: Calculator for the analyst ──────────────────
@@ -77,7 +78,7 @@ YOUR JOB:
 
 ALWAYS show your calculation steps!""",
         "tools": [calculate],
-        "model": "openai:gpt-4o",
+        "model": "openai:gpt-4o-mini",
     },
 ]
 
@@ -85,7 +86,7 @@ ALWAYS show your calculation steps!""",
 # ─── ORCHESTRATOR ──────────────────────────────────────
 
 agent = create_deep_agent(
-    model="openai:gpt-4o",
+    model="openai:gpt-4o-mini",
     tools=[],
     subagents=subagents,
     system_prompt="""You are a project manager orchestrating data analysis.
@@ -128,18 +129,7 @@ Compare cloud hosting costs for a standard web application:
     print(f"\n QUERY: {question.strip()}")
     print(f"\n Running pipeline: collect → analyze → present...\n")
 
-    result = agent.invoke(
-        {"messages": [HumanMessage(content=question)]},
-        config={"configurable": {"thread_id": "file-sharing-lab"}}
-    )
-
-    for msg in reversed(result["messages"]):
-        if msg.type == "ai" and msg.content:
-            print(f"\n{'─'*60}")
-            print("FINAL ANALYSIS:")
-            print(f"{'─'*60}")
-            print(msg.content)
-            break
+    run_with_trace(agent, question, thread_id="file-sharing-lab")
 
     print(f"\n{'='*60}")
     print(" LAB 3C COMPLETE!")
@@ -158,3 +148,5 @@ Compare cloud hosting costs for a standard web application:
 
     NEXT: python lab4_financial_research.py (Capstone!)
     """)
+
+    interactive_mode(agent, "Lab 3c: File Sharing")

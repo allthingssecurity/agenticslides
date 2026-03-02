@@ -8,10 +8,10 @@ Learn: SubAgent definition, task() tool, context isolation.
 
 Run: python lab3a_first_subagent.py
 """
-from openai import OpenAI
 from langchain_core.tools import tool
 from langchain_core.messages import HumanMessage
 from deepagents import create_deep_agent
+from trace_utils import run_with_trace, interactive_mode, resilient_web_search
 
 
 # ─── TOOL: Only the researcher gets this ───────────────
@@ -23,22 +23,13 @@ def web_search(query: str) -> str:
     Args:
         query: Search query string
     """
-    try:
-        client = OpenAI()
-        response = client.responses.create(
-            model="gpt-4o-mini",
-            tools=[{"type": "web_search_preview"}],
-            input=query
-        )
-        return response.output_text
-    except Exception as e:
-        return f"Search error: {e}"
+    return resilient_web_search(query)
 
 
 # ─── AGENT: Orchestrator + Researcher Sub-Agent ────────
 
 agent = create_deep_agent(
-    model="openai:gpt-4o",
+    model="openai:gpt-4o-mini",
     # Orchestrator has NO tools — it MUST delegate
     tools=[],
     subagents=[
@@ -79,19 +70,10 @@ exactly what to search for."""
 
 def ask(question: str, thread: str = "subagent-demo"):
     print(f"\n{'='*60}")
-    print(f" YOU: {question}")
+    print(f" QUERY: {question}")
     print(f"{'='*60}\n")
-    print("Orchestrator is delegating to researcher sub-agent...\n")
 
-    result = agent.invoke(
-        {"messages": [HumanMessage(content=question)]},
-        config={"configurable": {"thread_id": thread}}
-    )
-
-    for msg in reversed(result["messages"]):
-        if msg.type == "ai" and msg.content:
-            print(f"ANSWER:\n{msg.content}")
-            return
+    run_with_trace(agent, question, thread_id=thread)
 
 
 if __name__ == "__main__":
@@ -122,3 +104,5 @@ if __name__ == "__main__":
 
     NEXT: python lab3b_parallel_agents.py
     """)
+
+    interactive_mode(agent, "Lab 3a: Sub-Agent Delegation")

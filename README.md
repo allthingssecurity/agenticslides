@@ -1,6 +1,6 @@
 # Agentic AI Masterclass
 
-A hands-on course where **your AI coding agent builds AI agents for you**. You paste a prompt, the agent writes the code, runs it, and verifies it works.
+A hands-on course where **your AI coding agent builds AI agents for you**. You paste a prompt, the agent writes the code, and you run it yourself to see real-time traces and try interactive mode.
 
 **4 modules | 9 labs | 3 hours | Zero manual coding required**
 
@@ -33,23 +33,18 @@ Open **Claude Code**, **Codex**, **Cursor**, or whichever AI agent you use. Star
 
 ### 3. Start with Module 1
 
-Open the file `course/agent-docs/01-foundations.md` and copy the prompt from the top:
+Open the file `course/agent-docs/01-foundations.md` and copy the prompt from the top. Paste it into your agent.
 
-```
-Read the file course/agent-docs/01-foundations.md and follow it step by step.
+**The agent will build the files** (including a shared `trace_utils.py` utility), then tell you to run each lab yourself:
 
-First complete the Environment Setup section, then build Lab 0 and Lab 1 from
-scratch in the my-agents/ directory. Run each lab and verify it works before
-moving on to the next one.
-
-If you get stuck on any lab, you can consult the reference implementation in
-course/labs/ but try building it yourself first.
+```bash
+python my-agents/lab1_first_agent.py
 ```
 
-**Paste it into your agent.** Then sit back and watch. The agent will:
-- Install Python (if needed), create a virtual environment, install all dependencies
-- Build Lab 0 (environment checker) and Lab 1 (calculator + clock agent) from scratch
-- Run each lab and verify it works
+**When you run it, you'll see:**
+- Real-time colored traces: `[CALC]`, `[SEARCH]`, `[DELEGATE]`, `[WRITE]`, etc.
+- The agent's final response
+- An interactive prompt where you can try your own questions
 
 ### 4. Move to Module 2, 3, 4
 
@@ -68,7 +63,11 @@ When Module 1 is done, open a **new agent session** and repeat with the next mod
 
 ## What You'll Build
 
-By the end of the course, your `my-agents/` folder will contain 9 working AI agents:
+By the end of the course, your `my-agents/` folder will contain 9 working AI agents plus a shared tracing utility:
+
+| File | What It Does |
+|------|-------------|
+| `trace_utils.py` | Shared tracing + interactive mode utility (built in Module 1) |
 
 | Lab | File | What It Does |
 |-----|------|-------------|
@@ -109,6 +108,13 @@ agenticslides/
 │   │   ├── cheatsheet.md              ← Quick reference
 │   │   └── AGENT_README.md            ← Instructor guide
 │   ├── labs/                          ← Reference implementations (if you get stuck)
+│   │   └── trace_utils.py             ← Shared tracing utility
+│   ├── slides/                        ← INSTRUCTOR: PowerPoint decks
+│   │   ├── gen_module_slides.py       ← Slide generator script
+│   │   ├── Module_1_Foundations.pptx
+│   │   ├── Module_2_Building_Blocks.pptx
+│   │   ├── Module_3_Multi_Agent.pptx
+│   │   └── Module_4_Capstones.pptx
 │   ├── website/                       ← Course website (human-readable version)
 │   ├── MODULE_1_FOUNDATIONS.md        ← Concept deep-dives
 │   ├── MODULE_2_BUILDING_BLOCKS.md
@@ -143,5 +149,8 @@ cd agenticslides
 # 2. Open your AI agent and paste:
 # "Read the file course/agent-docs/01-foundations.md and follow it step by step."
 
-# 3. Watch it build everything. Repeat for modules 2-4.
+# 3. Agent builds the files. You run them:
+python my-agents/lab1_first_agent.py   # See traces + interactive prompt
+
+# 4. Repeat for modules 2-4 (new agent session each time).
 ```

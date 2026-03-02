@@ -8,11 +8,11 @@
 Read the file course/agent-docs/03-multi-agent.md and follow it step by step.
 
 First complete the Environment Setup section (skip if already done), then build
-Labs 3a, 3b, and 3c from scratch in the my-agents/ directory. Run and verify
-each lab before moving to the next.
+Labs 3a, 3b, and 3c from scratch in the my-agents/ directory.
 
-This module builds three multi-agent systems: delegation, parallel execution,
-and file-based communication pipelines.
+IMPORTANT: Build the files only — do NOT run the labs. After building each lab,
+tell the student: "Lab is ready. Run: python my-agents/lab3X.py"
+The student will run it in their own terminal to see traces and interactive mode.
 
 If you get stuck, consult the references at course/labs/lab3a_first_subagent.py,
 course/labs/lab3b_parallel_agents.py, and course/labs/lab3c_file_sharing.py.
@@ -133,10 +133,10 @@ LAB 3A: Your First Sub-Agent
 Orchestrator delegates research to a sub-agent.
 The orchestrator has NO tools — it MUST delegate.
 """
-from openai import OpenAI
 from langchain_core.tools import tool
 from langchain_core.messages import HumanMessage
 from deepagents import create_deep_agent
+from trace_utils import run_with_trace, interactive_mode, resilient_web_search
 
 
 # ─── TOOL: Only the researcher gets this ───────────────
@@ -148,16 +148,7 @@ def web_search(query: str) -> str:
     Args:
         query: Search query string
     """
-    try:
-        client = OpenAI()
-        response = client.responses.create(
-            model="gpt-4o-mini",
-            tools=[{"type": "web_search_preview"}],
-            input=query
-        )
-        return response.output_text
-    except Exception as e:
-        return f"Search error: {e}"
+    return resilient_web_search(query)
 ```
 
 ### Step 2: Define the orchestrator with a researcher sub-agent
@@ -171,7 +162,7 @@ def web_search(query: str) -> str:
 # ─── AGENT: Orchestrator + Researcher Sub-Agent ────────
 
 agent = create_deep_agent(
-    model="openai:gpt-4o",
+    model="openai:gpt-4o-mini",
     # Orchestrator has NO tools — it MUST delegate
     tools=[],
     subagents=[
@@ -210,7 +201,7 @@ exactly what to search for."""
 
 **Key design decisions:**
 - `tools=[]` on the orchestrator — it literally cannot do anything except delegate
-- `"model": "openai:gpt-4o-mini"` on the sub-agent — cheaper for data-fetching work
+- `"model": "openai:gpt-4o-mini"` — cost-effective and rate-limit-friendly for student keys
 - The `description` field is what the orchestrator reads to decide which sub-agent to use
 - The orchestrator's system prompt says "You CANNOT search" — reinforcing the delegation pattern
 
@@ -226,19 +217,10 @@ exactly what to search for."""
 
 def ask(question: str, thread: str = "subagent-demo"):
     print(f"\n{'='*60}")
-    print(f" YOU: {question}")
+    print(f" QUERY: {question}")
     print(f"{'='*60}\n")
-    print("Orchestrator is delegating to researcher sub-agent...\n")
 
-    result = agent.invoke(
-        {"messages": [HumanMessage(content=question)]},
-        config={"configurable": {"thread_id": thread}}
-    )
-
-    for msg in reversed(result["messages"]):
-        if msg.type == "ai" and msg.content:
-            print(f"ANSWER:\n{msg.content}")
-            return
+    run_with_trace(agent, question, thread_id=thread)
 
 
 if __name__ == "__main__":
@@ -252,24 +234,20 @@ if __name__ == "__main__":
     print(f"\n{'='*60}")
     print(" LAB 3A COMPLETE!")
     print("=" * 60)
+
+    interactive_mode(agent, "Lab 3a: Sub-Agent Delegation")
 ```
 
-### Step 4: Run it
+### Step 4: Tell the student to run it
 
-**Action:** `shell`
-**OS[mac/linux/windows]:**
-```bash
-python my-agents/lab3a_first_subagent.py
-```
+**Action:** Tell the student:
 
-### Step 5: Verify
-
-**Expected:** The orchestrator produces a synthesized answer about LangGraph/LangChain. It delegated to the researcher (not searching itself).
-
-**Success criteria:**
-- Answer contains information about LangGraph and LangChain
-- No errors — the orchestrator successfully delegated and received results
-- The orchestrator synthesized (not just passed through) the researcher's findings
+> Lab 3a is ready. Run it in your terminal:
+> ```bash
+> python my-agents/lab3a_first_subagent.py
+> ```
+> You'll see `[DELEGATE]` when the orchestrator delegates to the researcher,
+> then `[SUB-AGENT DONE]` when results come back. After the demo, try your own questions.
 
 ### What You Built
 - **An orchestrator** with no tools — forced to delegate via `task()`
@@ -294,10 +272,10 @@ LAB 3B: Parallel Sub-Agents
 =============================
 3 specialists research simultaneously, then orchestrator synthesizes.
 """
-from openai import OpenAI
 from langchain_core.tools import tool
 from langchain_core.messages import HumanMessage
 from deepagents import create_deep_agent
+from trace_utils import run_with_trace, interactive_mode, resilient_web_search
 
 
 # ─── TOOL ──────────────────────────────────────────────
@@ -309,16 +287,7 @@ def web_search(query: str) -> str:
     Args:
         query: Search query
     """
-    try:
-        client = OpenAI()
-        response = client.responses.create(
-            model="gpt-4o-mini",
-            tools=[{"type": "web_search_preview"}],
-            input=query
-        )
-        return response.output_text
-    except Exception as e:
-        return f"Error: {e}"
+    return resilient_web_search(query)
 ```
 
 ### Step 2: Define three specialist sub-agents
@@ -399,7 +368,7 @@ subagents = [
 # ─── ORCHESTRATOR ──────────────────────────────────────
 
 agent = create_deep_agent(
-    model="openai:gpt-4o",
+    model="openai:gpt-4o-mini",
     tools=[],
     subagents=subagents,
     system_prompt="""You are an orchestrator that produces comprehensive analysis reports.
@@ -447,40 +416,25 @@ if __name__ == "__main__":
     print(f"\n QUERY: {question}")
     print(f"\n Launching 3 parallel research agents...\n")
 
-    result = agent.invoke(
-        {"messages": [HumanMessage(content=question)]},
-        config={"configurable": {"thread_id": "parallel-lab"}}
-    )
-
-    for msg in reversed(result["messages"]):
-        if msg.type == "ai" and msg.content:
-            print(f"\n{'─'*60}")
-            print("SYNTHESIZED REPORT:")
-            print(f"{'─'*60}")
-            print(msg.content)
-            break
+    run_with_trace(agent, question, thread_id="parallel-lab")
 
     print(f"\n{'='*60}")
     print(" LAB 3B COMPLETE!")
     print("=" * 60)
+
+    interactive_mode(agent, "Lab 3b: Parallel Agents")
 ```
 
-### Step 5: Run it
+### Step 5: Tell the student to run it
 
-**Action:** `shell`
-**OS[mac/linux/windows]:**
-```bash
-python my-agents/lab3b_parallel_agents.py
-```
+**Action:** Tell the student:
 
-**Note:** Takes 30-90 seconds — three agents research in parallel.
-
-### Step 6: Verify
-
-**Success criteria:**
-- Synthesized report covers **all three angles**: technical, market, and pros/cons
-- Report is richer than what one agent could produce (multiple perspectives)
-- No errors — all three sub-agents ran and returned results
+> Lab 3b is ready. Run it in your terminal:
+> ```bash
+> python my-agents/lab3b_parallel_agents.py
+> ```
+> You'll see three `[DELEGATE]` calls in quick succession (parallel launch!),
+> then three `[SUB-AGENT DONE]` results, followed by the synthesized report.
 
 ### What You Built
 - **Three specialist sub-agents** — each focused on one research domain
@@ -513,6 +467,7 @@ import math
 from langchain_core.tools import tool
 from langchain_core.messages import HumanMessage
 from deepagents import create_deep_agent
+from trace_utils import run_with_trace, interactive_mode
 
 
 # ─── TOOL: Calculator for the analyst ──────────────────
@@ -607,7 +562,7 @@ ALWAYS show your calculation steps!""",
 # ─── ORCHESTRATOR ──────────────────────────────────────
 
 agent = create_deep_agent(
-    model="openai:gpt-4o",
+    model="openai:gpt-4o-mini",
     tools=[],
     subagents=subagents,
     system_prompt="""You are a project manager orchestrating data analysis.
@@ -658,39 +613,25 @@ Compare cloud hosting costs for a standard web application:
     print(f"\n QUERY: {question.strip()}")
     print(f"\n Running pipeline: collect → analyze → present...\n")
 
-    result = agent.invoke(
-        {"messages": [HumanMessage(content=question)]},
-        config={"configurable": {"thread_id": "file-sharing-lab"}}
-    )
-
-    for msg in reversed(result["messages"]):
-        if msg.type == "ai" and msg.content:
-            print(f"\n{'─'*60}")
-            print("FINAL ANALYSIS:")
-            print(f"{'─'*60}")
-            print(msg.content)
-            break
+    run_with_trace(agent, question, thread_id="file-sharing-lab")
 
     print(f"\n{'='*60}")
     print(" LAB 3C COMPLETE!")
     print("=" * 60)
+
+    interactive_mode(agent, "Lab 3c: File Sharing")
 ```
 
-### Step 5: Run it
+### Step 5: Tell the student to run it
 
-**Action:** `shell`
-**OS[mac/linux/windows]:**
-```bash
-python my-agents/lab3c_file_sharing.py
-```
+**Action:** Tell the student:
 
-### Step 6: Verify
-
-**Success criteria:**
-- Cost comparisons for AWS, Google Cloud, and Azure
-- Numbers and calculations present (totals, differences, percentages)
-- The data flowed: collector → files → analyst → files → orchestrator → user
-- No errors
+> Lab 3c is ready. Run it in your terminal:
+> ```bash
+> python my-agents/lab3c_file_sharing.py
+> ```
+> You'll see the sequential pipeline: `[DELEGATE]` data_collector → `[WRITE]` files →
+> `[DELEGATE]` analyst → `[READ]` data files → `[CALC]` calculations → final analysis.
 
 ### What You Built
 - **A sequential pipeline** — each agent depends on the previous agent's file output

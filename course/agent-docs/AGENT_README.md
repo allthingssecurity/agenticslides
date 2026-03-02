@@ -4,16 +4,18 @@
 
 ---
 
-## How Students Use This
+## How Students Use This (Build-Only Model)
 
 Each module doc has a **copy-paste prompt** at the very top. The student:
 
 1. Opens a **new agent session** (Codex, Claude Code, Cursor, etc.)
 2. Copies the prompt block from the module doc
 3. Pastes it into the agent
-4. Watches the agent build everything from scratch
+4. The agent **builds all files** (including `trace_utils.py` in Module 1) but does **NOT run** them
+5. Student runs each lab in their **own terminal**: `python my-agents/labX.py`
+6. Student sees **real-time traces** (tool calls, sub-agent delegations, file writes) and gets an **interactive prompt** to try their own queries
 
-That's it. One prompt per module, one session per module.
+**Why build-only?** Running labs inside the agent session showed "exit code 0" and a wall of text. With build-only, students see colored traces and can experiment interactively.
 
 ---
 

@@ -8,10 +8,11 @@
 Read the file course/agent-docs/02-building-blocks.md and follow it step by step.
 
 First complete the Environment Setup section (skip if already done), then build
-Lab 2 from scratch in the my-agents/ directory. Run it and verify it works.
+Lab 2 from scratch in the my-agents/ directory.
 
-This module builds a research agent that searches the web, takes structured notes
-to files, and writes a report. You need internet access and an OpenAI API key.
+IMPORTANT: Build the files only — do NOT run the labs. After building, tell
+the student: "Lab is ready. Run: python my-agents/lab2_research_agent.py"
+The student will run it in their own terminal to see traces and interactive mode.
 
 If you get stuck, consult the reference at course/labs/lab2_research_agent.py
 but try building it yourself first.
@@ -147,10 +148,10 @@ LAB 2: Research Agent
 ======================
 Searches the web, takes notes to files, writes a research report.
 """
-from openai import OpenAI
 from langchain_core.tools import tool
 from langchain_core.messages import HumanMessage
 from deepagents import create_deep_agent
+from trace_utils import run_with_trace, interactive_mode, resilient_web_search
 ```
 
 ### Step 2: Build the web search tool
@@ -170,23 +171,14 @@ def web_search(query: str) -> str:
     Args:
         query: The search query
     """
-    try:
-        client = OpenAI()
-        response = client.responses.create(
-            model="gpt-4o-mini",
-            tools=[{"type": "web_search_preview"}],
-            input=query
-        )
-        return response.output_text
-    except Exception as e:
-        return f"Search error: {e}"
+    return resilient_web_search(query)
 ```
 
 **How this works:**
-- Uses OpenAI's **web search** via the Responses API — uses your existing API key
-- `gpt-4o-mini` keeps search costs low while returning high-quality results
-- The model decides when to search and returns a summarized answer with sources
-- Graceful error handling — returns an error string instead of crashing
+- Uses `resilient_web_search()` from `trace_utils` — handles rate limits automatically
+- Retries with exponential backoff (1s, 2s, 4s) on 429 errors — no manual intervention needed
+- Uses `gpt-4o-mini` internally for cost-effective web search
+- Returns an error string instead of crashing on permanent failures
 
 ### Step 3: Build the research agent with a detailed system prompt
 
@@ -199,7 +191,7 @@ def web_search(query: str) -> str:
 # ─── AGENT: Research Agent ─────────────────────────────
 
 research_agent = create_deep_agent(
-    model="openai:gpt-4o",
+    model="openai:gpt-4o-mini",
     tools=[web_search],
     system_prompt="""You are a research agent that produces well-organized reports.
 
@@ -263,20 +255,8 @@ def research(question: str, thread: str = "lab2"):
     print(f"\n{'='*60}")
     print(f" RESEARCH QUERY: {question}")
     print(f"{'='*60}\n")
-    print("Agent is researching (this may take 30-60 seconds)...\n")
 
-    result = research_agent.invoke(
-        {"messages": [HumanMessage(content=question)]},
-        config={"configurable": {"thread_id": thread}}
-    )
-
-    for msg in reversed(result["messages"]):
-        if msg.type == "ai" and msg.content:
-            print(f"\n{'─'*60}")
-            print("FINAL RESPONSE:")
-            print(f"{'─'*60}")
-            print(msg.content)
-            return
+    run_with_trace(research_agent, question, thread_id=thread)
 
 
 if __name__ == "__main__":
@@ -293,49 +273,23 @@ if __name__ == "__main__":
     print(f"\n{'='*60}")
     print(" LAB 2 COMPLETE!")
     print("=" * 60)
+
+    interactive_mode(research_agent, "Lab 2: Research Agent")
 ```
 
-### Step 5: Run it
+### Step 5: Tell the student to run it
 
-**Action:** `shell`
-**OS[mac/linux/windows]:**
-```bash
-python my-agents/lab2_research_agent.py
-```
+**Action:** Tell the student:
 
-**Note:** This takes 30-60 seconds as the agent performs multiple web searches and writes files.
+> Lab 2 is ready. Run it in your terminal:
+> ```bash
+> python my-agents/lab2_research_agent.py
+> ```
+> You'll see colored traces showing `[SEARCH]`, `[PLAN]`, `[WRITE]`, and `[FILE WRITTEN]` events
+> in real time as the agent researches, takes notes, and writes its report.
+> After the demo query, you'll get an interactive prompt to try your own research topics.
 
-### Step 6: Verify
-
-**Expected output pattern:**
-```
-============================================================
- LAB 2: Research Agent
- The agent will: search → take notes → write report
-============================================================
-
-============================================================
- RESEARCH QUERY: Compare Python vs JavaScript for backend development...
-============================================================
-
-Agent is researching (this may take 30-60 seconds)...
-
-────────────────────────────────────────────────────────────
-FINAL RESPONSE:
-────────────────────────────────────────────────────────────
-[Summary discussing Python vs JavaScript: performance, ecosystem,
- developer experience, job market — with key findings and comparison]
-
-============================================================
- LAB 2 COMPLETE!
-============================================================
-```
-
-**Success criteria:**
-- The agent produces a final response (no errors or timeouts)
-- The response covers Python vs JavaScript across the requested dimensions
-- The agent used `web_search` (it searched multiple times with different queries)
-- Internally, the agent wrote notes to `/research/` and a report to `/output/report.md` (in its filesystem sandbox)
+**Do NOT run it yourself.** The student runs labs in their own terminal.
 
 ### What You Built
 - **A web search tool** using OpenAI's Responses API with web search

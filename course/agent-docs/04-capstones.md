@@ -8,11 +8,11 @@
 Read the file course/agent-docs/04-capstones.md and follow it step by step.
 
 First complete the Environment Setup section (skip if already done), then build
-Labs 4, 5, and 6 from scratch in the my-agents/ directory. Run and verify each
-lab before moving to the next.
+Labs 4, 5, and 6 from scratch in the my-agents/ directory.
 
-This module builds three production-grade apps: a financial deep research system
-(4 sub-agents), a text-to-SQL analytics agent, and an automated content pipeline.
+IMPORTANT: Build the files only — do NOT run the labs. After building each lab,
+tell the student: "Lab is ready. Run: python my-agents/labX.py"
+The student will run it in their own terminal to see traces and interactive mode.
 
 If you get stuck, consult the references at course/labs/lab4_financial_research.py,
 course/labs/lab5_text_to_sql.py, and course/labs/lab6_content_pipeline.py.
@@ -82,11 +82,11 @@ python -c "import os; assert os.getenv('OPENAI_API_KEY','').startswith('sk-'); p
 Build a production-grade multi-agent financial analysis system:
 
 ```
-Orchestrator (gpt-4o)
+Orchestrator (gpt-4o-mini)
   ├─→ market_data_agent (gpt-4o-mini)   ─┐ PHASE 1: PARALLEL
   ├─→ news_analyst (gpt-4o-mini)         ─┘
-  ├─→ finance_analyst (gpt-4o)           ← PHASE 2: after Phase 1
-  └─→ report_writer (gpt-4o)            ← PHASE 3: after Phase 2
+  ├─→ finance_analyst (gpt-4o-mini)      ← PHASE 2: after Phase 1
+  └─→ report_writer (gpt-4o-mini)       ← PHASE 3: after Phase 2
 ```
 
 ### Step 1: Create the file with imports
@@ -101,11 +101,11 @@ LAB 4 — CAPSTONE: Financial Deep Research System
 4 sub-agents + orchestrator with phased execution.
 """
 import json
-from openai import OpenAI
 from datetime import datetime
 from langchain_core.tools import tool
 from langchain_core.messages import HumanMessage
 from deepagents import create_deep_agent
+from trace_utils import run_with_trace, interactive_mode, resilient_web_search
 ```
 
 ### Step 2: Build the financial news search tool
@@ -127,16 +127,7 @@ def search_financial_news(query: str) -> str:
     Args:
         query: Financial search query (e.g., "NVIDIA earnings 2025")
     """
-    try:
-        client = OpenAI()
-        response = client.responses.create(
-            model="gpt-4o-mini",
-            tools=[{"type": "web_search_preview"}],
-            input=f"{query} finance stock market"
-        )
-        return response.output_text
-    except Exception as e:
-        return f"Search error: {e}"
+    return resilient_web_search(f"{query} finance stock market")
 ```
 
 ### Step 3: Build the stock data tool (simulated)
@@ -440,7 +431,7 @@ REPORT STRUCTURE:
 # ═══════════════════════════════════════════════════════
 
 financial_system = create_deep_agent(
-    model="openai:gpt-4o",
+    model="openai:gpt-4o-mini",
     tools=[],
     subagents=[market_data_agent, news_analyst_agent, finance_analyst_agent, report_writer_agent],
     system_prompt="""You are the lead orchestrator of a financial deep research system.
@@ -493,18 +484,8 @@ def research(question: str):
     print(f" Query: {question}")
     print(f" Agents: market_data → news → finance_analyst → report_writer")
     print(f"{'='*70}\n")
-    print("Running multi-agent analysis (1-2 minutes)...\n")
 
-    result = financial_system.invoke(
-        {"messages": [HumanMessage(content=question)]},
-        config={"configurable": {"thread_id": thread}}
-    )
-
-    for msg in reversed(result["messages"]):
-        if msg.type == "ai" and msg.content:
-            print(f"\n{'─'*70}")
-            print(msg.content)
-            break
+    run_with_trace(financial_system, question, thread_id=thread)
 
 
 if __name__ == "__main__":
@@ -518,26 +499,21 @@ if __name__ == "__main__":
     print(f"\n{'='*70}")
     print(" CAPSTONE 1 COMPLETE!")
     print("=" * 70)
+
+    interactive_mode(financial_system, "Lab 4: Financial Research")
 ```
 
-### Step 8: Run it
+### Step 8: Tell the student to run it
 
-**Action:** `shell`
-**OS[mac/linux/windows]:**
-```bash
-python my-agents/lab4_financial_research.py
-```
+**Action:** Tell the student:
 
-**Note:** Takes 1-2 minutes — 4 agents across 3 phases.
-
-### Step 9: Verify
-
-**Success criteria:**
-- A structured investment report is produced (no errors)
-- Contains NVDA stock data (price ~$875, P/E ~65)
-- Includes financial analysis (intrinsic value, risk score)
-- News sentiment is categorized (bullish/bearish/neutral)
-- Report includes a disclaimer
+> Lab 4 is ready. Run it in your terminal:
+> ```bash
+> python my-agents/lab4_financial_research.py
+> ```
+> You'll see the full 4-phase pipeline with `[DELEGATE]` for each sub-agent launch,
+> `[DATA]` for stock fetches, `[SEARCH]` for news, `[CALC]` for financial metrics,
+> and file writes throughout. After the demo, try analyzing different stocks.
 
 ### What You Built
 - **3 specialized tools** — news search, stock data, financial calculator
@@ -570,6 +546,7 @@ import random
 from langchain_core.tools import tool
 from langchain_core.messages import HumanMessage
 from deepagents import create_deep_agent
+from trace_utils import run_with_trace, interactive_mode
 
 
 # ═══════════════════════════════════════════════════════
@@ -822,7 +799,7 @@ def run_sql_query(query: str) -> str:
 # ═══════════════════════════════════════════════════════
 
 sql_agent = create_deep_agent(
-    model="openai:gpt-4o",
+    model="openai:gpt-4o-mini",
     tools=[explore_schema, run_sql_query],
     system_prompt="""You are a data analytics agent that converts natural language to SQL.
 
@@ -873,19 +850,7 @@ SELECT ...
 
 def ask_data(question: str, thread: str = "sql-lab"):
     """Ask the analytics agent a question about the data."""
-    print(f"\n{'─'*60}")
-    print(f" Q: {question}")
-    print(f"{'─'*60}\n")
-
-    result = sql_agent.invoke(
-        {"messages": [HumanMessage(content=question)]},
-        config={"configurable": {"thread_id": thread}}
-    )
-
-    for msg in reversed(result["messages"]):
-        if msg.type == "ai" and msg.content:
-            print(msg.content)
-            return
+    run_with_trace(sql_agent, question, thread_id=thread)
 
 
 if __name__ == "__main__":
@@ -913,24 +878,21 @@ if __name__ == "__main__":
     print(f"\n{'='*60}")
     print(" CAPSTONE 2 COMPLETE!")
     print("=" * 60)
+
+    interactive_mode(sql_agent, "Lab 5: Text-to-SQL", thread_id="sql-lab")
 ```
 
-### Step 4: Run it
+### Step 4: Tell the student to run it
 
-**Action:** `shell`
-**OS[mac/linux/windows]:**
-```bash
-python my-agents/lab5_text_to_sql.py
-```
+**Action:** Tell the student:
 
-### Step 5: Verify
-
-**Success criteria:**
-- Database created (15 products, 200 customers, 1000 orders)
-- All 5 queries produce SQL + results + explanations
-- SQL uses proper JOINs (not implicit joins)
-- Results explained in business terms
-- `sample_analytics.db` file created in `my-agents/`
+> Lab 5 is ready. Run it in your terminal:
+> ```bash
+> python my-agents/lab5_text_to_sql.py
+> ```
+> You'll see `[SCHEMA]` when the agent explores the database, `[SQL]` for each query,
+> and `[RESULT]` with the query results. The interactive mode uses the same thread,
+> so the agent remembers the schema from the demo queries.
 
 ### What You Built
 - **A database setup function** — creates an e-commerce database with realistic data
@@ -956,10 +918,10 @@ LAB 6 — BONUS: Automated Content Pipeline
 ============================================
 Researcher → Writer → Editor/Reviewer → Final Output
 """
-from openai import OpenAI
 from langchain_core.tools import tool
 from langchain_core.messages import HumanMessage
 from deepagents import create_deep_agent
+from trace_utils import run_with_trace, interactive_mode, resilient_web_search
 
 
 # ─── TOOL ──────────────────────────────────────────────
@@ -971,22 +933,13 @@ def web_search(query: str) -> str:
     Args:
         query: Search query
     """
-    try:
-        client = OpenAI()
-        response = client.responses.create(
-            model="gpt-4o-mini",
-            tools=[{"type": "web_search_preview"}],
-            input=query
-        )
-        return response.output_text
-    except Exception as e:
-        return f"Error: {e}"
+    return resilient_web_search(query)
 
 
 # ─── PIPELINE AGENTS ──────────────────────────────────
 
 content_pipeline = create_deep_agent(
-    model="openai:gpt-4o",
+    model="openai:gpt-4o-mini",
     tools=[],
     subagents=[
         # Stage 1: Research
@@ -1156,23 +1109,14 @@ def create_content(topic: str, audience: str = "tech professionals"):
     print(f" Audience: {audience}")
     print(f" Pipeline: Research → Write → Edit → Deliver")
     print(f"{'='*60}\n")
-    print("Running 3-stage pipeline (1-2 minutes)...\n")
 
-    result = content_pipeline.invoke(
-        {"messages": [HumanMessage(content=(
-            f"Create a high-quality article.\n"
-            f"Topic: {topic}\n"
-            f"Target audience: {audience}\n"
-            f"Run the full pipeline: research → write → review & edit"
-        ))]},
-        config={"configurable": {"thread_id": "content-pipeline"}}
+    prompt = (
+        f"Create a high-quality article.\n"
+        f"Topic: {topic}\n"
+        f"Target audience: {audience}\n"
+        f"Run the full pipeline: research → write → review & edit"
     )
-
-    for msg in reversed(result["messages"]):
-        if msg.type == "ai" and msg.content:
-            print(f"\n{'─'*60}")
-            print(msg.content)
-            break
+    run_with_trace(content_pipeline, prompt, thread_id="content-pipeline")
 
 
 if __name__ == "__main__":
@@ -1189,25 +1133,21 @@ if __name__ == "__main__":
     print(f"\n{'='*60}")
     print(" CONTENT PIPELINE COMPLETE!")
     print("=" * 60)
+
+    interactive_mode(content_pipeline, "Lab 6: Content Pipeline")
 ```
 
-### Step 2: Run it
+### Step 2: Tell the student to run it
 
-**Action:** `shell`
-**OS[mac/linux/windows]:**
-```bash
-python my-agents/lab6_content_pipeline.py
-```
+**Action:** Tell the student:
 
-**Note:** Takes 1-2 minutes — three agents run sequentially.
-
-### Step 3: Verify
-
-**Success criteria:**
-- Content about AI agents in software development is produced
-- Output is structured (headings, sections, takeaways)
-- Editor feedback is present (rating, strengths, changes)
-- No errors
+> Lab 6 is ready. Run it in your terminal:
+> ```bash
+> python my-agents/lab6_content_pipeline.py
+> ```
+> You'll see the 3-stage pipeline: `[DELEGATE]` researcher → `[SEARCH]` web queries →
+> `[DELEGATE]` writer → `[WRITE]` draft → `[DELEGATE]` editor → `[WRITE]` final article.
+> After the demo, try requesting articles on different topics.
 
 ### What You Built
 - **A 3-stage sequential pipeline** — each stage depends on the previous stage's files

@@ -35,7 +35,7 @@ def my_tool(query: str) -> str:
     return "result"
 
 agent = create_deep_agent(
-    model="openai:gpt-4o",
+    model="openai:gpt-4o-mini",
     tools=[my_tool],
     system_prompt="You are a helpful assistant."
 )
@@ -55,7 +55,7 @@ print(result["messages"][-1].content)
 
 ```python
 agent = create_deep_agent(
-    model="openai:gpt-4o",
+    model="openai:gpt-4o-mini",
     tools=[],  # No tools = orchestrator MUST delegate
     subagents=[{
         "name": "researcher",
@@ -76,7 +76,7 @@ agent = create_deep_agent(
 
 ```python
 agent = create_deep_agent(
-    model="openai:gpt-4o",
+    model="openai:gpt-4o-mini",
     tools=[],
     subagents=[agent_a, agent_b, agent_c],
     system_prompt="""
@@ -120,7 +120,7 @@ subagents = [
 
 ```python
 agent = create_deep_agent(
-    model="openai:gpt-4o",
+    model="openai:gpt-4o-mini",
     tools=[],
     subagents=[data_agent, news_agent, analyst_agent, writer_agent],
     system_prompt="""
@@ -151,13 +151,13 @@ agent = create_deep_agent(
 
 ## Available Models
 
-| Model | Best For | Relative Cost |
-|-------|----------|---------------|
-| `openai:gpt-4o` | Orchestrator, complex reasoning, writing | $$ |
-| `openai:gpt-4o-mini` | Sub-agents, data collection, simple tasks | $ |
-| `openai:gpt-4-turbo` | Long context tasks | $$ |
+| Model | Best For | Relative Cost | Rate Limits |
+|-------|----------|---------------|-------------|
+| `openai:gpt-4o-mini` | **Default for all agents** — great balance of quality, cost, and rate limits | $ | High (perfect for student keys) |
+| `openai:gpt-4o` | Complex reasoning, writing (upgrade when you have paid-tier API keys) | $$ | Lower (may hit 30k TPM on free tier) |
+| `openai:gpt-4-turbo` | Long context tasks | $$ | Lower |
 
-**Cost optimization:** Use `gpt-4o` for orchestrators and complex agents, `gpt-4o-mini` for data-fetching sub-agents.
+**Recommendation:** Use `gpt-4o-mini` for ALL agents during the course. It has much higher rate limits and lower cost, which is critical for student/free-tier API keys. Upgrade to `gpt-4o` only if you have a paid-tier key and need higher quality output.
 
 ---
 
@@ -209,6 +209,54 @@ response = result["messages"][-1].content
 
 ---
 
+## Pattern 6: Trace Utilities (Used in All Labs)
+
+```python
+from trace_utils import run_with_trace, interactive_mode, resilient_web_search
+
+# Instead of agent.invoke(), use run_with_trace() for visible traces:
+run_with_trace(agent, "Your question here", thread_id="thread-1")
+# Shows colored output: [SEARCH], [CALC], [WRITE], [DELEGATE], [SUB-AGENT DONE], etc.
+# Automatically retries on rate limit (429) errors with backoff.
+
+# Add at end of __main__ for student experimentation:
+interactive_mode(agent, "Lab Name")
+# Starts a REPL loop: "YOUR TURN — Try it yourself!"
+```
+
+**trace_utils.py** is a shared module all labs import. It uses `agent.stream(stream_mode="updates")` instead of `agent.invoke()` to show real-time formatted traces.
+
+**Used in:** All labs (lab1 through lab6)
+
+---
+
+## Pattern 7: Resilient Web Search (Used in Labs with Web Search)
+
+```python
+from trace_utils import resilient_web_search
+
+@tool
+def web_search(query: str) -> str:
+    """Search the web for information.
+
+    Args:
+        query: Search query
+    """
+    return resilient_web_search(query)
+```
+
+**How it works:**
+- Uses OpenAI's Responses API with `web_search_preview` tool
+- Automatically retries on 429 (rate limit) errors with exponential backoff (1s, 2s, 4s)
+- Uses `gpt-4o-mini` internally for cost-effective web search
+- Returns an error string instead of crashing on permanent failures
+
+**Why this matters:** Free-tier and student API keys have low rate limits (30k TPM). Without retry logic, labs crash on the first rate limit hit. With `resilient_web_search`, labs handle rate limits gracefully.
+
+**Used in:** Lab 2, Lab 3a, Lab 3b, Lab 4, Lab 6
+
+---
+
 ## Lab Execution Quick Reference
 
 After building each lab in `my-agents/`, run it:
@@ -238,6 +286,6 @@ Reference implementations (if stuck): `course/labs/lab*.py`
 | `ModuleNotFoundError: No module named 'openai'` | `pip install "openai>=1.66.0"` |
 | `OPENAI_API_KEY not set` | `export OPENAI_API_KEY="sk-..."` (mac/linux) or `set OPENAI_API_KEY=sk-...` (windows) |
 | `openai.AuthenticationError` | API key is invalid or expired — check at platform.openai.com |
-| `openai.RateLimitError` | Wait 60 seconds and retry, or check your OpenAI usage limits |
-| Timeout on web search | OpenAI web search may be slow — if it times out, the agent will retry automatically |
+| `openai.RateLimitError` | Labs auto-retry with backoff via `resilient_web_search()` and `run_with_trace()`. If it persists: wait 60s, or switch all models to `gpt-4o-mini` (higher rate limits) |
+| Timeout on web search | OpenAI web search may be slow — `resilient_web_search()` retries automatically with exponential backoff |
 | Lab 5 database error | Delete `my-agents/sample_analytics.db` and re-run — the script recreates it |

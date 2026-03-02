@@ -11,6 +11,7 @@ from datetime import datetime
 from langchain_core.tools import tool
 from langchain_core.messages import HumanMessage
 from deepagents import create_deep_agent
+from trace_utils import run_with_trace, interactive_mode
 
 
 # ─── STEP 1: Define Tools ──────────────────────────────
@@ -42,7 +43,7 @@ def get_current_time() -> str:
 # ─── STEP 2: Create the Agent ──────────────────────────
 
 agent = create_deep_agent(
-    model="openai:gpt-4o",
+    model="openai:gpt-4o-mini",
     tools=[calculator, get_current_time],
     system_prompt="""You are a helpful assistant with access to a calculator and clock.
 
@@ -59,19 +60,7 @@ agent = create_deep_agent(
 
 def ask(question: str, thread_id: str = "lab1"):
     """Send a message to the agent and print the response."""
-    print(f"\n{'─'*50}")
-    print(f"YOU: {question}")
-    print(f"{'─'*50}")
-
-    result = agent.invoke(
-        {"messages": [HumanMessage(content=question)]},
-        config={"configurable": {"thread_id": thread_id}}
-    )
-
-    for msg in reversed(result["messages"]):
-        if msg.type == "ai" and msg.content:
-            print(f"\nAGENT: {msg.content}")
-            return
+    run_with_trace(agent, question, thread_id=thread_id)
 
 
 # ─── STEP 4: Run It ────────────────────────────────────
@@ -114,3 +103,5 @@ if __name__ == "__main__":
 
     NEXT: python lab2_research_agent.py
     """)
+
+    interactive_mode(agent, "Lab 1: First Agent")

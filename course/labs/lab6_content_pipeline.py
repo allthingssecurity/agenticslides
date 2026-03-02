@@ -8,10 +8,10 @@ Learn: Sequential pipeline, quality control loop, agent specialization.
 
 Run: python lab6_content_pipeline.py
 """
-from openai import OpenAI
 from langchain_core.tools import tool
 from langchain_core.messages import HumanMessage
 from deepagents import create_deep_agent
+from trace_utils import run_with_trace, interactive_mode, resilient_web_search
 
 
 # ─── TOOL ──────────────────────────────────────────────
@@ -23,22 +23,13 @@ def web_search(query: str) -> str:
     Args:
         query: Search query
     """
-    try:
-        client = OpenAI()
-        response = client.responses.create(
-            model="gpt-4o-mini",
-            tools=[{"type": "web_search_preview"}],
-            input=query
-        )
-        return response.output_text
-    except Exception as e:
-        return f"Error: {e}"
+    return resilient_web_search(query)
 
 
 # ─── PIPELINE AGENTS ──────────────────────────────────
 
 content_pipeline = create_deep_agent(
-    model="openai:gpt-4o",
+    model="openai:gpt-4o-mini",
     tools=[],
     subagents=[
         # Stage 1: Research
@@ -124,7 +115,7 @@ RULES:
 - NO fluff or filler — every sentence adds value
 """,
             "tools": [],
-            "model": "openai:gpt-4o",
+            "model": "openai:gpt-4o-mini",
         },
 
         # Stage 3: Review & Polish
@@ -165,7 +156,7 @@ FEEDBACK FORMAT (/review/feedback.md):
 THEN write the polished final version to /final/article.md
 """,
             "tools": [],
-            "model": "openai:gpt-4o",
+            "model": "openai:gpt-4o-mini",
         },
     ],
 
@@ -208,23 +199,14 @@ def create_content(topic: str, audience: str = "tech professionals"):
     print(f" Audience: {audience}")
     print(f" Pipeline: Research → Write → Edit → Deliver")
     print(f"{'='*60}\n")
-    print("Running 3-stage pipeline (1-2 minutes)...\n")
 
-    result = content_pipeline.invoke(
-        {"messages": [HumanMessage(content=(
-            f"Create a high-quality article.\n"
-            f"Topic: {topic}\n"
-            f"Target audience: {audience}\n"
-            f"Run the full pipeline: research → write → review & edit"
-        ))]},
-        config={"configurable": {"thread_id": "content-pipeline"}}
+    prompt = (
+        f"Create a high-quality article.\n"
+        f"Topic: {topic}\n"
+        f"Target audience: {audience}\n"
+        f"Run the full pipeline: research → write → review & edit"
     )
-
-    for msg in reversed(result["messages"]):
-        if msg.type == "ai" and msg.content:
-            print(f"\n{'─'*60}")
-            print(msg.content)
-            break
+    run_with_trace(content_pipeline, prompt, thread_id="content-pipeline")
 
 
 if __name__ == "__main__":
@@ -273,6 +255,6 @@ if __name__ == "__main__":
     ✓ Quality control (editor reviews against research)
     ✓ File-based handoff between stages
     ✓ Separation of concerns (research ≠ writing ≠ editing)
-
-    CONGRATULATIONS — Course complete! 🎓
     """)
+
+    interactive_mode(content_pipeline, "Lab 6: Content Pipeline")

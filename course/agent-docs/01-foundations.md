@@ -7,9 +7,12 @@
 ```
 Read the file course/agent-docs/01-foundations.md and follow it step by step.
 
-First complete the Environment Setup section, then build Lab 0 and Lab 1 from
-scratch in the my-agents/ directory. Run each lab and verify it works before
-moving on to the next one.
+First complete the Environment Setup section, then build the trace_utils.py
+utility, then build Lab 0 and Lab 1 from scratch in the my-agents/ directory.
+
+IMPORTANT: Build the files only — do NOT run the labs. After building each lab,
+tell the student: "Lab is ready. Run: python my-agents/labX.py"
+The student will run it in their own terminal to see traces and interactive mode.
 
 If you get stuck on any lab, you can consult the reference implementation in
 course/labs/ but try building it yourself first.
@@ -152,7 +155,7 @@ from langchain_core.tools import tool
 from langchain_core.messages import HumanMessage
 
 agent = create_deep_agent(
-    model="openai:gpt-4o",          # LLM backend
+    model="openai:gpt-4o-mini",          # LLM backend
     tools=[tool1, tool2],            # Custom @tool functions
     subagents=[{...}],               # Sub-agent definitions (optional)
     system_prompt="You are..."       # Agent's instructions
@@ -165,6 +168,249 @@ result = agent.invoke(
 )
 response = result["messages"][-1].content
 ```
+
+---
+
+## Build the Trace Utility
+
+Before building any labs, create the shared tracing module. This lets every lab show real-time formatted traces of tool calls, sub-agent delegations, and file writes — so the student can see exactly what the agent does.
+
+### Step 1: Create trace_utils.py
+
+**Action:** `create-file`
+**File:** `my-agents/trace_utils.py`
+**Content:**
+```python
+"""
+Trace Utilities for Agentic AI Course Labs
+============================================
+Shows real-time formatted traces of agent tool calls, sub-agent
+delegations, and file writes.
+
+Three main exports:
+  - run_with_trace(agent, question, thread_id) — streams events with colored output
+  - interactive_mode(agent, lab_name)           — REPL loop after demo queries
+  - resilient_web_search(query)                 — web search with retry/backoff
+"""
+
+import time
+from langchain_core.messages import HumanMessage
+
+# ─── ANSI Colors ─────────────────────────────────────────
+
+CYAN = "\033[96m"
+GREEN = "\033[92m"
+YELLOW = "\033[93m"
+MAGENTA = "\033[95m"
+RED = "\033[91m"
+BLUE = "\033[94m"
+DIM = "\033[2m"
+BOLD = "\033[1m"
+RESET = "\033[0m"
+
+# ─── Tool-name → display label mapping ──────────────────
+
+TOOL_LABELS = {
+    "web_search": ("SEARCH", CYAN),
+    "search_financial_news": ("SEARCH", CYAN),
+    "calculator": ("CALC", GREEN),
+    "calculate": ("CALC", GREEN),
+    "calculate_financial_metrics": ("CALC", GREEN),
+    "get_current_time": ("CLOCK", GREEN),
+    "get_stock_data": ("DATA", CYAN),
+    "explore_schema": ("SCHEMA", CYAN),
+    "run_sql_query": ("SQL", CYAN),
+    "write_file": ("WRITE", MAGENTA),
+    "edit_file": ("EDIT", MAGENTA),
+    "read_file": ("READ", BLUE),
+    "write_todos": ("PLAN", YELLOW),
+    "ls": ("LS", DIM),
+    "glob": ("GLOB", DIM),
+    "grep": ("GREP", DIM),
+    "execute": ("EXEC", RED),
+    "task": ("DELEGATE", YELLOW),
+}
+
+
+def _label_for_tool(name):
+    """Return (label, color) for a tool name."""
+    if name in TOOL_LABELS:
+        return TOOL_LABELS[name]
+    return ("TOOL", BLUE)
+
+
+def _truncate(text, max_len=120):
+    """Truncate text for display."""
+    text = text.replace("\n", " ").strip()
+    if len(text) > max_len:
+        return text[:max_len] + "..."
+    return text
+
+
+def _format_args(args):
+    """Format tool call arguments for display."""
+    if not args:
+        return ""
+    parts = []
+    for k, v in args.items():
+        sv = str(v)
+        if len(sv) > 80:
+            sv = sv[:77] + "..."
+        parts.append(f'{k}="{sv}"' if isinstance(v, str) else f"{k}={sv}")
+    return ", ".join(parts)
+
+
+def resilient_web_search(query, max_retries=3):
+    """Search the web with automatic retry on rate limits.
+
+    Uses OpenAI's Responses API with web_search_preview.
+    Retries with exponential backoff on 429 errors.
+    """
+    from openai import OpenAI
+    client = OpenAI()
+    for attempt in range(max_retries + 1):
+        try:
+            response = client.responses.create(
+                model="gpt-4o-mini",
+                tools=[{"type": "web_search_preview"}],
+                input=query
+            )
+            return response.output_text
+        except Exception as e:
+            error_str = str(e)
+            if ("429" in error_str or "rate_limit" in error_str.lower()
+                    or "rate limit" in error_str.lower()):
+                if attempt < max_retries:
+                    wait = 2 ** attempt
+                    print(f"  {YELLOW}[RATE LIMIT]{RESET} Waiting {wait}s before retry...")
+                    time.sleep(wait)
+                    continue
+            return f"Search error: {e}"
+    return f"Search failed after {max_retries} retries"
+
+
+def run_with_trace(agent, question, thread_id="traced", max_retries=2):
+    """Stream agent execution with real-time formatted traces.
+    Automatically retries on rate limit errors with backoff."""
+    print(f"\n{DIM}{'─' * 50}{RESET}")
+    print(f"{BOLD}YOU:{RESET} {question}")
+    print(f"{DIM}{'─' * 50}{RESET}\n")
+
+    final_response = ""
+    pending_tool_calls = {}
+
+    config = {"configurable": {"thread_id": thread_id}}
+    inp = {"messages": [HumanMessage(content=question)]}
+
+    for attempt in range(max_retries + 1):
+      try:
+        for event in agent.stream(inp, config, stream_mode="updates"):
+        if "__interrupt__" in event:
+            continue
+
+        if "model" in event:
+            messages = event["model"].get("messages", [])
+            for msg in messages:
+                tool_calls = getattr(msg, "tool_calls", None) or []
+                if tool_calls:
+                    for tc in tool_calls:
+                        name = tc.get("name", "unknown")
+                        args = tc.get("args", {})
+                        tc_id = tc.get("id", "")
+                        pending_tool_calls[tc_id] = name
+                        label, color = _label_for_tool(name)
+
+                        if name == "task":
+                            desc = args.get("description", "")
+                            sub_type = args.get("subagent_type", "")
+                            print(f"  {color}[{label}]{RESET} task(\"{_truncate(desc, 60)}\", subagent_type=\"{sub_type}\")")
+                        elif name == "write_file":
+                            path = args.get("path", args.get("file_path", ""))
+                            print(f"  {color}[{label}]{RESET} write_file(\"{path}\")")
+                        elif name == "write_todos":
+                            items = args.get("items", args.get("todos", []))
+                            if isinstance(items, list):
+                                print(f"  {color}[{label}]{RESET} write_todos({items})")
+                            else:
+                                print(f"  {color}[{label}]{RESET} write_todos(...)")
+                        else:
+                            arg_str = _format_args(args)
+                            print(f"  {color}[{label}]{RESET} {name}({arg_str})")
+                else:
+                    content = getattr(msg, "content", "")
+                    if content:
+                        final_response = content
+
+        elif "tools" in event:
+            messages = event["tools"].get("messages", [])
+            for msg in messages:
+                tc_id = getattr(msg, "tool_call_id", "")
+                tool_name = pending_tool_calls.get(tc_id, "")
+                content = getattr(msg, "content", "")
+                label, color = _label_for_tool(tool_name)
+
+                if tool_name == "task":
+                    print(f"  {GREEN}[SUB-AGENT DONE]{RESET} {_truncate(content, 100)}")
+                elif tool_name in ("write_file", "edit_file"):
+                    print(f"  {GREEN}[FILE WRITTEN]{RESET} {_truncate(content, 100)}")
+                elif tool_name in ("ls", "glob", "grep"):
+                    print(f"  {DIM}[RESULT] {_truncate(content, 80)}{RESET}")
+                else:
+                    print(f"  {GREEN}[RESULT]{RESET} {_truncate(content, 100)}")
+
+        break  # Success — exit retry loop
+
+      except Exception as e:
+        error_str = str(e)
+        if ("429" in error_str or "rate_limit" in error_str.lower()) and attempt < max_retries:
+            wait = 3 * (attempt + 1)
+            print(f"\n  {YELLOW}[RATE LIMIT]{RESET} Waiting {wait}s before retry...")
+            time.sleep(wait)
+            continue
+        else:
+            print(f"\n  {RED}[ERROR]{RESET} {error_str}")
+            return ""
+
+    if final_response:
+        print(f"\n{'─' * 50}")
+        print(f"{BOLD}AGENT RESPONSE:{RESET}")
+        print(f"{'─' * 50}")
+        print(final_response)
+
+    return final_response
+
+
+def interactive_mode(agent, lab_name, thread_id=None):
+    """Start an interactive REPL so students can try their own queries."""
+    tid = thread_id or f"{lab_name}-interactive"
+
+    print(f"\n{'═' * 50}")
+    print(f"  {BOLD}YOUR TURN — Try it yourself!{RESET}")
+    print(f"{'═' * 50}")
+    print(f"  Lab: {lab_name}")
+    print(f"  Type a question (or 'quit' to exit)")
+    print(f"{'═' * 50}")
+
+    while True:
+        try:
+            user_input = input(f"\n{BOLD}>{RESET} ").strip()
+        except (EOFError, KeyboardInterrupt):
+            print("\nGoodbye!")
+            break
+
+        if not user_input:
+            continue
+        if user_input.lower() in ("quit", "exit", "q"):
+            print("Goodbye!")
+            break
+
+        run_with_trace(agent, user_input, thread_id=tid)
+```
+
+**What this gives you:**
+- `run_with_trace()` — replaces `agent.invoke()`, shows colored tool calls in real time
+- `interactive_mode()` — REPL loop at the end of each lab for student experimentation
+- Every lab imports this module instead of calling `agent.invoke()` directly
 
 ---
 
@@ -288,40 +534,17 @@ if __name__ == "__main__":
         print("\nFix the issues above, then run this script again.")
 ```
 
-### Step 2: Run it
+### Step 2: Tell the student to run it
 
-**Action:** `shell`
-**OS[mac/linux/windows]:**
-```bash
-python my-agents/lab0_setup.py
-```
+**Action:** Tell the student:
 
-### Step 3: Verify
+> Lab 0 is ready. Run it in your terminal:
+> ```bash
+> python my-agents/lab0_setup.py
+> ```
+> You should see all checks pass with `✓` marks and a "SETUP OK" response from the test agent.
 
-**Expected output:**
-```
-==================================================
- DeepAgents Course — Setup Checker
-==================================================
-
-[1] Python version: 3.1x.x ✓
-[2] deepagents package: ✓
-[3] langchain-openai package: ✓
-[4] OPENAI_API_KEY: ✓ (starts with sk-...XXXX)
-[5] openai package: ✓
-
-==================================================
- ALL CHECKS PASSED — Ready to go!
-==================================================
-
-[6] Testing agent creation...
-    Agent response: SETUP OK
-    ✓ Agent is working!
-
-You're ready for the course! Start with lab1_first_agent.py
-```
-
-**Success criteria:** All 5 checks show `✓`, and the smoke test agent responds.
+**Do NOT run it yourself.** The student runs labs in their own terminal.
 
 ### What You Built
 - A diagnostic script that validates the entire environment
@@ -351,6 +574,7 @@ from datetime import datetime
 from langchain_core.tools import tool
 from langchain_core.messages import HumanMessage
 from deepagents import create_deep_agent
+from trace_utils import run_with_trace, interactive_mode
 ```
 
 ### Step 2: Add the calculator tool
@@ -414,7 +638,7 @@ def get_current_time() -> str:
 # ─── CREATE THE AGENT ────────────────────────────────────
 
 agent = create_deep_agent(
-    model="openai:gpt-4o",
+    model="openai:gpt-4o-mini",
     tools=[calculator, get_current_time],
     system_prompt="""You are a helpful assistant with access to a calculator and clock.
 
@@ -428,7 +652,7 @@ agent = create_deep_agent(
 ```
 
 **Key decisions:**
-- `model="openai:gpt-4o"` — the full-power model for the main agent
+- `model="openai:gpt-4o-mini"` — cost-effective model with high rate limits (ideal for student keys)
 - `tools=[calculator, get_current_time]` — both tools are available
 - The system prompt **explicitly says** "ALWAYS use the calculator" — without this, the LLM might try to do math itself
 
@@ -444,19 +668,7 @@ agent = create_deep_agent(
 
 def ask(question: str, thread_id: str = "lab1"):
     """Send a message to the agent and print the response."""
-    print(f"\n{'─'*50}")
-    print(f"YOU: {question}")
-    print(f"{'─'*50}")
-
-    result = agent.invoke(
-        {"messages": [HumanMessage(content=question)]},
-        config={"configurable": {"thread_id": thread_id}}
-    )
-
-    for msg in reversed(result["messages"]):
-        if msg.type == "ai" and msg.content:
-            print(f"\nAGENT: {msg.content}")
-            return
+    run_with_trace(agent, question, thread_id=thread_id)
 
 
 # ─── RUN THE TESTS ────────────────────────────────────────
@@ -487,58 +699,22 @@ if __name__ == "__main__":
     print("\n" + "=" * 50)
     print(" LAB 1 COMPLETE!")
     print("=" * 50)
+
+    interactive_mode(agent, "Lab 1: First Agent")
 ```
 
-### Step 6: Run it
+### Step 6: Tell the student to run it
 
-**Action:** `shell`
-**OS[mac/linux/windows]:**
-```bash
-python my-agents/lab1_first_agent.py
-```
+**Action:** Tell the student:
 
-### Step 7: Verify
+> Lab 1 is ready. Run it in your terminal:
+> ```bash
+> python my-agents/lab1_first_agent.py
+> ```
+> You'll see colored traces showing each tool call (`[CALC]`, `[CLOCK]`) in real time,
+> followed by an interactive prompt where you can ask your own questions.
 
-**Expected output pattern:**
-```
-==================================================
- LAB 1: Your First Agent
-==================================================
-
-──────────────────────────────────────────────────
-YOU: What is the square root of 1764?
-──────────────────────────────────────────────────
-
-AGENT: [Uses calculator, returns 42.0]
-
-──────────────────────────────────────────────────
-YOU: If I invest $10,000 at 7% annual compound interest...
-──────────────────────────────────────────────────
-
-AGENT: [Uses calculator with 10000*(1.07)**10, returns ~$19,671.51]
-
-──────────────────────────────────────────────────
-YOU: What day of the week is it today?
-──────────────────────────────────────────────────
-
-AGENT: [Uses get_current_time, returns current day]
-
-──────────────────────────────────────────────────
-YOU: I was born on March 15, 1995. How many days have I been alive?
-──────────────────────────────────────────────────
-
-AGENT: [Uses get_current_time + calculator, returns day count]
-
-==================================================
- LAB 1 COMPLETE!
-==================================================
-```
-
-**Success criteria:**
-- All 4 queries return agent responses (no errors)
-- The agent uses the `calculator` tool for math (not calculating in its head)
-- The agent uses `get_current_time` for time queries
-- Compound interest answer is approximately $19,671.51
+**Do NOT run it yourself.** The student runs labs in their own terminal to see the traces and try interactive mode.
 
 ### What You Built
 - **Two custom tools** using `@tool` — the LLM reads the docstrings to decide when to call them
