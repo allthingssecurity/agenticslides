@@ -1,0 +1,33 @@
+# OS files
+.DS_Store
+
+# Temp Office files
+~$*
+
+# Large media files
+*.mp4
+*.mp3
+*.zip
+*.png
+
+# Sensitive files
+githubkey.docx
+
+# Virtual environment
+.venv/
+
+# Python
+__pycache__/
+*.pyc
+
+# IDE
+.claude/
+
+# Exclude non-course content
+agentic-ai-day1/
+quantum-*/
+projects/
+*.pptx
+*.docx
+gen_slides.py
+my-agents/

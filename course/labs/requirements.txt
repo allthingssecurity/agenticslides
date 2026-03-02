@@ -1,0 +1,6 @@
+# Agentic AI Course - Dependencies
+# Install: pip install -r requirements.txt
+
+deepagents>=0.4.3
+langchain-openai>=1.1.8
+httpx>=0.27.0

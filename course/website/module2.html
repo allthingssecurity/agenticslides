@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Module 2: Building Blocks — Agentic AI Masterclass</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- Top Bar -->
+<div class="topbar">
+  <button class="hamburger" aria-label="Toggle sidebar">&#9776;</button>
+  <a href="index.html" class="topbar-brand">Agentic AI Masterclass</a>
+  <div class="os-toggle">
+    <button data-os="mac">Mac / Linux</button>
+    <button data-os="windows">Windows</button>
+  </div>
+</div>
+
+<div class="sidebar-overlay"></div>
+
+<!-- Sidebar -->
+<nav class="sidebar">
+  <div class="sidebar-section">
+    <span class="sidebar-section-title">Module 2</span>
+    <a href="#section-2-1">2.1 Tools &amp; Backends</a>
+    <a href="#section-2-2">2.2 Planning with Todos</a>
+    <a href="#section-2-3">2.3 Context Management</a>
+    <a href="#section-2-4">2.4 Lab 2: Research Agent</a>
+    <a href="#recap">Key Concepts Recap</a>
+  </div>
+  <div class="sidebar-section">
+    <span class="sidebar-section-title">All Modules</span>
+    <a href="index.html">Home</a>
+    <a href="module1.html">1 &mdash; Foundations</a>
+    <a href="module2.html" class="active">2 &mdash; Building Blocks</a>
+    <a href="module3.html">3 &mdash; Multi-Agent</a>
+    <a href="module4.html">4 &mdash; Capstones</a>
+  </div>
+  <div class="sidebar-progress">
+    <div class="sidebar-progress-label">Module Progress: <span class="progress-pct">0%</span></div>
+    <div class="progress-bar"><div class="progress-bar-fill"></div></div>
+  </div>
+</nav>
+
+<!-- Main -->
+<div class="main">
+
+  <span class="module-badge">Module 2</span>
+  <span class="time-badge">45 minutes</span>
+  <h1>Core Building Blocks</h1>
+  <p class="subtitle">Tools, Planning, and Context Management</p>
+
+  <hr>
+
+  <!-- Section 2.1 -->
+  <h2 id="section-2-1">2.1 &mdash; Tools &amp; Backends</h2>
+
+  <div class="section-check">
+    <input type="checkbox" id="m2-s1">
+    <label for="m2-s1">Mark section 2.1 complete</label>
+  </div>
+
+  <h3>Backend Architecture</h3>
+  <p>Every Deep Agent needs a <strong>backend</strong> &mdash; the storage layer that holds files, state, and execution context. The architecture is pluggable via a protocol interface:</p>
+
+  <div class="diagram">┌─────────────────────────────────────────────────────┐
+│                     AGENT                           │
+│                                                     │
+│   LLM ←→ Tools ←→ BackendProtocol                  │
+│                        │                            │
+│           ┌────────────┼────────────┐               │
+│           ↓            ↓            ↓               │
+│   ┌─────────────┐ ┌─────────┐ ┌──────────────┐     │
+│   │    State     │ │Filesystem│ │  LocalShell  │     │
+│   │   Backend    │ │ Backend  │ │   Backend    │     │
+│   │ (in-memory)  │ │ (disk)   │ │ (disk+shell) │     │
+│   └─────────────┘ └─────────┘ └──────────────┘     │
+└─────────────────────────────────────────────────────┘</div>
+
+  <h3>Available Backends</h3>
+  <table>
+    <thead><tr><th>Backend</th><th>Storage</th><th>Use Case</th></tr></thead>
+    <tbody>
+      <tr><td><strong><code>StateBackend</code></strong></td><td>In-memory dict</td><td>Testing, simple agents, no persistence needed</td></tr>
+      <tr><td><strong><code>FilesystemBackend</code></strong></td><td>Local disk</td><td>File I/O without shell access (safer)</td></tr>
+      <tr><td><strong><code>LocalShellBackend</code></strong></td><td>Disk + shell</td><td>Full development environment (default)</td></tr>
+      <tr><td><strong><code>StoreBackend</code></strong></td><td>LangGraph store</td><td>Remote/distributed deployments</td></tr>
+      <tr><td><strong><code>CompositeBackend</code></strong></td><td>Multiple backends</td><td>Combine backends for different capabilities</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Filesystem Tools</h3>
+  <p>When an agent uses a filesystem-capable backend, the <code>FilesystemMiddleware</code> automatically injects these tools:</p>
+
+  <table>
+    <thead><tr><th>Tool</th><th>Description</th><th>Example</th></tr></thead>
+    <tbody>
+      <tr><td><code>ls</code></td><td>List directory contents</td><td><code>ls(path="/research")</code></td></tr>
+      <tr><td><code>read_file</code></td><td>Read a file's contents</td><td><code>read_file(path="/notes.md")</code></td></tr>
+      <tr><td><code>write_file</code></td><td>Create or overwrite a file</td><td><code>write_file(path="/output/report.md", content="...")</code></td></tr>
+      <tr><td><code>edit_file</code></td><td>Surgical edit with old/new strings</td><td><code>edit_file(path="/config.json", old="v1", new="v2")</code></td></tr>
+      <tr><td><code>glob</code></td><td>Find files matching a pattern</td><td><code>glob(pattern="**/*.md")</code></td></tr>
+      <tr><td><code>grep</code></td><td>Search file contents</td><td><code>grep(pattern="TODO", path="/src")</code></td></tr>
+      <tr><td><code>execute</code></td><td>Run a shell command (LocalShell only)</td><td><code>execute(command="pip install pandas")</code></td></tr>
+    </tbody>
+  </table>
+
+  <h3>Backend Configuration</h3>
+  <pre><code><span class="kw">from</span> deepagents <span class="kw">import</span> create_deep_agent
+<span class="kw">from</span> deepagents.backends <span class="kw">import</span> (
+    StateBackend,
+    FilesystemBackend,
+    LocalShellBackend
+)
+
+<span class="cm"># Option 1: In-memory only (no filesystem tools)</span>
+agent_simple = <span class="fn">create_deep_agent</span>(
+    model=<span class="st">"openai:gpt-4o"</span>,
+    backend=<span class="fn">StateBackend</span>()
+)
+
+<span class="cm"># Option 2: Filesystem access (read/write files, no shell)</span>
+agent_fs = <span class="fn">create_deep_agent</span>(
+    model=<span class="st">"openai:gpt-4o"</span>,
+    backend=<span class="fn">FilesystemBackend</span>(root=<span class="st">"./workspace"</span>)
+)
+
+<span class="cm"># Option 3: Full local environment (default)</span>
+agent_full = <span class="fn">create_deep_agent</span>(
+    model=<span class="st">"openai:gpt-4o"</span>,
+    backend=<span class="fn">LocalShellBackend</span>(root=<span class="st">"./workspace"</span>)
+)</code></pre>
+
+  <h3>Hands-On: Filesystem Demo</h3>
+  <pre><code><span class="cm"># Quick test: agent writes and reads a file</span>
+<span class="kw">from</span> langchain_core.messages <span class="kw">import</span> HumanMessage
+
+result = agent_fs.<span class="fn">invoke</span>(
+    {<span class="st">"messages"</span>: [<span class="fn">HumanMessage</span>(content=<span class="st">"""
+Create a file at /notes/ideas.md with three startup ideas.
+Then read it back and tell me which one is best.
+"""</span>)]},
+    config={<span class="st">"configurable"</span>: {<span class="st">"thread_id"</span>: <span class="st">"fs-demo"</span>}}
+)</code></pre>
+
+  <div class="expected-output">Agent: I've created /notes/ideas.md with three startup ideas:
+
+1. AI-Powered Code Review SaaS
+2. Personalized Learning Platform
+3. Sustainable Supply Chain Tracker
+
+After reading the file back, I'd recommend #1 (AI-Powered Code
+Review) — it has the clearest path to revenue and a well-defined
+target market of development teams.</div>
+
+  <div class="callout callout-info">
+    <div class="callout-title">Key Insight</div>
+    The agent's <code>write_file</code> call creates a real file on disk (inside the backend's root directory). This file persists across conversations and survives context summarization.
+  </div>
+
+  <hr>
+
+  <!-- Section 2.2 -->
+  <h2 id="section-2-2">2.2 &mdash; Planning with Todos</h2>
+
+  <div class="section-check">
+    <input type="checkbox" id="m2-s2">
+    <label for="m2-s2">Mark section 2.2 complete</label>
+  </div>
+
+  <h3>Why Planning Matters</h3>
+  <p>Without planning, an agent takes a <strong>random walk</strong> through solution space. With planning, it follows a <strong>structured path</strong>:</p>
+
+  <div class="diagram">WITHOUT PLANNING              WITH PLANNING
+
+  Start                       Start
+    ↓                           ↓
+  Search X                    Plan: [1] [2] [3] [4] [5]
+    ↓                           ↓
+  Oops, wrong direction       Step 1: Research topic A ✓
+    ↓                           ↓
+  Try something else          Step 2: Research topic B ✓
+    ↓                           ↓
+  Search Y                    Step 3: Analyze findings ✓
+    ↓                           ↓
+  Forget original goal        Step 4: Write report ✓
+    ↓                           ↓
+  Incomplete result           Step 5: Review &amp; deliver ✓
+                                ↓
+                              Complete, high-quality result</div>
+
+  <h3>The <code>write_todos</code> Tool</h3>
+  <p>Every Deep Agent has a built-in <code>write_todos</code> tool. When invoked, the agent creates a structured task list:</p>
+
+  <pre><code><span class="cm"># The agent calls write_todos with a JSON task list</span>
+<span class="fn">write_todos</span>({
+    <span class="st">"todos"</span>: [
+        {<span class="st">"id"</span>: <span class="nu">1</span>, <span class="st">"task"</span>: <span class="st">"Search for Python backend frameworks"</span>, <span class="st">"status"</span>: <span class="st">"in_progress"</span>},
+        {<span class="st">"id"</span>: <span class="nu">2</span>, <span class="st">"task"</span>: <span class="st">"Search for JavaScript backend frameworks"</span>, <span class="st">"status"</span>: <span class="st">"pending"</span>},
+        {<span class="st">"id"</span>: <span class="nu">3</span>, <span class="st">"task"</span>: <span class="st">"Compare performance benchmarks"</span>, <span class="st">"status"</span>: <span class="st">"pending"</span>},
+        {<span class="st">"id"</span>: <span class="nu">4</span>, <span class="st">"task"</span>: <span class="st">"Write comparison report"</span>, <span class="st">"status"</span>: <span class="st">"pending"</span>},
+        {<span class="st">"id"</span>: <span class="nu">5</span>, <span class="st">"task"</span>: <span class="st">"Summarize key findings"</span>, <span class="st">"status"</span>: <span class="st">"pending"</span>}
+    ]
+})</code></pre>
+
+  <p>The agent updates the status as it completes each step: <code>"pending"</code> &rarr; <code>"in_progress"</code> &rarr; <code>"done"</code>.</p>
+
+  <h3>Planning Demo</h3>
+  <pre><code><span class="kw">from</span> deepagents <span class="kw">import</span> create_deep_agent
+<span class="kw">from</span> langchain_core.messages <span class="kw">import</span> HumanMessage
+
+planner_agent = <span class="fn">create_deep_agent</span>(
+    model=<span class="st">"openai:gpt-4o"</span>,
+    system_prompt=<span class="st">"""You are a research analyst. You ALWAYS plan before acting.
+
+## Rules
+1. FIRST use write_todos to create a 3-5 step plan
+2. Work through each step systematically
+3. Update todo status as you complete each step
+4. Write findings to files as you go
+5. Deliver a summary when all steps are done"""</span>
+)
+
+result = planner_agent.<span class="fn">invoke</span>(
+    {<span class="st">"messages"</span>: [<span class="fn">HumanMessage</span>(content=<span class="st">"Research the pros and cons of microservices vs monoliths"</span>)]},
+    config={<span class="st">"configurable"</span>: {<span class="st">"thread_id"</span>: <span class="st">"planning-demo"</span>}}
+)</code></pre>
+
+  <h3>Internal Agent Behavior</h3>
+  <p>Here's what happens inside the agent when it plans:</p>
+
+  <div class="diagram">User: "Research microservices vs monoliths"
+       ↓
+LLM thinks: "I need to plan first"
+       ↓
+Tool call: write_todos([
+  {id: 1, task: "Research microservices pros/cons", status: "in_progress"},
+  {id: 2, task: "Research monolith pros/cons",     status: "pending"},
+  {id: 3, task: "Compare and contrast",            status: "pending"},
+  {id: 4, task: "Write report to file",            status: "pending"}
+])
+       ↓
+LLM: "Step 1 — Researching microservices..."
+       ↓
+Tool call: write_file("/research/microservices.md", "...")
+       ↓
+Tool call: write_todos([...update step 1 → done, step 2 → in_progress...])
+       ↓
+LLM: "Step 2 — Researching monoliths..."
+       ↓
+  ... continues until all steps are done ...</div>
+
+  <div class="callout callout-tip">
+    <div class="callout-title">Why Structured Planning Works</div>
+    The todo list acts as a <strong>persistent anchor</strong> in the conversation. Even if early messages get summarized, the current todo state keeps the agent on track. Each <code>write_todos</code> call gives the LLM a complete picture of progress.
+  </div>
+
+  <hr>
+
+  <!-- Section 2.3 -->
+  <h2 id="section-2-3">2.3 &mdash; Context Management</h2>
+
+  <div class="section-check">
+    <input type="checkbox" id="m2-s3">
+    <label for="m2-s3">Mark section 2.3 complete</label>
+  </div>
+
+  <h3>The Context Window Problem</h3>
+  <p>Every LLM has a finite context window. As the agent works, the conversation fills up:</p>
+
+  <div class="diagram">Context Window Usage Over Time:
+
+  0%  ├────────────────────────────────────────┤ Empty
+ 25%  ├██████████──────────────────────────────┤ After a few tool calls
+ 50%  ├████████████████████──────────────────────┤ After research phase
+ 75%  ├██████████████████████████████──────────┤ Writing report
+100%  ├████████████████████████████████████████┤ FULL — LLM errors!
+
+Problem: Once full, the LLM can't process new information.
+         Older messages get truncated and WORK IS LOST.</div>
+
+  <h3><code>SummarizationMiddleware</code></h3>
+  <p>The <code>SummarizationMiddleware</code> automatically compresses the conversation when it gets too long:</p>
+
+  <pre><code><span class="kw">from</span> deepagents <span class="kw">import</span> create_deep_agent
+<span class="kw">from</span> deepagents.middleware <span class="kw">import</span> SummarizationMiddleware
+
+agent = <span class="fn">create_deep_agent</span>(
+    model=<span class="st">"openai:gpt-4o"</span>,
+    middleware=[
+        <span class="fn">SummarizationMiddleware</span>(
+            model=<span class="st">"openai:gpt-4o-mini"</span>,    <span class="cm"># Cheap model for summarization</span>
+            threshold=<span class="nu">0.7</span>,                 <span class="cm"># Trigger at 70% context usage</span>
+            preserve_recent=<span class="nu">5</span>,             <span class="cm"># Keep last 5 messages intact</span>
+        )
+    ]
+)</code></pre>
+
+  <h3>Before and After Summarization</h3>
+
+  <div class="diagram">BEFORE SUMMARIZATION                 AFTER SUMMARIZATION
+
+┌──────────────────────────┐        ┌──────────────────────────┐
+│ System Prompt             │        │ System Prompt             │
+│ User: "Research AI..."    │        │                           │
+│ AI: "I'll plan first..."  │        │ [Summary]: The agent      │
+│ Tool: write_todos(...)    │ ──────→│ researched AI frameworks, │
+│ Tool: search("langchain") │        │ took notes on 5 tools,    │
+│ Tool result: {...}        │        │ and is now writing the    │
+│ AI: "Found LangChain..."  │        │ final report.             │
+│ Tool: write_file(...)     │        │                           │
+│ Tool: search("crewai")   │        │ AI: "Now writing report"  │
+│ Tool result: {...}        │        │ Tool: read_file(...)      │
+│ AI: "Found CrewAI..."     │        │ Tool: write_file(...)     │
+│ Tool: write_file(...)     │        │ AI: "Report complete!"    │
+│ ...20 more messages...    │        └──────────────────────────┘
+│ AI: "Now writing report"  │
+│ Tool: read_file(...)      │        70% context → 25% context
+│ Tool: write_file(...)     │        Agent can keep working!
+│ AI: "Report complete!"    │
+└──────────────────────────┘</div>
+
+  <h3>Key Insight: Files Survive Summarization</h3>
+  <p>This is the critical pattern:</p>
+
+  <div class="callout callout-info">
+    <div class="callout-title">The Write-Then-Summarize Pattern</div>
+    <ol>
+      <li>Agent <strong>writes research to files</strong> as it goes</li>
+      <li>Summarization compresses the <strong>conversation</strong> (what was discussed)</li>
+      <li>But the <strong>files on disk are untouched</strong> &mdash; no data is lost</li>
+      <li>Agent can <strong>read files back</strong> when it needs the data again</li>
+    </ol>
+    <p>This is why filesystem-based agents can handle arbitrarily complex tasks &mdash; they use files as external memory.</p>
+  </div>
+
+  <h3>The Write-Then-Summarize System Prompt Pattern</h3>
+  <pre><code>system_prompt = <span class="st">"""You are a research agent with context management.
+
+## CRITICAL RULES FOR CONTEXT MANAGEMENT
+1. ALWAYS write findings to files IMMEDIATELY after each search
+2. Never keep large amounts of data only in conversation
+3. Use /research/ for raw notes, /output/ for final deliverables
+4. When you need old data, READ it from files — don't rely on memory
+
+## Why This Matters
+Your conversation history may be summarized to save space.
+When that happens, anything only in chat messages may be lost.
+But files on disk ALWAYS survive. Write early, write often.
+"""</span></code></pre>
+
+  <div class="callout callout-tip">
+    <div class="callout-title">Mental Model</div>
+    Think of the context window as <strong>RAM</strong> and the filesystem as <strong>disk</strong>. Just like a real computer, you save important data to disk so it survives when RAM is cleared.
+  </div>
+
+  <hr>
+
+  <!-- Section 2.4 -->
+  <h2 id="section-2-4">2.4 &mdash; Lab 2: Research Agent</h2>
+
+  <div class="section-check">
+    <input type="checkbox" id="m2-s4">
+    <label for="m2-s4">Mark section 2.4 complete</label>
+  </div>
+
+  <div class="lab-header">
+    <h3>Lab 2: Research Agent</h3>
+    <p><strong>Goal:</strong> Build a research agent that searches the web, takes structured notes, and produces a polished report &mdash; all using the patterns from this module.</p>
+    <p><strong>Time:</strong> 15 minutes</p>
+  </div>
+
+  <div class="lab-code-section">
+    <a href="#" class="download-btn" data-filename="lab2_research_agent.py">Download lab2_research_agent.py</a>
+
+    <h4>Step 1: Web Search Tool</h4>
+    <p>First, we create a tool that searches the web using the DuckDuckGo API:</p>
+
+    <pre><code><span class="cm"># lab2_research_agent.py</span>
+<span class="kw">import</span> json
+<span class="kw">import</span> httpx
+<span class="kw">from</span> langchain_core.tools <span class="kw">import</span> tool
+<span class="kw">from</span> langchain_core.messages <span class="kw">import</span> HumanMessage
+<span class="kw">from</span> deepagents <span class="kw">import</span> create_deep_agent
+
+<span class="dc">@tool</span>
+<span class="kw">def</span> <span class="fn">web_search</span>(query: <span class="ty">str</span>, num_results: <span class="ty">int</span> = <span class="nu">5</span>) -> <span class="ty">str</span>:
+    <span class="st">"""Search the web for information.
+
+    Args:
+        query: The search query
+        num_results: Number of results to return (default 5)
+    """</span>
+    <span class="kw">try</span>:
+        response = httpx.<span class="fn">get</span>(
+            <span class="st">"https://api.duckduckgo.com/"</span>,
+            params={<span class="st">"q"</span>: query, <span class="st">"format"</span>: <span class="st">"json"</span>, <span class="st">"no_html"</span>: <span class="nu">1</span>},
+            timeout=<span class="nu">10</span>
+        )
+        data = response.<span class="fn">json</span>()
+        results = []
+        <span class="kw">if</span> data.<span class="fn">get</span>(<span class="st">"Abstract"</span>):
+            results.<span class="fn">append</span>({
+                <span class="st">"title"</span>: data.<span class="fn">get</span>(<span class="st">"Heading"</span>, <span class="st">"Main Result"</span>),
+                <span class="st">"snippet"</span>: data[<span class="st">"Abstract"</span>],
+                <span class="st">"source"</span>: data.<span class="fn">get</span>(<span class="st">"AbstractURL"</span>, <span class="st">""</span>)
+            })
+        <span class="kw">for</span> topic <span class="kw">in</span> data.<span class="fn">get</span>(<span class="st">"RelatedTopics"</span>, [])[:num_results]:
+            <span class="kw">if</span> <span class="bi">isinstance</span>(topic, <span class="ty">dict</span>) <span class="kw">and</span> <span class="st">"Text"</span> <span class="kw">in</span> topic:
+                results.<span class="fn">append</span>({
+                    <span class="st">"title"</span>: topic.<span class="fn">get</span>(<span class="st">"Text"</span>, <span class="st">""</span>)[:<span class="nu">80</span>],
+                    <span class="st">"snippet"</span>: topic.<span class="fn">get</span>(<span class="st">"Text"</span>, <span class="st">""</span>),
+                    <span class="st">"source"</span>: topic.<span class="fn">get</span>(<span class="st">"FirstURL"</span>, <span class="st">""</span>)
+                })
+        <span class="kw">if not</span> results:
+            <span class="kw">return</span> <span class="st">f"No results found for: {query}"</span>
+        <span class="kw">return</span> json.<span class="fn">dumps</span>(results, indent=<span class="nu">2</span>)
+    <span class="kw">except</span> <span class="ty">Exception</span> <span class="kw">as</span> e:
+        <span class="kw">return</span> <span class="st">f"Search error: {e}"</span></code></pre>
+
+    <h4>Step 2: Research Agent with System Prompt</h4>
+    <p>Now we create the agent with a detailed system prompt that enforces the research workflow:</p>
+
+    <pre><code>research_agent = <span class="fn">create_deep_agent</span>(
+    model=<span class="st">"openai:gpt-4o"</span>,
+    tools=[web_search],
+    system_prompt=<span class="st">"""You are a research agent that produces well-organized reports.
+
+## WORKFLOW (ALWAYS follow this order)
+1. **Plan**: Use write_todos to break the research into 3-5 steps
+2. **Research**: Search for information on each aspect (2-3 searches per topic)
+3. **Take Notes**: Write findings to /research/ as structured markdown files
+4. **Synthesize**: Read your notes and write a final report to /output/report.md
+5. **Deliver**: Present a summary to the user with key findings
+
+## File Organization
+/research/
+├── topic_1.md
+├── topic_2.md
+└── sources.md
+/output/
+└── report.md
+
+## Research Quality Rules
+- Search at least 2-3 times per topic from different angles
+- Write notes IMMEDIATELY after each search
+- Always include source URLs
+- Distinguish facts from opinions
+- If information conflicts, note the discrepancy
+"""</span>
+)</code></pre>
+
+    <h4>Step 3: Run the Research</h4>
+    <pre><code><span class="kw">def</span> <span class="fn">research</span>(question: <span class="ty">str</span>, thread: <span class="ty">str</span> = <span class="st">"lab2"</span>):
+    <span class="bi">print</span>(<span class="st">f"RESEARCH QUERY: {question}"</span>)
+    result = research_agent.<span class="fn">invoke</span>(
+        {<span class="st">"messages"</span>: [<span class="fn">HumanMessage</span>(content=question)]},
+        config={<span class="st">"configurable"</span>: {<span class="st">"thread_id"</span>: thread}}
+    )
+    <span class="kw">for</span> msg <span class="kw">in</span> <span class="bi">reversed</span>(result[<span class="st">"messages"</span>]):
+        <span class="kw">if</span> msg.type == <span class="st">"ai"</span> <span class="kw">and</span> msg.content:
+            <span class="bi">print</span>(msg.content)
+            <span class="kw">return</span>
+
+<span class="kw">if</span> __name__ == <span class="st">"__main__"</span>:
+    <span class="fn">research</span>(
+        <span class="st">"Compare Python vs JavaScript for backend development in 2025. "</span>
+        <span class="st">"Cover: performance, ecosystem, developer experience, and job market."</span>
+    )</code></pre>
+
+    <h4>Step 4: Verify the Agent's Work</h4>
+    <p>After the agent finishes, check what files it created:</p>
+
+    <div class="os-command" data-mac="python3 lab2_research_agent.py" data-windows="python lab2_research_agent.py"><code></code></div>
+  </div>
+
+  <div class="expected-output">RESEARCH QUERY: Compare Python vs JavaScript for backend development...
+
+Agent: I'll research Python vs JavaScript for backend development.
+Let me start by creating a plan...
+
+[Agent creates todos, searches, writes notes, produces report]
+
+## Summary: Python vs JavaScript for Backend Development (2025)
+
+**Performance**: JavaScript (Node.js) excels at I/O-heavy workloads;
+Python leads in data processing and ML integration.
+
+**Ecosystem**: Both have mature ecosystems. Python dominates in
+data/AI; JavaScript owns the full-stack web story.
+
+**Developer Experience**: Python praised for readability; JavaScript
+offers unified language across front-end and back-end.
+
+**Job Market**: Both in high demand. Python growing faster due to
+AI/ML boom; JavaScript remains the most-used language overall.
+
+Full report written to /output/report.md</div>
+
+  <h3>Data Flow</h3>
+  <div class="diagram">┌────────────────────────────────────────────────────────────┐
+│                    RESEARCH AGENT                          │
+│                                                            │
+│   web_search("Python backend 2025")                        │
+│       ↓                                                    │
+│   write_file("/research/python_backend.md", results)       │
+│       ↓                                                    │
+│   web_search("JavaScript Node.js backend 2025")            │
+│       ↓                                                    │
+│   write_file("/research/javascript_backend.md", results)   │
+│       ↓                                                    │
+│   web_search("Python vs JavaScript performance")           │
+│       ↓                                                    │
+│   write_file("/research/performance_comparison.md", ...)   │
+│       ↓                                                    │
+│   read_file("/research/python_backend.md")                 │
+│   read_file("/research/javascript_backend.md")             │
+│   read_file("/research/performance_comparison.md")         │
+│       ↓                                                    │
+│   write_file("/output/report.md", synthesized_report)      │
+└────────────────────────────────────────────────────────────┘</div>
+
+  <div class="callout callout-tip">
+    <div class="callout-title">Challenge Exercise</div>
+    Modify the research agent to accept a list of topics and produce a separate report for each. Hint: use a loop in the <code>research()</code> function and pass different <code>thread_id</code> values to keep each research session isolated.
+  </div>
+
+  <hr>
+
+  <!-- Recap -->
+  <h2 id="recap">Key Concepts Recap</h2>
+
+  <div class="section-check">
+    <input type="checkbox" id="m2-recap">
+    <label for="m2-recap">Module 2 complete</label>
+  </div>
+
+  <table>
+    <thead><tr><th>Concept</th><th>What You Learned</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Backends</strong></td><td>Pluggable storage &mdash; in-memory, disk, or remote</td></tr>
+      <tr><td><strong>Filesystem tools</strong></td><td><code>ls</code>, <code>read_file</code>, <code>write_file</code>, <code>edit_file</code>, <code>glob</code>, <code>grep</code></td></tr>
+      <tr><td><strong><code>write_todos</code></strong></td><td>Built-in planning tool for task decomposition</td></tr>
+      <tr><td><strong>Summarization</strong></td><td>Auto-compresses conversation when context fills up</td></tr>
+      <tr><td><strong>Context offloading</strong></td><td>Write to files &rarr; read later &rarr; survives summarization</td></tr>
+      <tr><td><strong>Research pattern</strong></td><td>Search &rarr; Notes &rarr; Synthesize &rarr; Report</td></tr>
+    </tbody>
+  </table>
+
+  <!-- Page Nav -->
+  <div class="page-nav">
+    <a href="module1.html">
+      <span class="page-nav-label">Previous</span>
+      <span class="page-nav-title">&larr; Module 1: Foundations</span>
+    </a>
+    <a href="module3.html" class="next">
+      <span class="page-nav-label">Next</span>
+      <span class="page-nav-title">Module 3: Multi-Agent &rarr;</span>
+    </a>
+  </div>
+
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Module 1: Foundations — Agentic AI Masterclass</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- Top Bar -->
+<div class="topbar">
+  <button class="hamburger" aria-label="Toggle sidebar">&#9776;</button>
+  <a href="index.html" class="topbar-brand">Agentic AI Masterclass</a>
+  <div class="os-toggle">
+    <button data-os="mac">Mac / Linux</button>
+    <button data-os="windows">Windows</button>
+  </div>
+</div>
+
+<div class="sidebar-overlay"></div>
+
+<!-- Sidebar -->
+<nav class="sidebar">
+  <div class="sidebar-section">
+    <span class="sidebar-section-title">Module 1</span>
+    <a href="#section-1-1">1.1 The Problem with Shallow Agents</a>
+    <a href="#section-1-2">1.2 The 4 Pillars of Deep Agents</a>
+    <a href="#section-1-3">1.3 Environment Setup</a>
+    <a href="#section-1-4">1.4 Lab 1: Your First Agent</a>
+    <a href="#recap">Key Concepts Recap</a>
+  </div>
+  <div class="sidebar-section">
+    <span class="sidebar-section-title">All Modules</span>
+    <a href="index.html">Home</a>
+    <a href="module1.html" class="active">1 &mdash; Foundations</a>
+    <a href="module2.html">2 &mdash; Building Blocks</a>
+    <a href="module3.html">3 &mdash; Multi-Agent</a>
+    <a href="module4.html">4 &mdash; Capstones</a>
+  </div>
+  <div class="sidebar-progress">
+    <div class="sidebar-progress-label">Module Progress: <span class="progress-pct">0%</span></div>
+    <div class="progress-bar"><div class="progress-bar-fill"></div></div>
+  </div>
+</nav>
+
+<!-- Main -->
+<div class="main">
+
+  <span class="module-badge">Module 1</span>
+  <span class="time-badge">45 minutes</span>
+  <h1>Foundations</h1>
+  <p class="subtitle">From Shallow to Deep Agents</p>
+
+  <hr>
+
+  <!-- Section 1.1 -->
+  <h2 id="section-1-1">1.1 &mdash; The Problem with Shallow Agents</h2>
+
+  <div class="section-check">
+    <input type="checkbox" id="m1-s1">
+    <label for="m1-s1">Mark section 1.1 complete</label>
+  </div>
+
+  <h3>What is an "Agent"?</h3>
+  <p>An <strong>agent</strong> is an LLM that can:</p>
+  <ol>
+    <li><strong>Observe</strong> &mdash; Read inputs, tool results, environment state</li>
+    <li><strong>Think</strong> &mdash; Reason about what to do next</li>
+    <li><strong>Act</strong> &mdash; Call tools, write code, make API calls</li>
+    <li><strong>Loop</strong> &mdash; Repeat until the task is done</li>
+  </ol>
+
+  <div class="diagram">┌─────────────────────────────────┐
+│         AGENT LOOP              │
+│                                 │
+│   User Query                    │
+│       ↓                         │
+│   LLM thinks → picks a tool    │
+│       ↓                         │
+│   Tool executes → returns result│
+│       ↓                         │
+│   LLM thinks again...          │
+│       ↓                         │
+│   (repeat until done)           │
+│       ↓                         │
+│   Final Answer                  │
+└─────────────────────────────────┘</div>
+
+  <h3>The "Shallow Agent" Problem</h3>
+  <p>A <strong>shallow agent</strong> is just an LLM in a tool loop with no additional structure. Here's why they fail at real-world tasks:</p>
+
+  <table>
+    <thead><tr><th>Problem</th><th>What Happens</th><th>Example</th></tr></thead>
+    <tbody>
+      <tr><td><strong>No Planning</strong></td><td>Agent jumps straight into action without thinking</td><td>Asked to "build a REST API", starts writing random endpoints</td></tr>
+      <tr><td><strong>Context Overflow</strong></td><td>Too much information crammed into one conversation</td><td>50 tool calls later, the LLM forgets the original goal</td></tr>
+      <tr><td><strong>No Delegation</strong></td><td>One agent tries to do everything</td><td>Research + code + test + deploy all in one context</td></tr>
+      <tr><td><strong>Lost Work</strong></td><td>Results disappear when context is truncated</td><td>10,000 words of research vanish after summarization</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Real Example: Why ChatGPT Struggles with Complex Tasks</h3>
+  <div class="diagram">User: "Research the top 5 AI frameworks, compare their features,
+       write a 2000-word report, and create a comparison table."
+
+Shallow Agent Behavior:
+  Step 1: Search "top AI frameworks" ✓
+  Step 2: Search "LangChain features" ✓
+  Step 3: Search "CrewAI features" ✓
+  Step 4: ... context window filling up ...
+  Step 5: Starts forgetting earlier search results
+  Step 6: Writes incomplete report missing key data
+  Step 7: Table is inconsistent with the report text</div>
+
+  <h3>The Solution: Deep Agents</h3>
+  <p>Deep Agents solve this with <strong>4 pillars</strong>:</p>
+
+  <div class="diagram">┌──────────────────────────────────────────────────┐
+│                  DEEP AGENT                       │
+│                                                   │
+│  ┌──────────┐  ┌──────────┐  ┌──────────────┐   │
+│  │ PLANNING │  │SUB-AGENTS│  │  FILESYSTEM   │   │
+│  │write_todos│ │  task()  │  │read/write/edit│   │
+│  │decompose │  │ delegate │  │  offload ctx  │   │
+│  └──────────┘  └──────────┘  └──────────────┘   │
+│                                                   │
+│  ┌──────────────────────────────────────────┐    │
+│  │         DETAILED SYSTEM PROMPTS           │    │
+│  │    Guide behavior, set boundaries         │    │
+│  └──────────────────────────────────────────┘    │
+└──────────────────────────────────────────────────┘</div>
+
+  <hr>
+
+  <!-- Section 1.2 -->
+  <h2 id="section-1-2">1.2 &mdash; The 4 Pillars of Deep Agents</h2>
+
+  <div class="section-check">
+    <input type="checkbox" id="m1-s2">
+    <label for="m1-s2">Mark section 1.2 complete</label>
+  </div>
+
+  <h3>Pillar 1: Planning (write_todos)</h3>
+  <p>Agents break complex tasks into discrete steps <strong>before</strong> acting:</p>
+
+  <pre><code><span class="cm"># The agent automatically creates a todo list</span>
+todos = [
+    <span class="st">"1. Search for top 5 AI frameworks"</span>,
+    <span class="st">"2. For each framework, research key features"</span>,
+    <span class="st">"3. Create comparison matrix"</span>,
+    <span class="st">"4. Write executive summary"</span>,
+    <span class="st">"5. Generate final report with table"</span>
+]</code></pre>
+
+  <p><strong>Why this matters:</strong> Without planning, agents take random walks through solution space. With planning, they follow a structured path.</p>
+
+  <h3>Pillar 2: Sub-Agents (task delegation)</h3>
+  <p>Instead of one agent doing everything, the <strong>orchestrator</strong> delegates to <strong>specialists</strong>:</p>
+
+  <div class="diagram">┌─────────────┐
+│ ORCHESTRATOR │
+└──────┬──────┘
+       │
+       ├──→ [Researcher Agent] → searches web, takes notes
+       ├──→ [Analyst Agent]    → processes data, finds patterns
+       └──→ [Writer Agent]     → synthesizes into final report</div>
+
+  <p><strong>Key insight:</strong> Each sub-agent gets its own <strong>isolated context window</strong>. The researcher's 50 search results don't pollute the writer's clean context.</p>
+
+  <h3>Pillar 3: Filesystem (context offloading)</h3>
+  <p>Instead of keeping everything in the conversation, agents write to files:</p>
+
+  <div class="diagram">/workspace/
+├── research/
+│   ├── langchain_notes.md      ← Researcher wrote this
+│   ├── crewai_notes.md         ← Researcher wrote this
+│   └── comparison_data.json    ← Analyst wrote this
+└── output/
+    └── final_report.md         ← Writer reads notes, writes report</div>
+
+  <p><strong>Why this matters:</strong> Files persist beyond the context window. When conversation history is summarized, the work product survives.</p>
+
+  <h3>Pillar 4: Detailed System Prompts</h3>
+  <p>The system prompt is the agent's <strong>operating manual</strong>:</p>
+
+  <pre><code><span class="st">"""You are a financial research analyst agent.
+
+## Your Role
+- You research financial data and produce investor-grade reports
+- You ALWAYS plan before acting using write_todos
+- You delegate complex sub-tasks to specialized sub-agents
+
+## Rules
+- Never make up financial data — always cite sources
+- Write research notes to /research/ before synthesizing
+- Maximum 3 search queries per sub-topic"""</span></code></pre>
+
+  <hr>
+
+  <!-- Section 1.3 -->
+  <h2 id="section-1-3">1.3 &mdash; Environment Setup</h2>
+
+  <div class="section-check">
+    <input type="checkbox" id="m1-s3">
+    <label for="m1-s3">Mark section 1.3 complete</label>
+  </div>
+
+  <h3>Step 1: Create Project Directory</h3>
+  <div class="os-command" data-mac="mkdir agentic-ai-course && cd agentic-ai-course
+python3 -m venv .venv
+source .venv/bin/activate" data-windows="mkdir agentic-ai-course && cd agentic-ai-course
+python -m venv .venv
+.venv\Scripts\activate"><code></code></div>
+
+  <h3>Step 2: Install DeepAgents</h3>
+  <pre><code>pip install deepagents "langchain-openai>=1.1.8"</code></pre>
+
+  <div class="callout callout-info">
+    <div class="callout-title">Note</div>
+    We install <code>langchain-openai</code> explicitly since we're using OpenAI models. The core <code>deepagents</code> package defaults to Anthropic but fully supports OpenAI.
+  </div>
+
+  <h3>Step 3: Configure OpenAI API Key</h3>
+  <div class="os-command" data-mac="export OPENAI_API_KEY=&quot;sk-your-key-here&quot;" data-windows="set OPENAI_API_KEY=sk-your-key-here"><code></code></div>
+
+  <p>Or create a <code>.env</code> file:</p>
+  <pre><code>OPENAI_API_KEY=sk-your-key-here</code></pre>
+
+  <h3>Step 4: Verify Installation (Lab 0)</h3>
+
+  <div class="lab-header">
+    <h3>Lab 0: Setup Verification</h3>
+    <p>Run this script to verify everything is installed correctly.</p>
+  </div>
+
+  <div class="lab-code-section">
+    <a href="#" class="download-btn" data-filename="lab0_setup.py">Download lab0_setup.py</a>
+
+    <pre><code><span class="cm">"""
+LAB 0: Environment Setup &amp; Verification
+Run this first to verify everything is installed correctly.
+"""</span>
+<span class="kw">import</span> os
+<span class="kw">import</span> sys
+
+<span class="kw">def</span> <span class="fn">check_setup</span>():
+    <span class="bi">print</span>(<span class="st">"="</span> * <span class="nu">50</span>)
+    <span class="bi">print</span>(<span class="st">" DeepAgents Course — Setup Checker"</span>)
+    <span class="bi">print</span>(<span class="st">"="</span> * <span class="nu">50</span>)
+
+    errors = []
+
+    <span class="cm"># Check Python version</span>
+    v = sys.version_info
+    <span class="bi">print</span>(<span class="st">f"\n[1] Python version: {v.major}.{v.minor}.{v.micro}"</span>, end=<span class="st">" "</span>)
+    <span class="kw">if</span> v >= (<span class="nu">3</span>, <span class="nu">11</span>):
+        <span class="bi">print</span>(<span class="st">"✓"</span>)
+    <span class="kw">else</span>:
+        <span class="bi">print</span>(<span class="st">"✗ (need 3.11+)"</span>)
+        errors.<span class="fn">append</span>(<span class="st">"Python 3.11+ required"</span>)
+
+    <span class="cm"># Check deepagents</span>
+    <span class="bi">print</span>(<span class="st">"[2] deepagents package:"</span>, end=<span class="st">" "</span>)
+    <span class="kw">try</span>:
+        <span class="kw">import</span> deepagents
+        <span class="bi">print</span>(<span class="st">"✓"</span>)
+    <span class="kw">except</span> <span class="ty">ImportError</span>:
+        <span class="bi">print</span>(<span class="st">"✗"</span>)
+        errors.<span class="fn">append</span>(<span class="st">"Run: pip install deepagents"</span>)
+
+    <span class="cm"># Check langchain-openai</span>
+    <span class="bi">print</span>(<span class="st">"[3] langchain-openai package:"</span>, end=<span class="st">" "</span>)
+    <span class="kw">try</span>:
+        <span class="kw">import</span> langchain_openai
+        <span class="bi">print</span>(<span class="st">"✓"</span>)
+    <span class="kw">except</span> <span class="ty">ImportError</span>:
+        <span class="bi">print</span>(<span class="st">"✗"</span>)
+        errors.<span class="fn">append</span>(<span class="st">"Run: pip install langchain-openai>=1.1.8"</span>)
+
+    <span class="cm"># Check OpenAI API key</span>
+    <span class="bi">print</span>(<span class="st">"[4] OPENAI_API_KEY:"</span>, end=<span class="st">" "</span>)
+    key = os.<span class="fn">getenv</span>(<span class="st">"OPENAI_API_KEY"</span>, <span class="st">""</span>)
+    <span class="kw">if</span> key.<span class="fn">startswith</span>(<span class="st">"sk-"</span>):
+        <span class="bi">print</span>(<span class="st">f"✓ (starts with sk-...{key[-4:]})"</span>)
+    <span class="kw">else</span>:
+        <span class="bi">print</span>(<span class="st">"✗ (not set or invalid)"</span>)
+        errors.<span class="fn">append</span>(<span class="st">"Run: export OPENAI_API_KEY='sk-your-key-here'"</span>)
+
+    <span class="cm"># Check httpx</span>
+    <span class="bi">print</span>(<span class="st">"[5] httpx package:"</span>, end=<span class="st">" "</span>)
+    <span class="kw">try</span>:
+        <span class="kw">import</span> httpx
+        <span class="bi">print</span>(<span class="st">"✓"</span>)
+    <span class="kw">except</span> <span class="ty">ImportError</span>:
+        <span class="bi">print</span>(<span class="st">"✗"</span>)
+        errors.<span class="fn">append</span>(<span class="st">"Run: pip install httpx"</span>)
+
+    <span class="bi">print</span>(<span class="st">"\n"</span> + <span class="st">"="</span> * <span class="nu">50</span>)
+    <span class="kw">if</span> errors:
+        <span class="bi">print</span>(<span class="st">" ISSUES FOUND:"</span>)
+        <span class="kw">for</span> e <span class="kw">in</span> errors:
+            <span class="bi">print</span>(<span class="st">f"   → {e}"</span>)
+    <span class="kw">else</span>:
+        <span class="bi">print</span>(<span class="st">" ALL CHECKS PASSED — Ready to go!"</span>)
+    <span class="kw">return</span> <span class="kw">not</span> errors
+
+<span class="kw">def</span> <span class="fn">test_agent</span>():
+    <span class="bi">print</span>(<span class="st">"\n[6] Testing agent creation..."</span>)
+    <span class="kw">from</span> deepagents <span class="kw">import</span> create_deep_agent
+    <span class="kw">from</span> langchain_core.messages <span class="kw">import</span> HumanMessage
+
+    agent = <span class="fn">create_deep_agent</span>(
+        model=<span class="st">"openai:gpt-4o-mini"</span>,
+        system_prompt=<span class="st">"You are a test agent. Respond with exactly: SETUP OK"</span>
+    )
+    result = agent.<span class="fn">invoke</span>(
+        {<span class="st">"messages"</span>: [<span class="fn">HumanMessage</span>(content=<span class="st">"Confirm setup"</span>)]},
+        config={<span class="st">"configurable"</span>: {<span class="st">"thread_id"</span>: <span class="st">"setup-test"</span>}}
+    )
+    <span class="bi">print</span>(<span class="st">f"    Agent response: {result['messages'][-1].content}"</span>)
+    <span class="bi">print</span>(<span class="st">"    ✓ Agent is working!\n"</span>)
+
+<span class="kw">if</span> __name__ == <span class="st">"__main__"</span>:
+    <span class="kw">if</span> <span class="fn">check_setup</span>():
+        <span class="fn">test_agent</span>()
+        <span class="bi">print</span>(<span class="st">"You're ready for the course! Start with lab1_first_agent.py"</span>)</code></pre>
+  </div>
+
+  <div class="os-command" data-mac="python3 lab0_setup.py" data-windows="python lab0_setup.py"><code></code></div>
+
+  <h3>Understanding <code>create_deep_agent()</code></h3>
+
+  <pre><code><span class="kw">def</span> <span class="fn">create_deep_agent</span>(
+    model=<span class="st">"openai:gpt-4o"</span>,          <span class="cm"># The LLM to use</span>
+    tools=[],                         <span class="cm"># Custom tools the agent can call</span>
+    system_prompt=<span class="kw">None</span>,               <span class="cm"># Your instructions for the agent</span>
+    subagents=[],                     <span class="cm"># Specialist agents to delegate to</span>
+    middleware=[],                     <span class="cm"># Extensibility hooks</span>
+    backend=<span class="kw">None</span>,                     <span class="cm"># Where files are stored</span>
+    memory=[],                        <span class="cm"># Paths to AGENTS.md memory files</span>
+    skills=[],                        <span class="cm"># Paths to skill directories</span>
+    interrupt_on=[],                  <span class="cm"># Tools that need human approval</span>
+)</code></pre>
+
+  <div class="callout callout-tip">
+    <div class="callout-title">Key Behavior with OpenAI</div>
+    <ul>
+      <li>When you pass <code>"openai:gpt-4o"</code>, it automatically enables the OpenAI Responses API</li>
+      <li>Authentication uses the <code>OPENAI_API_KEY</code> environment variable</li>
+      <li>All OpenAI models with tool-calling support work: <code>gpt-4o</code>, <code>gpt-4o-mini</code>, <code>gpt-4-turbo</code>, etc.</li>
+    </ul>
+  </div>
+
+  <hr>
+
+  <!-- Section 1.4 -->
+  <h2 id="section-1-4">1.4 &mdash; Lab 1: Your First Agent</h2>
+
+  <div class="section-check">
+    <input type="checkbox" id="m1-s4">
+    <label for="m1-s4">Mark section 1.4 complete</label>
+  </div>
+
+  <div class="lab-header">
+    <h3>Lab 1: Your First Agent</h3>
+    <p><strong>Goal:</strong> Build an agent with custom tools that can answer math questions and tell the current time.</p>
+    <p><strong>Time:</strong> 15 minutes</p>
+  </div>
+
+  <div class="lab-code-section">
+    <a href="#" class="download-btn" data-filename="lab1_first_agent.py">Download lab1_first_agent.py</a>
+
+    <h4>Step 1: Define Tools</h4>
+    <pre><code><span class="cm"># lab1_first_agent.py</span>
+<span class="kw">import</span> math
+<span class="kw">from</span> datetime <span class="kw">import</span> datetime
+<span class="kw">from</span> langchain_core.tools <span class="kw">import</span> tool
+<span class="kw">from</span> langchain_core.messages <span class="kw">import</span> HumanMessage
+<span class="kw">from</span> deepagents <span class="kw">import</span> create_deep_agent
+
+<span class="dc">@tool</span>
+<span class="kw">def</span> <span class="fn">calculator</span>(expression: <span class="ty">str</span>) -> <span class="ty">str</span>:
+    <span class="st">"""Evaluate a mathematical expression.
+    Supports: +, -, *, /, **, sqrt, sin, cos, log, pi, e
+
+    Args:
+        expression: A math expression, e.g. "2 + 3 * 4" or "sqrt(144)"
+    """</span>
+    allowed_names = {k: v <span class="kw">for</span> k, v <span class="kw">in</span> math.__dict__.<span class="fn">items</span>() <span class="kw">if not</span> k.<span class="fn">startswith</span>(<span class="st">"__"</span>)}
+    allowed_names.<span class="fn">update</span>({<span class="st">"abs"</span>: <span class="bi">abs</span>, <span class="st">"round"</span>: <span class="bi">round</span>})
+    <span class="kw">try</span>:
+        result = <span class="bi">eval</span>(expression, {<span class="st">"__builtins__"</span>: {}}, allowed_names)
+        <span class="kw">return</span> <span class="st">f"Result: {result}"</span>
+    <span class="kw">except</span> <span class="ty">Exception</span> <span class="kw">as</span> e:
+        <span class="kw">return</span> <span class="st">f"Error evaluating '{expression}': {e}"</span>
+
+<span class="dc">@tool</span>
+<span class="kw">def</span> <span class="fn">get_current_time</span>() -> <span class="ty">str</span>:
+    <span class="st">"""Get the current date and time."""</span>
+    now = datetime.<span class="fn">now</span>()
+    <span class="kw">return</span> <span class="st">f"Current date/time: {now.strftime('%Y-%m-%d %H:%M:%S (%A)')}"</span></code></pre>
+
+    <h4>Step 2: Create the Agent</h4>
+    <pre><code>agent = <span class="fn">create_deep_agent</span>(
+    model=<span class="st">"openai:gpt-4o"</span>,
+    tools=[calculator, get_current_time],
+    system_prompt=<span class="st">"""You are a helpful assistant with access to a calculator and clock.
+
+## Rules
+- For ANY math question, ALWAYS use the calculator tool — never calculate in your head
+- Show your work: state what you're calculating and why
+- Be concise but thorough
+- When using the calculator, show the expression you're evaluating
+"""</span>
+)</code></pre>
+
+    <h4>Step 3: Test It</h4>
+    <pre><code><span class="kw">def</span> <span class="fn">ask</span>(question: <span class="ty">str</span>, thread_id: <span class="ty">str</span> = <span class="st">"lab1"</span>):
+    <span class="st">"""Send a message to the agent and print the response."""</span>
+    result = agent.<span class="fn">invoke</span>(
+        {<span class="st">"messages"</span>: [<span class="fn">HumanMessage</span>(content=question)]},
+        config={<span class="st">"configurable"</span>: {<span class="st">"thread_id"</span>: thread_id}}
+    )
+    <span class="kw">for</span> msg <span class="kw">in</span> <span class="bi">reversed</span>(result[<span class="st">"messages"</span>]):
+        <span class="kw">if</span> msg.type == <span class="st">"ai"</span> <span class="kw">and</span> msg.content:
+            <span class="bi">print</span>(<span class="st">f"\nAGENT: {msg.content}"</span>)
+            <span class="kw">return</span>
+
+<span class="cm"># Test basic tool use</span>
+<span class="fn">ask</span>(<span class="st">"What is the square root of 1764?"</span>)
+
+<span class="cm"># Test multi-step reasoning</span>
+<span class="fn">ask</span>(<span class="st">"If I invest $10,000 at 7% annual compound interest, "</span>
+    <span class="st">"how much will I have after 10 years? Use A = P*(1+r)^t"</span>)
+
+<span class="cm"># Test time tool</span>
+<span class="fn">ask</span>(<span class="st">"What day of the week is it today?"</span>)
+
+<span class="cm"># Test combining tools</span>
+<span class="fn">ask</span>(<span class="st">"How many days until the end of this year? Use today's date."</span>)</code></pre>
+  </div>
+
+  <div class="os-command" data-mac="python3 lab1_first_agent.py" data-windows="python lab1_first_agent.py"><code></code></div>
+
+  <div class="expected-output">Agent: The square root of 1764 is 42.
+
+Agent: Using the compound interest formula A = P(1+r)^t:
+- P = $10,000, r = 0.07, t = 10
+- A = 10000 × (1.07)^10 = $19,671.51
+After 10 years, you'd have approximately $19,671.51.
+
+Agent: The current date and time is 2025-01-15 14:32:07.
+
+Agent: Today is January 15, 2025. The year ends on December 31, 2025.
+That's 350 days from now.</div>
+
+  <h3>What Just Happened?</h3>
+
+  <div class="diagram">1. User asks: "sqrt of 1764?"
+2. LLM decides to use calculator tool
+3. Tool call: calculator("sqrt(1764)")
+4. Tool returns: "Result: 42.0"
+5. LLM formats answer: "The square root is 42"</div>
+
+  <div class="callout callout-tip">
+    <div class="callout-title">Challenge Exercise</div>
+    Add a third tool <code>unit_converter</code> that converts between units (kg/lbs, km/miles, etc.) and ask the agent a question that requires both conversion and calculation.
+  </div>
+
+  <hr>
+
+  <!-- Recap -->
+  <h2 id="recap">Key Concepts Recap</h2>
+
+  <div class="section-check">
+    <input type="checkbox" id="m1-recap">
+    <label for="m1-recap">Module 1 complete</label>
+  </div>
+
+  <table>
+    <thead><tr><th>Concept</th><th>What You Learned</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Shallow vs Deep</strong></td><td>Raw LLM + tools fails; need planning + delegation + filesystem</td></tr>
+      <tr><td><strong>4 Pillars</strong></td><td>Planning, Sub-agents, Filesystem, System Prompts</td></tr>
+      <tr><td><strong><code>create_deep_agent()</code></strong></td><td>The factory function that builds agents</td></tr>
+      <tr><td><strong><code>@tool</code> decorator</strong></td><td>How to give agents capabilities</td></tr>
+      <tr><td><strong>Tool calling</strong></td><td>LLM decides when/how to use tools</td></tr>
+      <tr><td><strong>Thread ID</strong></td><td>Conversation identity for stateful interactions</td></tr>
+    </tbody>
+  </table>
+
+  <!-- Page Nav -->
+  <div class="page-nav">
+    <a href="index.html">
+      <span class="page-nav-label">Previous</span>
+      <span class="page-nav-title">&larr; Course Home</span>
+    </a>
+    <a href="module2.html" class="next">
+      <span class="page-nav-label">Next</span>
+      <span class="page-nav-title">Module 2: Building Blocks &rarr;</span>
+    </a>
+  </div>
+
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

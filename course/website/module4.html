@@ -1,0 +1,1648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Module 4: Capstone Projects — Agentic AI Masterclass</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- Top Bar -->
+<div class="topbar">
+  <button class="hamburger" aria-label="Toggle sidebar">&#9776;</button>
+  <a href="index.html" class="topbar-brand">Agentic AI Masterclass</a>
+  <div class="os-toggle">
+    <button data-os="mac">Mac / Linux</button>
+    <button data-os="windows">Windows</button>
+  </div>
+</div>
+
+<div class="sidebar-overlay"></div>
+
+<!-- Sidebar -->
+<nav class="sidebar">
+  <div class="sidebar-section">
+    <span class="sidebar-section-title">Module 4</span>
+    <a href="#section-4-1">4.1 Financial Deep Research</a>
+    <a href="#section-4-2">4.2 Text-to-SQL Analytics</a>
+    <a href="#section-4-3">4.3 Content Pipeline (Bonus)</a>
+    <a href="#cheatsheet">Cheatsheet</a>
+    <a href="#wrapup">Course Wrap-Up</a>
+  </div>
+  <div class="sidebar-section">
+    <span class="sidebar-section-title">All Modules</span>
+    <a href="index.html">Home</a>
+    <a href="module1.html">1 &mdash; Foundations</a>
+    <a href="module2.html">2 &mdash; Building Blocks</a>
+    <a href="module3.html">3 &mdash; Multi-Agent</a>
+    <a href="module4.html" class="active">4 &mdash; Capstones</a>
+  </div>
+  <div class="sidebar-progress">
+    <div class="sidebar-progress-label">Module Progress: <span class="progress-pct">0%</span></div>
+    <div class="progress-bar"><div class="progress-bar-fill"></div></div>
+  </div>
+</nav>
+
+<!-- Main -->
+<div class="main">
+
+  <span class="module-badge">Module 4</span>
+  <span class="time-badge">45 minutes</span>
+  <h1>Capstone Projects</h1>
+  <p class="subtitle">Build Production-Grade Multi-Agent Apps</p>
+
+  <div class="callout callout-tip">
+    <div class="callout-title">100% Hands-On Code</div>
+    Three complete applications you build from scratch. Each project combines everything you learned in Modules 1&ndash;3: tools, sub-agents, orchestration, filesystem handoff, and detailed system prompts.
+  </div>
+
+  <hr>
+
+  <!-- ================================================================ -->
+  <!-- Section 4.1 — Financial Deep Research System                     -->
+  <!-- ================================================================ -->
+  <h2 id="section-4-1">4.1 &mdash; Financial Deep Research System</h2>
+
+  <div class="section-check">
+    <input type="checkbox" id="m4-s1">
+    <label for="m4-s1">Mark section 4.1 complete</label>
+  </div>
+
+  <span class="time-badge">25 min</span>
+
+  <h3>What We&rsquo;re Building</h3>
+  <p>A multi-agent financial research system that gathers market data, analyzes news, computes financial metrics, and produces a comprehensive investment report &mdash; all orchestrated automatically.</p>
+
+  <div class="diagram">┌──────────────────────────────────────────────────────────────┐
+│                     ORCHESTRATOR AGENT                       │
+│                                                              │
+│  Phase 1: Parallel Data Collection                           │
+│  ┌──────────────┐  ┌──────────────┐                         │
+│  │ market_data   │  │ news_analyst  │                         │
+│  │   agent       │  │   agent       │                         │
+│  │              │  │              │                         │
+│  │ get_stock_   │  │ search_      │                         │
+│  │ data()       │  │ financial_   │                         │
+│  │              │  │ news()       │                         │
+│  └──────┬───────┘  └──────┬───────┘                         │
+│         │                 │                                  │
+│         ▼                 ▼                                  │
+│  ┌──────────────────────────────┐                            │
+│  │       /data/ directory       │   ← file-based handoff     │
+│  │  market_data.md              │                            │
+│  │  news_analysis.md            │                            │
+│  │  financial_analysis.md       │                            │
+│  │  final_report.md             │                            │
+│  └──────────────────────────────┘                            │
+│         │                 │                                  │
+│  Phase 2: Analysis        │                                  │
+│  ┌──────────────┐         │                                  │
+│  │ finance_     │◄────────┘                                  │
+│  │ analyst_agent│                                            │
+│  │              │                                            │
+│  │ calculate_   │                                            │
+│  │ financial_   │                                            │
+│  │ metrics()    │                                            │
+│  └──────┬───────┘                                            │
+│         │                                                    │
+│  Phase 3: Report                                             │
+│  ┌──────────────┐                                            │
+│  │ report_      │                                            │
+│  │ writer_agent │                                            │
+│  │              │                                            │
+│  │ Reads all    │                                            │
+│  │ /data/ files │                                            │
+│  └──────┬───────┘                                            │
+│         │                                                    │
+│  Phase 4: Deliver final_report.md to user                    │
+└─────────┴────────────────────────────────────────────────────┘</div>
+
+  <h3>Architecture</h3>
+  <table>
+    <thead><tr><th>Agent</th><th>Role</th><th>Tools</th></tr></thead>
+    <tbody>
+      <tr><td><strong>market_data_agent</strong></td><td>Fetches stock prices, P/E, market cap</td><td><code>get_stock_data</code></td></tr>
+      <tr><td><strong>news_analyst_agent</strong></td><td>Searches for financial news &amp; sentiment</td><td><code>search_financial_news</code></td></tr>
+      <tr><td><strong>finance_analyst_agent</strong></td><td>Computes metrics &amp; comparisons</td><td><code>calculate_financial_metrics</code></td></tr>
+      <tr><td><strong>report_writer_agent</strong></td><td>Reads all data and writes final report</td><td>filesystem (read/write)</td></tr>
+      <tr><td><strong>orchestrator</strong></td><td>Coordinates all phases</td><td>sub-agent delegation</td></tr>
+    </tbody>
+  </table>
+
+  <div class="lab-header">
+    <h3>Lab 4: Financial Deep Research</h3>
+    <a href="#" class="download-btn" data-filename="lab4_financial_research.py">Download lab4_financial_research.py</a>
+  </div>
+
+  <div class="lab-code-section">
+
+    <h4>Step 1: Imports &amp; Configuration</h4>
+    <pre><code><span class="cm">#!/usr/bin/env python3</span>
+<span class="cm">"""</span>
+<span class="cm">Lab 4 — Financial Deep Research System</span>
+<span class="cm">A multi-agent system that researches stocks and produces investment reports.</span>
+<span class="cm">Uses simulated data for educational purposes.</span>
+<span class="cm">"""</span>
+
+<span class="kw">import</span> os
+<span class="kw">import</span> json
+<span class="kw">import</span> random
+<span class="kw">from</span> datetime <span class="kw">import</span> datetime, timedelta
+<span class="kw">from</span> pathlib <span class="kw">import</span> Path
+
+<span class="kw">from</span> langchain_core.tools <span class="kw">import</span> tool
+<span class="kw">from</span> agents <span class="kw">import</span> Agent, Runner
+
+<span class="cm"># Create data directory for file-based handoff</span>
+DATA_DIR = Path(<span class="st">"data"</span>)
+DATA_DIR.<span class="fn">mkdir</span>(exist_ok=<span class="kw">True</span>)</code></pre>
+
+    <h4>Step 2: Simulated Stock Data</h4>
+    <pre><code><span class="cm"># ─── Simulated Stock Data (for educational purposes) ───</span>
+<span class="cm"># In production, replace with Alpha Vantage, Yahoo Finance, etc.</span>
+
+STOCK_DATABASE = {
+    <span class="st">"NVDA"</span>: {
+        <span class="st">"name"</span>: <span class="st">"NVIDIA Corporation"</span>,
+        <span class="st">"price"</span>: <span class="nu">142.85</span>,
+        <span class="st">"change_pct"</span>: <span class="nu">3.2</span>,
+        <span class="st">"pe_ratio"</span>: <span class="nu">65.4</span>,
+        <span class="st">"market_cap"</span>: <span class="st">"3.5T"</span>,
+        <span class="st">"52w_high"</span>: <span class="nu">152.89</span>,
+        <span class="st">"52w_low"</span>: <span class="nu">47.32</span>,
+        <span class="st">"volume"</span>: <span class="st">"312M"</span>,
+        <span class="st">"sector"</span>: <span class="st">"Technology"</span>,
+        <span class="st">"industry"</span>: <span class="st">"Semiconductors"</span>,
+        <span class="st">"revenue_growth"</span>: <span class="nu">122.4</span>,
+        <span class="st">"profit_margin"</span>: <span class="nu">55.6</span>,
+        <span class="st">"debt_to_equity"</span>: <span class="nu">0.41</span>,
+        <span class="st">"dividend_yield"</span>: <span class="nu">0.02</span>,
+        <span class="st">"beta"</span>: <span class="nu">1.65</span>,
+        <span class="st">"eps"</span>: <span class="nu">2.18</span>,
+        <span class="st">"forward_pe"</span>: <span class="nu">45.2</span>,
+        <span class="st">"analyst_rating"</span>: <span class="st">"Strong Buy"</span>,
+        <span class="st">"price_target"</span>: <span class="nu">165.00</span>,
+    },
+    <span class="st">"AAPL"</span>: {
+        <span class="st">"name"</span>: <span class="st">"Apple Inc."</span>,
+        <span class="st">"price"</span>: <span class="nu">237.49</span>,
+        <span class="st">"change_pct"</span>: <span class="nu">0.8</span>,
+        <span class="st">"pe_ratio"</span>: <span class="nu">31.2</span>,
+        <span class="st">"market_cap"</span>: <span class="st">"3.6T"</span>,
+        <span class="st">"52w_high"</span>: <span class="nu">243.85</span>,
+        <span class="st">"52w_low"</span>: <span class="nu">164.08</span>,
+        <span class="st">"volume"</span>: <span class="st">"58M"</span>,
+        <span class="st">"sector"</span>: <span class="st">"Technology"</span>,
+        <span class="st">"industry"</span>: <span class="st">"Consumer Electronics"</span>,
+        <span class="st">"revenue_growth"</span>: <span class="nu">6.1</span>,
+        <span class="st">"profit_margin"</span>: <span class="nu">26.3</span>,
+        <span class="st">"debt_to_equity"</span>: <span class="nu">1.87</span>,
+        <span class="st">"dividend_yield"</span>: <span class="nu">0.44</span>,
+        <span class="st">"beta"</span>: <span class="nu">1.24</span>,
+        <span class="st">"eps"</span>: <span class="nu">7.62</span>,
+        <span class="st">"forward_pe"</span>: <span class="nu">28.5</span>,
+        <span class="st">"analyst_rating"</span>: <span class="st">"Buy"</span>,
+        <span class="st">"price_target"</span>: <span class="nu">260.00</span>,
+    },
+    <span class="st">"MSFT"</span>: {
+        <span class="st">"name"</span>: <span class="st">"Microsoft Corporation"</span>,
+        <span class="st">"price"</span>: <span class="nu">432.68</span>,
+        <span class="st">"change_pct"</span>: <span class="nu">1.5</span>,
+        <span class="st">"pe_ratio"</span>: <span class="nu">36.8</span>,
+        <span class="st">"market_cap"</span>: <span class="st">"3.2T"</span>,
+        <span class="st">"52w_high"</span>: <span class="nu">445.72</span>,
+        <span class="st">"52w_low"</span>: <span class="nu">362.90</span>,
+        <span class="st">"volume"</span>: <span class="st">"22M"</span>,
+        <span class="st">"sector"</span>: <span class="st">"Technology"</span>,
+        <span class="st">"industry"</span>: <span class="st">"Software — Infrastructure"</span>,
+        <span class="st">"revenue_growth"</span>: <span class="nu">16.0</span>,
+        <span class="st">"profit_margin"</span>: <span class="nu">35.6</span>,
+        <span class="st">"debt_to_equity"</span>: <span class="nu">0.29</span>,
+        <span class="st">"dividend_yield"</span>: <span class="nu">0.72</span>,
+        <span class="st">"beta"</span>: <span class="nu">0.89</span>,
+        <span class="st">"eps"</span>: <span class="nu">11.75</span>,
+        <span class="st">"forward_pe"</span>: <span class="nu">32.1</span>,
+        <span class="st">"analyst_rating"</span>: <span class="st">"Strong Buy"</span>,
+        <span class="st">"price_target"</span>: <span class="nu">480.00</span>,
+    },
+    <span class="st">"GOOGL"</span>: {
+        <span class="st">"name"</span>: <span class="st">"Alphabet Inc."</span>,
+        <span class="st">"price"</span>: <span class="nu">191.24</span>,
+        <span class="st">"change_pct"</span>: <span class="nu">2.1</span>,
+        <span class="st">"pe_ratio"</span>: <span class="nu">23.4</span>,
+        <span class="st">"market_cap"</span>: <span class="st">"2.4T"</span>,
+        <span class="st">"52w_high"</span>: <span class="nu">199.95</span>,
+        <span class="st">"52w_low"</span>: <span class="nu">130.67</span>,
+        <span class="st">"volume"</span>: <span class="st">"28M"</span>,
+        <span class="st">"sector"</span>: <span class="st">"Technology"</span>,
+        <span class="st">"industry"</span>: <span class="st">"Internet Content &amp; Information"</span>,
+        <span class="st">"revenue_growth"</span>: <span class="nu">15.1</span>,
+        <span class="st">"profit_margin"</span>: <span class="nu">27.5</span>,
+        <span class="st">"debt_to_equity"</span>: <span class="nu">0.05</span>,
+        <span class="st">"dividend_yield"</span>: <span class="nu">0.45</span>,
+        <span class="st">"beta"</span>: <span class="nu">1.06</span>,
+        <span class="st">"eps"</span>: <span class="nu">8.17</span>,
+        <span class="st">"forward_pe"</span>: <span class="nu">20.8</span>,
+        <span class="st">"analyst_rating"</span>: <span class="st">"Buy"</span>,
+        <span class="st">"price_target"</span>: <span class="nu">210.00</span>,
+    },
+    <span class="st">"TSLA"</span>: {
+        <span class="st">"name"</span>: <span class="st">"Tesla, Inc."</span>,
+        <span class="st">"price"</span>: <span class="nu">352.76</span>,
+        <span class="st">"change_pct"</span>: -<span class="nu">1.4</span>,
+        <span class="st">"pe_ratio"</span>: <span class="nu">112.5</span>,
+        <span class="st">"market_cap"</span>: <span class="st">"1.1T"</span>,
+        <span class="st">"52w_high"</span>: <span class="nu">488.54</span>,
+        <span class="st">"52w_low"</span>: <span class="nu">138.80</span>,
+        <span class="st">"volume"</span>: <span class="st">"95M"</span>,
+        <span class="st">"sector"</span>: <span class="st">"Consumer Cyclical"</span>,
+        <span class="st">"industry"</span>: <span class="st">"Auto Manufacturers"</span>,
+        <span class="st">"revenue_growth"</span>: <span class="nu">8.8</span>,
+        <span class="st">"profit_margin"</span>: <span class="nu">13.1</span>,
+        <span class="st">"debt_to_equity"</span>: <span class="nu">0.11</span>,
+        <span class="st">"dividend_yield"</span>: <span class="nu">0.0</span>,
+        <span class="st">"beta"</span>: <span class="nu">2.31</span>,
+        <span class="st">"eps"</span>: <span class="nu">3.14</span>,
+        <span class="st">"forward_pe"</span>: <span class="nu">95.8</span>,
+        <span class="st">"analyst_rating"</span>: <span class="st">"Hold"</span>,
+        <span class="st">"price_target"</span>: <span class="nu">320.00</span>,
+    },
+    <span class="st">"AMZN"</span>: {
+        <span class="st">"name"</span>: <span class="st">"Amazon.com, Inc."</span>,
+        <span class="st">"price"</span>: <span class="nu">227.35</span>,
+        <span class="st">"change_pct"</span>: <span class="nu">1.9</span>,
+        <span class="st">"pe_ratio"</span>: <span class="nu">42.1</span>,
+        <span class="st">"market_cap"</span>: <span class="st">"2.4T"</span>,
+        <span class="st">"52w_high"</span>: <span class="nu">233.00</span>,
+        <span class="st">"52w_low"</span>: <span class="nu">151.61</span>,
+        <span class="st">"volume"</span>: <span class="st">"45M"</span>,
+        <span class="st">"sector"</span>: <span class="st">"Consumer Cyclical"</span>,
+        <span class="st">"industry"</span>: <span class="st">"Internet Retail"</span>,
+        <span class="st">"revenue_growth"</span>: <span class="nu">12.5</span>,
+        <span class="st">"profit_margin"</span>: <span class="nu">8.0</span>,
+        <span class="st">"debt_to_equity"</span>: <span class="nu">0.52</span>,
+        <span class="st">"dividend_yield"</span>: <span class="nu">0.0</span>,
+        <span class="st">"beta"</span>: <span class="nu">1.16</span>,
+        <span class="st">"eps"</span>: <span class="nu">5.40</span>,
+        <span class="st">"forward_pe"</span>: <span class="nu">35.6</span>,
+        <span class="st">"analyst_rating"</span>: <span class="st">"Strong Buy"</span>,
+        <span class="st">"price_target"</span>: <span class="nu">250.00</span>,
+    },
+    <span class="st">"META"</span>: {
+        <span class="st">"name"</span>: <span class="st">"Meta Platforms, Inc."</span>,
+        <span class="st">"price"</span>: <span class="nu">612.77</span>,
+        <span class="st">"change_pct"</span>: <span class="nu">0.6</span>,
+        <span class="st">"pe_ratio"</span>: <span class="nu">26.8</span>,
+        <span class="st">"market_cap"</span>: <span class="st">"1.6T"</span>,
+        <span class="st">"52w_high"</span>: <span class="nu">638.40</span>,
+        <span class="st">"52w_low"</span>: <span class="nu">347.20</span>,
+        <span class="st">"volume"</span>: <span class="st">"18M"</span>,
+        <span class="st">"sector"</span>: <span class="st">"Technology"</span>,
+        <span class="st">"industry"</span>: <span class="st">"Internet Content &amp; Information"</span>,
+        <span class="st">"revenue_growth"</span>: <span class="nu">22.0</span>,
+        <span class="st">"profit_margin"</span>: <span class="nu">34.5</span>,
+        <span class="st">"debt_to_equity"</span>: <span class="nu">0.31</span>,
+        <span class="st">"dividend_yield"</span>: <span class="nu">0.35</span>,
+        <span class="st">"beta"</span>: <span class="nu">1.22</span>,
+        <span class="st">"eps"</span>: <span class="nu">22.88</span>,
+        <span class="st">"forward_pe"</span>: <span class="nu">23.1</span>,
+        <span class="st">"analyst_rating"</span>: <span class="st">"Buy"</span>,
+        <span class="st">"price_target"</span>: <span class="nu">660.00</span>,
+    },
+}
+
+<span class="cm"># ─── Simulated News Data ───</span>
+
+NEWS_DATABASE = {
+    <span class="st">"NVDA"</span>: [
+        {<span class="st">"title"</span>: <span class="st">"NVIDIA Blackwell GPUs See Record Demand from Hyperscalers"</span>,
+         <span class="st">"source"</span>: <span class="st">"Reuters"</span>, <span class="st">"sentiment"</span>: <span class="st">"positive"</span>,
+         <span class="st">"summary"</span>: <span class="st">"NVIDIA's next-gen Blackwell GPU architecture is seeing unprecedented demand from major cloud providers including Microsoft, Google, and Amazon."</span>},
+        {<span class="st">"title"</span>: <span class="st">"AI Chip Market Expected to Reach $300B by 2027"</span>,
+         <span class="st">"source"</span>: <span class="st">"Bloomberg"</span>, <span class="st">"sentiment"</span>: <span class="st">"positive"</span>,
+         <span class="st">"summary"</span>: <span class="st">"The global AI chip market continues to expand rapidly with NVIDIA maintaining dominant market share above 80%."</span>},
+        {<span class="st">"title"</span>: <span class="st">"Concerns Mount Over AI Chip Export Restrictions to China"</span>,
+         <span class="st">"source"</span>: <span class="st">"WSJ"</span>, <span class="st">"sentiment"</span>: <span class="st">"negative"</span>,
+         <span class="st">"summary"</span>: <span class="st">"New export controls could impact NVIDIA's revenue from the Chinese market, which accounts for roughly 20% of data center sales."</span>},
+    ],
+    <span class="st">"AAPL"</span>: [
+        {<span class="st">"title"</span>: <span class="st">"Apple Intelligence Rollout Boosts iPhone 16 Demand"</span>,
+         <span class="st">"source"</span>: <span class="st">"CNBC"</span>, <span class="st">"sentiment"</span>: <span class="st">"positive"</span>,
+         <span class="st">"summary"</span>: <span class="st">"Apple's AI features are driving a stronger-than-expected iPhone upgrade cycle across all major markets."</span>},
+        {<span class="st">"title"</span>: <span class="st">"Apple Services Revenue Hits All-Time High"</span>,
+         <span class="st">"source"</span>: <span class="st">"Bloomberg"</span>, <span class="st">"sentiment"</span>: <span class="st">"positive"</span>,
+         <span class="st">"summary"</span>: <span class="st">"Services segment reaches $25B quarterly revenue, now representing 25% of total company revenue."</span>},
+    ],
+    <span class="st">"MSFT"</span>: [
+        {<span class="st">"title"</span>: <span class="st">"Microsoft Azure AI Revenue Surges 60% Year-over-Year"</span>,
+         <span class="st">"source"</span>: <span class="st">"Reuters"</span>, <span class="st">"sentiment"</span>: <span class="st">"positive"</span>,
+         <span class="st">"summary"</span>: <span class="st">"Azure cloud business powered by Copilot and OpenAI integration shows accelerating growth."</span>},
+        {<span class="st">"title"</span>: <span class="st">"Microsoft Copilot Adoption Reaches 1 Million Enterprise Users"</span>,
+         <span class="st">"source"</span>: <span class="st">"TechCrunch"</span>, <span class="st">"sentiment"</span>: <span class="st">"positive"</span>,
+         <span class="st">"summary"</span>: <span class="st">"Enterprise adoption of Copilot is accelerating, with Fortune 500 companies leading deployment."</span>},
+    ],
+    <span class="st">"GOOGL"</span>: [
+        {<span class="st">"title"</span>: <span class="st">"Google Gemini 2.0 Challenges OpenAI's GPT Dominance"</span>,
+         <span class="st">"source"</span>: <span class="st">"The Verge"</span>, <span class="st">"sentiment"</span>: <span class="st">"positive"</span>,
+         <span class="st">"summary"</span>: <span class="st">"Alphabet's latest AI model shows significant improvements in reasoning and multimodal capabilities."</span>},
+        {<span class="st">"title"</span>: <span class="st">"Google Cloud Wins Major Government Contracts"</span>,
+         <span class="st">"source"</span>: <span class="st">"CNBC"</span>, <span class="st">"sentiment"</span>: <span class="st">"positive"</span>,
+         <span class="st">"summary"</span>: <span class="st">"Google Cloud Platform secures several large federal contracts worth over $2B combined."</span>},
+    ],
+    <span class="st">"TSLA"</span>: [
+        {<span class="st">"title"</span>: <span class="st">"Tesla Full Self-Driving v13 Shows Major Safety Improvements"</span>,
+         <span class="st">"source"</span>: <span class="st">"Reuters"</span>, <span class="st">"sentiment"</span>: <span class="st">"positive"</span>,
+         <span class="st">"summary"</span>: <span class="st">"Latest FSD version shows 5x improvement in miles between interventions."</span>},
+        {<span class="st">"title"</span>: <span class="st">"Tesla Faces Increased Competition in China EV Market"</span>,
+         <span class="st">"source"</span>: <span class="st">"Bloomberg"</span>, <span class="st">"sentiment"</span>: <span class="st">"negative"</span>,
+         <span class="st">"summary"</span>: <span class="st">"BYD and other Chinese manufacturers are taking market share with competitive pricing."</span>},
+        {<span class="st">"title"</span>: <span class="st">"Analysts Divided on Tesla Valuation After Recent Rally"</span>,
+         <span class="st">"source"</span>: <span class="st">"WSJ"</span>, <span class="st">"sentiment"</span>: <span class="st">"neutral"</span>,
+         <span class="st">"summary"</span>: <span class="st">"Stock's 150% gain in 6 months has analysts debating whether current levels are justified."</span>},
+    ],
+    <span class="st">"AMZN"</span>: [
+        {<span class="st">"title"</span>: <span class="st">"AWS Launches Next-Gen Custom AI Chips to Compete with NVIDIA"</span>,
+         <span class="st">"source"</span>: <span class="st">"TechCrunch"</span>, <span class="st">"sentiment"</span>: <span class="st">"positive"</span>,
+         <span class="st">"summary"</span>: <span class="st">"Amazon's Trainium2 chips offer 4x price-performance improvement for AI training workloads."</span>},
+        {<span class="st">"title"</span>: <span class="st">"Amazon Advertising Business Becomes Third Profit Pillar"</span>,
+         <span class="st">"source"</span>: <span class="st">"Bloomberg"</span>, <span class="st">"sentiment"</span>: <span class="st">"positive"</span>,
+         <span class="st">"summary"</span>: <span class="st">"Ad revenue exceeds $50B annually, making it a significant profit driver alongside AWS and retail."</span>},
+    ],
+    <span class="st">"META"</span>: [
+        {<span class="st">"title"</span>: <span class="st">"Meta's Llama 4 Open-Source Model Disrupts Enterprise AI"</span>,
+         <span class="st">"source"</span>: <span class="st">"Reuters"</span>, <span class="st">"sentiment"</span>: <span class="st">"positive"</span>,
+         <span class="st">"summary"</span>: <span class="st">"Open-source Llama 4 achieves GPT-4 level performance, driving enterprise adoption of Meta's ecosystem."</span>},
+        {<span class="st">"title"</span>: <span class="st">"Meta Reality Labs Losses Widen to $5B in Q4"</span>,
+         <span class="st">"source"</span>: <span class="st">"CNBC"</span>, <span class="st">"sentiment"</span>: <span class="st">"negative"</span>,
+         <span class="st">"summary"</span>: <span class="st">"Continued heavy investment in metaverse and AR/VR hardware weighs on short-term profitability."</span>},
+    ],
+}</code></pre>
+
+    <h4>Step 3: Define Tools</h4>
+    <pre><code><span class="dc">@tool</span>
+<span class="kw">def</span> <span class="fn">search_financial_news</span>(ticker: <span class="ty">str</span>) -> <span class="ty">str</span>:
+    <span class="st">"""Search for recent financial news about a stock ticker.
+
+    Args:
+        ticker: Stock ticker symbol (e.g., NVDA, AAPL, MSFT)
+    """</span>
+    ticker = ticker.<span class="fn">upper</span>().<span class="fn">strip</span>()
+    <span class="kw">if</span> ticker <span class="kw">not</span> <span class="kw">in</span> NEWS_DATABASE:
+        <span class="kw">return</span> <span class="st">f"No news found for ticker: {ticker}. Available: {', '.join(NEWS_DATABASE.keys())}"</span>
+
+    articles = NEWS_DATABASE[ticker]
+    result = <span class="st">f"## Recent News for {ticker}\n\n"</span>
+    <span class="kw">for</span> i, article <span class="kw">in</span> <span class="bi">enumerate</span>(articles, <span class="nu">1</span>):
+        result += <span class="st">f"### {i}. {article['title']}\n"</span>
+        result += <span class="st">f"**Source:** {article['source']} | **Sentiment:** {article['sentiment']}\n"</span>
+        result += <span class="st">f"{article['summary']}\n\n"</span>
+
+    <span class="kw">return</span> result
+
+
+<span class="dc">@tool</span>
+<span class="kw">def</span> <span class="fn">get_stock_data</span>(ticker: <span class="ty">str</span>) -> <span class="ty">str</span>:
+    <span class="st">"""Get current stock data including price, P/E ratio, market cap, and other metrics.
+
+    Args:
+        ticker: Stock ticker symbol (e.g., NVDA, AAPL, MSFT)
+    """</span>
+    ticker = ticker.<span class="fn">upper</span>().<span class="fn">strip</span>()
+    <span class="kw">if</span> ticker <span class="kw">not</span> <span class="kw">in</span> STOCK_DATABASE:
+        <span class="kw">return</span> <span class="st">f"Unknown ticker: {ticker}. Available: {', '.join(STOCK_DATABASE.keys())}"</span>
+
+    stock = STOCK_DATABASE[ticker]
+    result = <span class="st">f"## Stock Data: {stock['name']} ({ticker})\n\n"</span>
+    result += <span class="st">f"| Metric | Value |\n|--------|-------|\n"</span>
+    result += <span class="st">f"| Price | ${stock['price']:.2f} |\n"</span>
+    result += <span class="st">f"| Change | {stock['change_pct']:+.1f}% |\n"</span>
+    result += <span class="st">f"| P/E Ratio | {stock['pe_ratio']} |\n"</span>
+    result += <span class="st">f"| Forward P/E | {stock['forward_pe']} |\n"</span>
+    result += <span class="st">f"| Market Cap | {stock['market_cap']} |\n"</span>
+    result += <span class="st">f"| EPS | ${stock['eps']:.2f} |\n"</span>
+    result += <span class="st">f"| 52-Week High | ${stock['52w_high']:.2f} |\n"</span>
+    result += <span class="st">f"| 52-Week Low | ${stock['52w_low']:.2f} |\n"</span>
+    result += <span class="st">f"| Volume | {stock['volume']} |\n"</span>
+    result += <span class="st">f"| Revenue Growth | {stock['revenue_growth']}% |\n"</span>
+    result += <span class="st">f"| Profit Margin | {stock['profit_margin']}% |\n"</span>
+    result += <span class="st">f"| Debt/Equity | {stock['debt_to_equity']} |\n"</span>
+    result += <span class="st">f"| Dividend Yield | {stock['dividend_yield']}% |\n"</span>
+    result += <span class="st">f"| Beta | {stock['beta']} |\n"</span>
+    result += <span class="st">f"| Analyst Rating | {stock['analyst_rating']} |\n"</span>
+    result += <span class="st">f"| Price Target | ${stock['price_target']:.2f} |\n"</span>
+    result += <span class="st">f"| Sector | {stock['sector']} |\n"</span>
+    result += <span class="st">f"| Industry | {stock['industry']} |\n"</span>
+
+    <span class="kw">return</span> result
+
+
+<span class="dc">@tool</span>
+<span class="kw">def</span> <span class="fn">calculate_financial_metrics</span>(tickers: <span class="ty">str</span>) -> <span class="ty">str</span>:
+    <span class="st">"""Calculate comparative financial metrics for a comma-separated list of tickers.
+
+    Args:
+        tickers: Comma-separated list of ticker symbols (e.g., "NVDA,AAPL,MSFT")
+    """</span>
+    ticker_list = [t.<span class="fn">strip</span>().<span class="fn">upper</span>() <span class="kw">for</span> t <span class="kw">in</span> tickers.<span class="fn">split</span>(<span class="st">","</span>)]
+    valid_tickers = [t <span class="kw">for</span> t <span class="kw">in</span> ticker_list <span class="kw">if</span> t <span class="kw">in</span> STOCK_DATABASE]
+
+    <span class="kw">if</span> <span class="kw">not</span> valid_tickers:
+        <span class="kw">return</span> <span class="st">"No valid tickers provided."</span>
+
+    result = <span class="st">"## Comparative Financial Metrics\n\n"</span>
+
+    <span class="cm"># Comparison table</span>
+    header = <span class="st">"| Metric | "</span> + <span class="st">" | "</span>.<span class="fn">join</span>(valid_tickers) + <span class="st">" |\n"</span>
+    separator = <span class="st">"|--------|"</span> + <span class="st">"|"</span>.<span class="fn">join</span>([<span class="st">"--------"</span>] * <span class="bi">len</span>(valid_tickers)) + <span class="st">"|\n"</span>
+    result += header + separator
+
+    metrics = [
+        (<span class="st">"Price"</span>, <span class="kw">lambda</span> s: <span class="st">f"${s['price']:.2f}"</span>),
+        (<span class="st">"P/E Ratio"</span>, <span class="kw">lambda</span> s: <span class="st">f"{s['pe_ratio']}"</span>),
+        (<span class="st">"Forward P/E"</span>, <span class="kw">lambda</span> s: <span class="st">f"{s['forward_pe']}"</span>),
+        (<span class="st">"Market Cap"</span>, <span class="kw">lambda</span> s: <span class="st">f"{s['market_cap']}"</span>),
+        (<span class="st">"Rev Growth"</span>, <span class="kw">lambda</span> s: <span class="st">f"{s['revenue_growth']}%"</span>),
+        (<span class="st">"Profit Margin"</span>, <span class="kw">lambda</span> s: <span class="st">f"{s['profit_margin']}%"</span>),
+        (<span class="st">"Debt/Equity"</span>, <span class="kw">lambda</span> s: <span class="st">f"{s['debt_to_equity']}"</span>),
+        (<span class="st">"Beta"</span>, <span class="kw">lambda</span> s: <span class="st">f"{s['beta']}"</span>),
+        (<span class="st">"Analyst"</span>, <span class="kw">lambda</span> s: <span class="st">f"{s['analyst_rating']}"</span>),
+        (<span class="st">"Upside"</span>, <span class="kw">lambda</span> s: <span class="st">f"{((s['price_target'] - s['price']) / s['price'] * 100):.1f}%"</span>),
+    ]
+
+    <span class="kw">for</span> name, fn <span class="kw">in</span> metrics:
+        values = <span class="st">" | "</span>.<span class="fn">join</span>(fn(STOCK_DATABASE[t]) <span class="kw">for</span> t <span class="kw">in</span> valid_tickers)
+        result += <span class="st">f"| {name} | {values} |\n"</span>
+
+    <span class="cm"># Rankings</span>
+    result += <span class="st">"\n### Rankings\n\n"</span>
+    stocks = [(t, STOCK_DATABASE[t]) <span class="kw">for</span> t <span class="kw">in</span> valid_tickers]
+
+    result += <span class="st">"**By Revenue Growth:** "</span>
+    result += <span class="st">", "</span>.<span class="fn">join</span>(
+        <span class="st">f"{t} ({s['revenue_growth']}%)"</span>
+        <span class="kw">for</span> t, s <span class="kw">in</span> <span class="bi">sorted</span>(stocks, key=<span class="kw">lambda</span> x: x[<span class="nu">1</span>][<span class="st">"revenue_growth"</span>], reverse=<span class="kw">True</span>)
+    ) + <span class="st">"\n\n"</span>
+
+    result += <span class="st">"**By Profit Margin:** "</span>
+    result += <span class="st">", "</span>.<span class="fn">join</span>(
+        <span class="st">f"{t} ({s['profit_margin']}%)"</span>
+        <span class="kw">for</span> t, s <span class="kw">in</span> <span class="bi">sorted</span>(stocks, key=<span class="kw">lambda</span> x: x[<span class="nu">1</span>][<span class="st">"profit_margin"</span>], reverse=<span class="kw">True</span>)
+    ) + <span class="st">"\n\n"</span>
+
+    result += <span class="st">"**By Value (Lowest P/E):** "</span>
+    result += <span class="st">", "</span>.<span class="fn">join</span>(
+        <span class="st">f"{t} ({s['pe_ratio']})"</span>
+        <span class="kw">for</span> t, s <span class="kw">in</span> <span class="bi">sorted</span>(stocks, key=<span class="kw">lambda</span> x: x[<span class="nu">1</span>][<span class="st">"pe_ratio"</span>])
+    ) + <span class="st">"\n\n"</span>
+
+    result += <span class="st">"**By Risk (Beta):** "</span>
+    result += <span class="st">", "</span>.<span class="fn">join</span>(
+        <span class="st">f"{t} ({s['beta']})"</span>
+        <span class="kw">for</span> t, s <span class="kw">in</span> <span class="bi">sorted</span>(stocks, key=<span class="kw">lambda</span> x: x[<span class="nu">1</span>][<span class="st">"beta"</span>])
+    ) + <span class="st">"\n"</span>
+
+    <span class="kw">return</span> result</code></pre>
+
+    <h4>Step 4: Define Sub-Agents</h4>
+    <pre><code><span class="cm"># ─── Sub-Agent Definitions ───</span>
+
+market_data_agent = Agent(
+    name=<span class="st">"market_data_agent"</span>,
+    model=<span class="st">"gpt-4o"</span>,
+    instructions=<span class="st">"""You are a Market Data Specialist.
+
+Your job:
+1. Use get_stock_data to fetch current data for the requested ticker(s)
+2. Organize the data clearly in markdown format
+3. Save your findings to data/market_data.md using the file tools
+
+Always include: price, P/E, market cap, 52-week range, revenue growth,
+profit margins, and analyst ratings.
+
+Format your output as a clean markdown report.
+"""</span>,
+    tools=[get_stock_data],
+)
+
+news_analyst_agent = Agent(
+    name=<span class="st">"news_analyst_agent"</span>,
+    model=<span class="st">"gpt-4o"</span>,
+    instructions=<span class="st">"""You are a Financial News Analyst.
+
+Your job:
+1. Use search_financial_news to find recent news for the requested ticker(s)
+2. Analyze the sentiment: bullish vs bearish signals
+3. Identify key themes and catalysts
+4. Save your analysis to data/news_analysis.md
+
+Your analysis should include:
+- Summary of key news items
+- Overall sentiment assessment (bullish/bearish/neutral)
+- Key catalysts and risk factors
+- Impact assessment on stock price
+"""</span>,
+    tools=[search_financial_news],
+)
+
+finance_analyst_agent = Agent(
+    name=<span class="st">"finance_analyst_agent"</span>,
+    model=<span class="st">"gpt-4o"</span>,
+    instructions=<span class="st">"""You are a Quantitative Financial Analyst.
+
+Your job:
+1. Read market data from data/market_data.md
+2. Use calculate_financial_metrics to compare stocks
+3. Provide detailed financial analysis
+4. Save your analysis to data/financial_analysis.md
+
+Your analysis should include:
+- Comparative metrics table
+- Valuation assessment (overvalued/undervalued/fairly valued)
+- Growth vs value categorization
+- Risk assessment based on beta and debt levels
+- Ranking by investment attractiveness
+"""</span>,
+    tools=[calculate_financial_metrics],
+)
+
+report_writer_agent = Agent(
+    name=<span class="st">"report_writer_agent"</span>,
+    model=<span class="st">"gpt-4o"</span>,
+    instructions=<span class="st">"""You are a Senior Investment Report Writer.
+
+Your job:
+1. Read ALL files in the data/ directory:
+   - data/market_data.md
+   - data/news_analysis.md
+   - data/financial_analysis.md
+2. Synthesize everything into a comprehensive investment report
+3. Save the final report to data/final_report.md
+
+Your report MUST include:
+- Executive Summary (2-3 paragraphs)
+- Individual Stock Analysis (for each ticker)
+- Comparative Analysis
+- Risk Assessment
+- Investment Recommendation
+- Disclaimer
+
+Write in professional financial analyst style.
+"""</span>,
+    tools=[],
+)</code></pre>
+
+    <h4>Step 5: Create the Orchestrator</h4>
+    <pre><code><span class="cm"># ─── Orchestrator ───</span>
+
+orchestrator = Agent(
+    name=<span class="st">"financial_research_orchestrator"</span>,
+    model=<span class="st">"gpt-4o"</span>,
+    instructions=<span class="st">"""You are the Financial Research Orchestrator.
+
+When the user asks for stock research, follow this EXACT workflow:
+
+## Phase 1: Parallel Data Collection
+- Delegate to market_data_agent to fetch stock data for ALL requested tickers
+- Delegate to news_analyst_agent to fetch news for ALL requested tickers
+- These can run in parallel — both save to the data/ directory
+
+## Phase 2: Analysis
+- Delegate to finance_analyst_agent to read the collected data and produce analysis
+- The analyst should compare all tickers using calculate_financial_metrics
+
+## Phase 3: Report Generation
+- Delegate to report_writer_agent to read ALL data/ files and produce the final report
+- The report should be comprehensive and professional
+
+## Phase 4: Delivery
+- Read data/final_report.md
+- Present the key findings to the user
+- Offer to dive deeper into any specific area
+
+IMPORTANT:
+- Always confirm which tickers the user wants researched
+- If no tickers specified, suggest the Magnificent 7: NVDA, AAPL, MSFT, GOOGL, TSLA, AMZN, META
+- Each phase must complete before the next begins
+- If any agent fails, report the error and continue with available data
+"""</span>,
+    agents=[market_data_agent, news_analyst_agent,
+            finance_analyst_agent, report_writer_agent],
+)</code></pre>
+
+    <h4>Step 6: Run Function</h4>
+    <pre><code><span class="cm"># ─── Run the System ───</span>
+
+<span class="kw">def</span> <span class="fn">run_research</span>(query: <span class="ty">str</span>):
+    <span class="st">"""Run a financial research query through the orchestrator."""</span>
+    <span class="bi">print</span>(<span class="st">f"\n{'='*60}"</span>)
+    <span class="bi">print</span>(<span class="st">f"Financial Research Query: {query}"</span>)
+    <span class="bi">print</span>(<span class="st">f"{'='*60}\n"</span>)
+
+    result = Runner.<span class="fn">run_sync</span>(orchestrator, query)
+    <span class="bi">print</span>(<span class="st">f"\n{result.final_output}"</span>)
+
+    <span class="cm"># Show generated files</span>
+    <span class="bi">print</span>(<span class="st">f"\n{'='*60}"</span>)
+    <span class="bi">print</span>(<span class="st">"Generated files in data/ directory:"</span>)
+    <span class="kw">for</span> f <span class="kw">in</span> DATA_DIR.<span class="fn">glob</span>(<span class="st">"*.md"</span>):
+        size = f.<span class="fn">stat</span>().st_size
+        <span class="bi">print</span>(<span class="st">f"  - {f.name} ({size:,} bytes)"</span>)
+
+    <span class="kw">return</span> result
+
+
+<span class="kw">if</span> __name__ == <span class="st">"__main__"</span>:
+    <span class="cm"># Example research queries</span>
+    <span class="fn">run_research</span>(<span class="st">"Compare NVDA, AAPL, and MSFT. Which is the best investment right now?"</span>)
+
+    <span class="cm"># Try other queries:</span>
+    <span class="cm"># run_research("Deep dive into NVDA — is it overvalued?")</span>
+    <span class="cm"># run_research("Compare all Magnificent 7 stocks for a growth portfolio")</span>
+    <span class="cm"># run_research("Which tech stock has the best risk-adjusted return?")</span></code></pre>
+  </div>
+
+  <div class="os-command" data-mac="python3 lab4_financial_research.py" data-windows="python lab4_financial_research.py"><code></code></div>
+
+  <div class="expected-output">============================================================
+Financial Research Query: Compare NVDA, AAPL, and MSFT...
+============================================================
+
+[Orchestrator delegates to market_data_agent, news_analyst_agent...]
+[Phase 2: finance_analyst_agent compares metrics...]
+[Phase 3: report_writer_agent produces final report...]
+
+## Executive Summary
+Based on comprehensive analysis of NVIDIA (NVDA), Apple (AAPL),
+and Microsoft (MSFT)...
+
+Generated files in data/ directory:
+  - market_data.md (2,847 bytes)
+  - news_analysis.md (1,923 bytes)
+  - financial_analysis.md (3,156 bytes)
+  - final_report.md (5,412 bytes)</div>
+
+  <h3>Extending with Real APIs</h3>
+  <p>Once the pattern works with simulated data, swap in real API calls:</p>
+
+  <pre><code><span class="cm"># ─── Alpha Vantage (Free API key at alphavantage.co) ───</span>
+
+<span class="kw">import</span> requests
+
+<span class="kw">def</span> <span class="fn">get_real_stock_data</span>(ticker: <span class="ty">str</span>) -> <span class="ty">dict</span>:
+    <span class="st">"""Fetch real stock data from Alpha Vantage."""</span>
+    api_key = os.environ.<span class="fn">get</span>(<span class="st">"ALPHA_VANTAGE_KEY"</span>)
+    url = <span class="st">f"https://www.alphavantage.co/query"</span>
+    params = {
+        <span class="st">"function"</span>: <span class="st">"GLOBAL_QUOTE"</span>,
+        <span class="st">"symbol"</span>: ticker,
+        <span class="st">"apikey"</span>: api_key,
+    }
+    response = requests.<span class="fn">get</span>(url, params=params)
+    <span class="kw">return</span> response.<span class="fn">json</span>()
+
+
+<span class="cm"># ─── NewsAPI (Free API key at newsapi.org) ───</span>
+
+<span class="kw">def</span> <span class="fn">get_real_news</span>(ticker: <span class="ty">str</span>) -> <span class="ty">list</span>:
+    <span class="st">"""Fetch real news from NewsAPI."""</span>
+    api_key = os.environ.<span class="fn">get</span>(<span class="st">"NEWS_API_KEY"</span>)
+    company = STOCK_DATABASE[ticker][<span class="st">"name"</span>]
+    url = <span class="st">"https://newsapi.org/v2/everything"</span>
+    params = {
+        <span class="st">"q"</span>: company,
+        <span class="st">"sortBy"</span>: <span class="st">"publishedAt"</span>,
+        <span class="st">"pageSize"</span>: <span class="nu">5</span>,
+        <span class="st">"apiKey"</span>: api_key,
+    }
+    response = requests.<span class="fn">get</span>(url, params=params)
+    <span class="kw">return</span> response.<span class="fn">json</span>().<span class="fn">get</span>(<span class="st">"articles"</span>, [])</code></pre>
+
+  <hr>
+
+  <!-- ================================================================ -->
+  <!-- Section 4.2 — Text-to-SQL Analytics Agent                       -->
+  <!-- ================================================================ -->
+  <h2 id="section-4-2">4.2 &mdash; Text-to-SQL Analytics Agent</h2>
+
+  <div class="section-check">
+    <input type="checkbox" id="m4-s2">
+    <label for="m4-s2">Mark section 4.2 complete</label>
+  </div>
+
+  <span class="time-badge">15 min</span>
+
+  <h3>What We&rsquo;re Building</h3>
+  <p>An agent that converts natural language questions into SQL queries, runs them against a SQLite database, and returns human-readable results. Think &ldquo;ChatGPT for your database&rdquo; &mdash; users ask questions in plain English and get instant analytics.</p>
+
+  <div class="diagram">┌─────────────────────────────────────────────────────────┐
+│                  TEXT-TO-SQL AGENT                       │
+│                                                         │
+│  User: "What are the top 5 products by revenue?"        │
+│       ↓                                                 │
+│  1. explore_schema() → learns table structure           │
+│       ↓                                                 │
+│  2. LLM generates SQL:                                  │
+│     SELECT name, SUM(quantity * price) as revenue       │
+│     FROM orders JOIN products ...                       │
+│       ↓                                                 │
+│  3. run_sql_query() → executes (SELECT only!)           │
+│       ↓                                                 │
+│  4. LLM formats results as a readable answer            │
+│       ↓                                                 │
+│  "The top 5 products by revenue are:                    │
+│   1. Widget Pro - $124,500                              │
+│   2. Gadget Max - $98,200 ..."                          │
+└─────────────────────────────────────────────────────────┘</div>
+
+  <div class="lab-header">
+    <h3>Lab 5: Text-to-SQL Analytics</h3>
+    <a href="#" class="download-btn" data-filename="lab5_text_to_sql.py">Download lab5_text_to_sql.py</a>
+  </div>
+
+  <div class="lab-code-section">
+
+    <h4>Step 1: Imports &amp; Database Setup</h4>
+    <pre><code><span class="cm">#!/usr/bin/env python3</span>
+<span class="cm">"""</span>
+<span class="cm">Lab 5 — Text-to-SQL Analytics Agent</span>
+<span class="cm">An agent that converts natural language to SQL and queries a database.</span>
+<span class="cm">"""</span>
+
+<span class="kw">import</span> sqlite3
+<span class="kw">import</span> random
+<span class="kw">import</span> os
+<span class="kw">from</span> datetime <span class="kw">import</span> datetime, timedelta
+
+<span class="kw">from</span> langchain_core.tools <span class="kw">import</span> tool
+<span class="kw">from</span> agents <span class="kw">import</span> Agent, Runner
+
+DB_PATH = <span class="st">"analytics.db"</span>
+
+
+<span class="kw">def</span> <span class="fn">setup_database</span>():
+    <span class="st">"""Create and populate the sample analytics database."""</span>
+    conn = sqlite3.<span class="fn">connect</span>(DB_PATH)
+    cursor = conn.<span class="fn">cursor</span>()
+
+    <span class="cm"># ─── Create Tables ───</span>
+
+    cursor.<span class="fn">execute</span>(<span class="st">"""
+        CREATE TABLE IF NOT EXISTS products (
+            id INTEGER PRIMARY KEY,
+            name TEXT NOT NULL,
+            category TEXT NOT NULL,
+            price REAL NOT NULL,
+            cost REAL NOT NULL,
+            stock_quantity INTEGER NOT NULL,
+            supplier TEXT NOT NULL,
+            created_date TEXT NOT NULL
+        )
+    """</span>)
+
+    cursor.<span class="fn">execute</span>(<span class="st">"""
+        CREATE TABLE IF NOT EXISTS customers (
+            id INTEGER PRIMARY KEY,
+            name TEXT NOT NULL,
+            email TEXT NOT NULL,
+            region TEXT NOT NULL,
+            segment TEXT NOT NULL,
+            join_date TEXT NOT NULL,
+            lifetime_value REAL DEFAULT 0
+        )
+    """</span>)
+
+    cursor.<span class="fn">execute</span>(<span class="st">"""
+        CREATE TABLE IF NOT EXISTS orders (
+            id INTEGER PRIMARY KEY,
+            customer_id INTEGER NOT NULL,
+            product_id INTEGER NOT NULL,
+            quantity INTEGER NOT NULL,
+            total_amount REAL NOT NULL,
+            order_date TEXT NOT NULL,
+            status TEXT NOT NULL DEFAULT 'completed',
+            FOREIGN KEY (customer_id) REFERENCES customers(id),
+            FOREIGN KEY (product_id) REFERENCES products(id)
+        )
+    """</span>)
+
+    <span class="cm"># ─── Populate Products (15 items) ───</span>
+
+    products = [
+        (<span class="nu">1</span>,  <span class="st">"Widget Pro"</span>,       <span class="st">"Electronics"</span>,  <span class="nu">49.99</span>,  <span class="nu">22.50</span>, <span class="nu">150</span>, <span class="st">"TechCorp"</span>,     <span class="st">"2024-01-15"</span>),
+        (<span class="nu">2</span>,  <span class="st">"Gadget Max"</span>,       <span class="st">"Electronics"</span>,  <span class="nu">89.99</span>,  <span class="nu">41.00</span>, <span class="nu">85</span>,  <span class="st">"TechCorp"</span>,     <span class="st">"2024-01-20"</span>),
+        (<span class="nu">3</span>,  <span class="st">"Smart Sensor"</span>,     <span class="st">"IoT"</span>,          <span class="nu">34.99</span>,  <span class="nu">15.00</span>, <span class="nu">200</span>, <span class="st">"SensorLab"</span>,    <span class="st">"2024-02-01"</span>),
+        (<span class="nu">4</span>,  <span class="st">"Data Logger X"</span>,    <span class="st">"IoT"</span>,          <span class="nu">129.99</span>, <span class="nu">58.00</span>, <span class="nu">60</span>,  <span class="st">"SensorLab"</span>,    <span class="st">"2024-02-10"</span>),
+        (<span class="nu">5</span>,  <span class="st">"Cloud Hub"</span>,        <span class="st">"Software"</span>,     <span class="nu">199.99</span>, <span class="nu">20.00</span>, <span class="nu">999</span>, <span class="st">"CloudNine"</span>,    <span class="st">"2024-03-01"</span>),
+        (<span class="nu">6</span>,  <span class="st">"API Gateway"</span>,      <span class="st">"Software"</span>,     <span class="nu">149.99</span>, <span class="nu">15.00</span>, <span class="nu">999</span>, <span class="st">"CloudNine"</span>,    <span class="st">"2024-03-15"</span>),
+        (<span class="nu">7</span>,  <span class="st">"Nano Board"</span>,       <span class="st">"Hardware"</span>,     <span class="nu">24.99</span>,  <span class="nu">12.50</span>, <span class="nu">300</span>, <span class="st">"ChipWorks"</span>,    <span class="st">"2024-04-01"</span>),
+        (<span class="nu">8</span>,  <span class="st">"Power Module"</span>,     <span class="st">"Hardware"</span>,     <span class="nu">59.99</span>,  <span class="nu">28.00</span>, <span class="nu">120</span>, <span class="st">"ChipWorks"</span>,    <span class="st">"2024-04-10"</span>),
+        (<span class="nu">9</span>,  <span class="st">"Secure Vault"</span>,     <span class="st">"Security"</span>,     <span class="nu">299.99</span>, <span class="nu">45.00</span>, <span class="nu">40</span>,  <span class="st">"CyberShield"</span>,  <span class="st">"2024-05-01"</span>),
+        (<span class="nu">10</span>, <span class="st">"Firewall Plus"</span>,    <span class="st">"Security"</span>,     <span class="nu">179.99</span>, <span class="nu">30.00</span>, <span class="nu">75</span>,  <span class="st">"CyberShield"</span>,  <span class="st">"2024-05-15"</span>),
+        (<span class="nu">11</span>, <span class="st">"ML Toolkit"</span>,       <span class="st">"Software"</span>,     <span class="nu">249.99</span>, <span class="nu">25.00</span>, <span class="nu">999</span>, <span class="st">"AIFactory"</span>,    <span class="st">"2024-06-01"</span>),
+        (<span class="nu">12</span>, <span class="st">"Vision Camera"</span>,    <span class="st">"IoT"</span>,          <span class="nu">74.99</span>,  <span class="nu">35.00</span>, <span class="nu">110</span>, <span class="st">"SensorLab"</span>,    <span class="st">"2024-06-15"</span>),
+        (<span class="nu">13</span>, <span class="st">"Edge Processor"</span>,   <span class="st">"Hardware"</span>,     <span class="nu">159.99</span>, <span class="nu">72.00</span>, <span class="nu">45</span>,  <span class="st">"ChipWorks"</span>,    <span class="st">"2024-07-01"</span>),
+        (<span class="nu">14</span>, <span class="st">"Stream Analytics"</span>, <span class="st">"Software"</span>,     <span class="nu">179.99</span>, <span class="nu">18.00</span>, <span class="nu">999</span>, <span class="st">"CloudNine"</span>,    <span class="st">"2024-07-15"</span>),
+        (<span class="nu">15</span>, <span class="st">"Mesh Network Kit"</span>, <span class="st">"IoT"</span>,          <span class="nu">109.99</span>, <span class="nu">48.00</span>, <span class="nu">90</span>,  <span class="st">"SensorLab"</span>,    <span class="st">"2024-08-01"</span>),
+    ]
+
+    cursor.<span class="fn">executemany</span>(
+        <span class="st">"INSERT OR IGNORE INTO products VALUES (?, ?, ?, ?, ?, ?, ?, ?)"</span>,
+        products
+    )
+
+    <span class="cm"># ─── Populate Customers (200) ───</span>
+
+    regions = [<span class="st">"North America"</span>, <span class="st">"Europe"</span>, <span class="st">"Asia Pacific"</span>, <span class="st">"Latin America"</span>]
+    segments = [<span class="st">"Enterprise"</span>, <span class="st">"SMB"</span>, <span class="st">"Startup"</span>, <span class="st">"Government"</span>]
+    first_names = [<span class="st">"James"</span>, <span class="st">"Maria"</span>, <span class="st">"Wei"</span>, <span class="st">"Fatima"</span>, <span class="st">"Carlos"</span>,
+                   <span class="st">"Yuki"</span>, <span class="st">"Priya"</span>, <span class="st">"Ahmed"</span>, <span class="st">"Sophie"</span>, <span class="st">"Liam"</span>,
+                   <span class="st">"Elena"</span>, <span class="st">"Raj"</span>, <span class="st">"Ana"</span>, <span class="st">"David"</span>, <span class="st">"Nina"</span>,
+                   <span class="st">"Omar"</span>, <span class="st">"Li"</span>, <span class="st">"Eva"</span>, <span class="st">"Chen"</span>, <span class="st">"Rose"</span>]
+    last_names = [<span class="st">"Smith"</span>, <span class="st">"Garcia"</span>, <span class="st">"Chen"</span>, <span class="st">"Ali"</span>, <span class="st">"Kim"</span>,
+                  <span class="st">"Tanaka"</span>, <span class="st">"Patel"</span>, <span class="st">"Mueller"</span>, <span class="st">"Silva"</span>, <span class="st">"Johnson"</span>,
+                  <span class="st">"Williams"</span>, <span class="st">"Brown"</span>, <span class="st">"Jones"</span>, <span class="st">"Miller"</span>, <span class="st">"Davis"</span>,
+                  <span class="st">"Wilson"</span>, <span class="st">"Moore"</span>, <span class="st">"Taylor"</span>, <span class="st">"Anderson"</span>, <span class="st">"Thomas"</span>]
+
+    random.<span class="fn">seed</span>(<span class="nu">42</span>)  <span class="cm"># Reproducible data</span>
+
+    customers = []
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="bi">range</span>(<span class="nu">1</span>, <span class="nu">201</span>):
+        first = random.<span class="fn">choice</span>(first_names)
+        last = random.<span class="fn">choice</span>(last_names)
+        name = <span class="st">f"{first} {last}"</span>
+        email = <span class="st">f"{first.lower()}.{last.lower()}{i}@example.com"</span>
+        region = random.<span class="fn">choice</span>(regions)
+        segment = random.<span class="fn">choice</span>(segments)
+        join_date = (datetime(<span class="nu">2024</span>, <span class="nu">1</span>, <span class="nu">1</span>) +
+                     timedelta(days=random.<span class="fn">randint</span>(<span class="nu">0</span>, <span class="nu">364</span>))).<span class="fn">strftime</span>(<span class="st">"%Y-%m-%d"</span>)
+        ltv = <span class="bi">round</span>(random.<span class="fn">uniform</span>(<span class="nu">100</span>, <span class="nu">15000</span>), <span class="nu">2</span>)
+        customers.<span class="fn">append</span>((i, name, email, region, segment, join_date, ltv))
+
+    cursor.<span class="fn">executemany</span>(
+        <span class="st">"INSERT OR IGNORE INTO customers VALUES (?, ?, ?, ?, ?, ?, ?)"</span>,
+        customers
+    )
+
+    <span class="cm"># ─── Populate Orders (1000) ───</span>
+
+    statuses = [<span class="st">"completed"</span>, <span class="st">"completed"</span>, <span class="st">"completed"</span>, <span class="st">"completed"</span>,
+                <span class="st">"shipped"</span>, <span class="st">"processing"</span>, <span class="st">"cancelled"</span>]
+
+    orders = []
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="bi">range</span>(<span class="nu">1</span>, <span class="nu">1001</span>):
+        customer_id = random.<span class="fn">randint</span>(<span class="nu">1</span>, <span class="nu">200</span>)
+        product_id = random.<span class="fn">randint</span>(<span class="nu">1</span>, <span class="nu">15</span>)
+        quantity = random.<span class="fn">randint</span>(<span class="nu">1</span>, <span class="nu">10</span>)
+        product_price = products[product_id - <span class="nu">1</span>][<span class="nu">3</span>]
+        total = <span class="bi">round</span>(quantity * product_price, <span class="nu">2</span>)
+        order_date = (datetime(<span class="nu">2024</span>, <span class="nu">1</span>, <span class="nu">1</span>) +
+                      timedelta(days=random.<span class="fn">randint</span>(<span class="nu">0</span>, <span class="nu">364</span>))).<span class="fn">strftime</span>(<span class="st">"%Y-%m-%d"</span>)
+        status = random.<span class="fn">choice</span>(statuses)
+        orders.<span class="fn">append</span>((i, customer_id, product_id, quantity,
+                       total, order_date, status))
+
+    cursor.<span class="fn">executemany</span>(
+        <span class="st">"INSERT OR IGNORE INTO orders VALUES (?, ?, ?, ?, ?, ?, ?)"</span>,
+        orders
+    )
+
+    conn.<span class="fn">commit</span>()
+    conn.<span class="fn">close</span>()
+    <span class="bi">print</span>(<span class="st">f"Database created: {DB_PATH}"</span>)
+    <span class="bi">print</span>(<span class="st">f"  - 15 products, 200 customers, 1000 orders"</span>)</code></pre>
+
+    <h4>Step 2: Define Tools</h4>
+    <pre><code><span class="cm"># ─── Tools ───</span>
+
+<span class="dc">@tool</span>
+<span class="kw">def</span> <span class="fn">explore_schema</span>() -> <span class="ty">str</span>:
+    <span class="st">"""Explore the database schema. Returns all table names, columns, types,
+    and sample data. Call this FIRST before writing any SQL queries."""</span>
+    conn = sqlite3.<span class="fn">connect</span>(DB_PATH)
+    cursor = conn.<span class="fn">cursor</span>()
+
+    <span class="cm"># Get all tables</span>
+    cursor.<span class="fn">execute</span>(<span class="st">"SELECT name FROM sqlite_master WHERE type='table'"</span>)
+    tables = [row[<span class="nu">0</span>] <span class="kw">for</span> row <span class="kw">in</span> cursor.<span class="fn">fetchall</span>()]
+
+    result = <span class="st">"## Database Schema\n\n"</span>
+
+    <span class="kw">for</span> table <span class="kw">in</span> tables:
+        result += <span class="st">f"### Table: {table}\n"</span>
+
+        <span class="cm"># Get column info</span>
+        cursor.<span class="fn">execute</span>(<span class="st">f"PRAGMA table_info({table})"</span>)
+        columns = cursor.<span class="fn">fetchall</span>()
+        result += <span class="st">"| Column | Type | Nullable | PK |\n"</span>
+        result += <span class="st">"|--------|------|----------|----|\n"</span>
+        <span class="kw">for</span> col <span class="kw">in</span> columns:
+            result += <span class="st">f"| {col[1]} | {col[2]} | {'YES' if not col[3] else 'NO'} | {'YES' if col[5] else 'NO'} |\n"</span>
+
+        <span class="cm"># Row count</span>
+        cursor.<span class="fn">execute</span>(<span class="st">f"SELECT COUNT(*) FROM {table}"</span>)
+        count = cursor.<span class="fn">fetchone</span>()[<span class="nu">0</span>]
+        result += <span class="st">f"\nRow count: {count}\n"</span>
+
+        <span class="cm"># Sample rows</span>
+        cursor.<span class="fn">execute</span>(<span class="st">f"SELECT * FROM {table} LIMIT 3"</span>)
+        samples = cursor.<span class="fn">fetchall</span>()
+        col_names = [desc[<span class="nu">0</span>] <span class="kw">for</span> desc <span class="kw">in</span> cursor.description]
+        result += <span class="st">f"\nSample data:\n"</span>
+        result += <span class="st">"| "</span> + <span class="st">" | "</span>.<span class="fn">join</span>(col_names) + <span class="st">" |\n"</span>
+        result += <span class="st">"|"</span> + <span class="st">"|"</span>.<span class="fn">join</span>([<span class="st">"---"</span>] * <span class="bi">len</span>(col_names)) + <span class="st">"|\n"</span>
+        <span class="kw">for</span> row <span class="kw">in</span> samples:
+            result += <span class="st">"| "</span> + <span class="st">" | "</span>.<span class="fn">join</span>(<span class="bi">str</span>(v) <span class="kw">for</span> v <span class="kw">in</span> row) + <span class="st">" |\n"</span>
+
+        result += <span class="st">"\n"</span>
+
+    conn.<span class="fn">close</span>()
+    <span class="kw">return</span> result
+
+
+<span class="dc">@tool</span>
+<span class="kw">def</span> <span class="fn">run_sql_query</span>(query: <span class="ty">str</span>) -> <span class="ty">str</span>:
+    <span class="st">"""Run a SQL query against the analytics database.
+    SAFETY: Only SELECT statements are allowed. No INSERT, UPDATE, DELETE, DROP, etc.
+
+    Args:
+        query: A SQL SELECT query to execute
+    """</span>
+    <span class="cm"># ─── Safety Checks ───</span>
+    query_upper = query.<span class="fn">upper</span>().<span class="fn">strip</span>()
+
+    <span class="cm"># Block dangerous operations</span>
+    blocked_keywords = [<span class="st">"INSERT"</span>, <span class="st">"UPDATE"</span>, <span class="st">"DELETE"</span>, <span class="st">"DROP"</span>, <span class="st">"ALTER"</span>,
+                        <span class="st">"CREATE"</span>, <span class="st">"TRUNCATE"</span>, <span class="st">"REPLACE"</span>, <span class="st">"EXEC"</span>, <span class="st">"GRANT"</span>,
+                        <span class="st">"REVOKE"</span>, <span class="st">"ATTACH"</span>, <span class="st">"DETACH"</span>, <span class="st">"PRAGMA"</span>]
+
+    <span class="kw">for</span> keyword <span class="kw">in</span> blocked_keywords:
+        <span class="kw">if</span> keyword <span class="kw">in</span> query_upper:
+            <span class="kw">return</span> <span class="st">f"ERROR: {keyword} statements are not allowed. Only SELECT queries permitted."</span>
+
+    <span class="kw">if</span> <span class="kw">not</span> query_upper.<span class="fn">startswith</span>(<span class="st">"SELECT"</span>):
+        <span class="kw">return</span> <span class="st">"ERROR: Only SELECT queries are allowed."</span>
+
+    <span class="cm"># ─── Execute Query ───</span>
+    <span class="kw">try</span>:
+        conn = sqlite3.<span class="fn">connect</span>(DB_PATH)
+        cursor = conn.<span class="fn">cursor</span>()
+        cursor.<span class="fn">execute</span>(query)
+
+        columns = [desc[<span class="nu">0</span>] <span class="kw">for</span> desc <span class="kw">in</span> cursor.description]
+        rows = cursor.<span class="fn">fetchall</span>()
+        conn.<span class="fn">close</span>()
+
+        <span class="kw">if</span> <span class="kw">not</span> rows:
+            <span class="kw">return</span> <span class="st">"Query returned no results."</span>
+
+        <span class="cm"># Format as markdown table</span>
+        result = <span class="st">f"Query returned {len(rows)} rows:\n\n"</span>
+        result += <span class="st">"| "</span> + <span class="st">" | "</span>.<span class="fn">join</span>(columns) + <span class="st">" |\n"</span>
+        result += <span class="st">"|"</span> + <span class="st">"|"</span>.<span class="fn">join</span>([<span class="st">"---"</span>] * <span class="bi">len</span>(columns)) + <span class="st">"|\n"</span>
+        <span class="kw">for</span> row <span class="kw">in</span> rows[:<span class="nu">50</span>]:  <span class="cm"># Limit to 50 rows</span>
+            result += <span class="st">"| "</span> + <span class="st">" | "</span>.<span class="fn">join</span>(<span class="bi">str</span>(v) <span class="kw">for</span> v <span class="kw">in</span> row) + <span class="st">" |\n"</span>
+
+        <span class="kw">if</span> <span class="bi">len</span>(rows) > <span class="nu">50</span>:
+            result += <span class="st">f"\n... and {len(rows) - 50} more rows (showing first 50)"</span>
+
+        <span class="kw">return</span> result
+
+    <span class="kw">except</span> <span class="ty">Exception</span> <span class="kw">as</span> e:
+        <span class="kw">return</span> <span class="st">f"SQL Error: {e}\n\nPlease check your query syntax and try again."</span></code></pre>
+
+    <h4>Step 3: Create the Agent</h4>
+    <pre><code><span class="cm"># ─── SQL Analytics Agent ───</span>
+
+sql_agent = Agent(
+    name=<span class="st">"sql_analytics_agent"</span>,
+    model=<span class="st">"gpt-4o"</span>,
+    instructions=<span class="st">"""You are a SQL Analytics Expert. You help users query their database
+using natural language.
+
+## Workflow
+1. ALWAYS call explore_schema() FIRST to understand the database structure
+2. Write a SQL query based on the user's question
+3. Execute it with run_sql_query()
+4. Format the results in a clear, human-readable way
+
+## SQL Best Practices
+- Use JOINs when data spans multiple tables
+- Use GROUP BY with aggregate functions (SUM, AVG, COUNT)
+- Use ORDER BY for ranked/sorted results
+- Use LIMIT for top-N queries
+- Always alias calculated columns (AS revenue, AS total, etc.)
+- Use WHERE to filter, HAVING to filter aggregates
+- Round monetary values to 2 decimal places: ROUND(value, 2)
+- Format dates consistently: strftime('%Y-%m', order_date)
+
+## Response Format
+- Start with a brief restatement of the question
+- Show the SQL query you're running (in a code block)
+- Present results in a clear table or bullet list
+- Add a brief insight or observation about the data
+
+## Safety
+- NEVER modify data — only SELECT queries
+- NEVER expose raw connection strings or credentials
+"""</span>,
+    tools=[explore_schema, run_sql_query],
+)</code></pre>
+
+    <h4>Step 4: Run and Test</h4>
+    <pre><code><span class="cm"># ─── Run the Agent ───</span>
+
+<span class="kw">def</span> <span class="fn">ask_database</span>(question: <span class="ty">str</span>):
+    <span class="st">"""Ask a natural language question about the database."""</span>
+    <span class="bi">print</span>(<span class="st">f"\n{'='*60}"</span>)
+    <span class="bi">print</span>(<span class="st">f"Question: {question}"</span>)
+    <span class="bi">print</span>(<span class="st">f"{'='*60}\n"</span>)
+
+    result = Runner.<span class="fn">run_sync</span>(sql_agent, question)
+    <span class="bi">print</span>(result.final_output)
+    <span class="kw">return</span> result
+
+
+<span class="kw">if</span> __name__ == <span class="st">"__main__"</span>:
+    <span class="cm"># Setup the database</span>
+    <span class="fn">setup_database</span>()
+
+    <span class="cm"># Test queries</span>
+    <span class="fn">ask_database</span>(<span class="st">"What are the top 5 products by total revenue?"</span>)
+
+    <span class="fn">ask_database</span>(<span class="st">"How does each region perform in terms of total sales and order count?"</span>)
+
+    <span class="fn">ask_database</span>(<span class="st">"Segment our customers by lifetime value: High (>5000), Medium (1000-5000), Low (&lt;1000). How many in each?"</span>)
+
+    <span class="fn">ask_database</span>(<span class="st">"Show monthly revenue trends for 2024. Is revenue growing?"</span>)
+
+    <span class="fn">ask_database</span>(<span class="st">"Which products have the highest profit margins? Show top 5 with margin percentage."</span>)</code></pre>
+  </div>
+
+  <div class="os-command" data-mac="python3 lab5_text_to_sql.py" data-windows="python lab5_text_to_sql.py"><code></code></div>
+
+  <div class="expected-output">Database created: analytics.db
+  - 15 products, 200 customers, 1000 orders
+
+============================================================
+Question: What are the top 5 products by total revenue?
+============================================================
+
+The top 5 products by total revenue are:
+
+| Rank | Product         | Revenue      | Orders |
+|------|-----------------|-------------|--------|
+| 1    | Secure Vault    | $198,293.40 | 662    |
+| 2    | ML Toolkit      | $167,493.30 | 670    |
+| 3    | Cloud Hub       | $134,593.27 | 673    |
+| 4    | Stream Analytics| $122,393.21 | 680    |
+| 5    | Firewall Plus   | $116,993.51 | 650    |
+
+Insight: Security and Software products dominate the top 5,
+likely due to their higher price points.</div>
+
+  <hr>
+
+  <!-- ================================================================ -->
+  <!-- Section 4.3 — Bonus: Content Pipeline                           -->
+  <!-- ================================================================ -->
+  <h2 id="section-4-3">4.3 &mdash; Bonus: Content Pipeline</h2>
+
+  <div class="section-check">
+    <input type="checkbox" id="m4-s3">
+    <label for="m4-s3">Mark section 4.3 complete</label>
+  </div>
+
+  <span class="time-badge">5 min</span>
+
+  <h3>What We&rsquo;re Building</h3>
+  <p>A three-stage content creation pipeline where each agent handles a different phase: research, writing, and editorial review. This demonstrates the <strong>sequential pipeline</strong> pattern.</p>
+
+  <div class="diagram">┌──────────────────────────────────────────────────────────┐
+│                   CONTENT PIPELINE                       │
+│                                                          │
+│  User: "Write an article about AI agents"                │
+│       ↓                                                  │
+│  ┌────────────────────┐                                  │
+│  │  topic_researcher  │  Phase 1: Research                │
+│  │  - Finds key facts │  Saves to data/research.md       │
+│  │  - Identifies angle│                                  │
+│  └────────┬───────────┘                                  │
+│           ↓                                              │
+│  ┌────────────────────┐                                  │
+│  │  content_writer    │  Phase 2: Writing                 │
+│  │  - Reads research  │  Saves to data/draft.md          │
+│  │  - Writes article  │                                  │
+│  └────────┬───────────┘                                  │
+│           ↓                                              │
+│  ┌────────────────────┐                                  │
+│  │  editor_reviewer   │  Phase 3: Review                  │
+│  │  - Reads draft     │  Saves to data/final_article.md  │
+│  │  - Fixes issues    │                                  │
+│  │  - Polishes prose  │                                  │
+│  └────────┬───────────┘                                  │
+│           ↓                                              │
+│  Final article delivered                                 │
+└──────────────────────────────────────────────────────────┘</div>
+
+  <div class="lab-header">
+    <h3>Lab 6: Content Pipeline</h3>
+    <a href="#" class="download-btn" data-filename="lab6_content_pipeline.py">Download lab6_content_pipeline.py</a>
+  </div>
+
+  <div class="lab-code-section">
+
+    <h4>Full Pipeline Code</h4>
+    <pre><code><span class="cm">#!/usr/bin/env python3</span>
+<span class="cm">"""</span>
+<span class="cm">Lab 6 — Content Pipeline</span>
+<span class="cm">A sequential multi-agent pipeline: Research → Write → Edit</span>
+<span class="cm">"""</span>
+
+<span class="kw">import</span> os
+<span class="kw">from</span> pathlib <span class="kw">import</span> Path
+<span class="kw">from</span> agents <span class="kw">import</span> Agent, Runner
+
+<span class="cm"># Create data directory</span>
+DATA_DIR = Path(<span class="st">"data"</span>)
+DATA_DIR.<span class="fn">mkdir</span>(exist_ok=<span class="kw">True</span>)
+
+<span class="cm"># ─── Sub-Agent 1: Topic Researcher ───</span>
+
+topic_researcher = Agent(
+    name=<span class="st">"topic_researcher"</span>,
+    model=<span class="st">"gpt-4o"</span>,
+    instructions=<span class="st">"""You are a Topic Research Specialist.
+
+When given a topic, you:
+1. Identify 5-7 key points that should be covered
+2. Find the most interesting angle or hook
+3. Note any statistics, trends, or expert opinions to include
+4. Identify the target audience
+5. Suggest a compelling title and subtitle
+
+Save your research to data/research.md with clear sections:
+- Title Suggestions (3 options)
+- Target Audience
+- Key Points to Cover
+- Interesting Hook/Angle
+- Supporting Data & Trends
+- Suggested Structure (outline)
+
+Be thorough — the writer will depend entirely on your research.
+"""</span>,
+    tools=[],
+)
+
+<span class="cm"># ─── Sub-Agent 2: Content Writer ───</span>
+
+content_writer = Agent(
+    name=<span class="st">"content_writer"</span>,
+    model=<span class="st">"gpt-4o"</span>,
+    instructions=<span class="st">"""You are a Professional Content Writer.
+
+Your workflow:
+1. Read the research from data/research.md
+2. Write a complete, polished article based on the research
+3. Save the draft to data/draft.md
+
+Writing guidelines:
+- Use the best title suggestion from the research
+- Start with a compelling hook (question, statistic, or story)
+- Write 800-1200 words
+- Use clear sections with headers (## format)
+- Include a strong introduction and conclusion
+- Use active voice and conversational tone
+- Include 2-3 pull quotes or key takeaways
+- End with a call-to-action or thought-provoking question
+
+Format the output as clean markdown.
+"""</span>,
+    tools=[],
+)
+
+<span class="cm"># ─── Sub-Agent 3: Editor/Reviewer ───</span>
+
+editor_reviewer = Agent(
+    name=<span class="st">"editor_reviewer"</span>,
+    model=<span class="st">"gpt-4o"</span>,
+    instructions=<span class="st">"""You are a Senior Editor and Content Reviewer.
+
+Your workflow:
+1. Read the draft from data/draft.md
+2. Review for: clarity, grammar, flow, engagement, accuracy
+3. Make improvements and polish the prose
+4. Save the final version to data/final_article.md
+
+Editing checklist:
+- [ ] Title is compelling and SEO-friendly
+- [ ] Opening hook grabs attention in first 2 sentences
+- [ ] Each section flows logically to the next
+- [ ] No jargon without explanation
+- [ ] Active voice throughout (minimize passive)
+- [ ] Sentences vary in length (short punchy + longer explanatory)
+- [ ] Strong conclusion with clear takeaway
+- [ ] Grammar and spelling are perfect
+- [ ] Format is consistent (headers, lists, emphasis)
+
+Add an editor's note at the top of the final article with:
+- Word count
+- Reading time (assume 200 words/minute)
+- Quality score (1-10) with brief justification
+"""</span>,
+    tools=[],
+)
+
+<span class="cm"># ─── Orchestrator ───</span>
+
+content_orchestrator = Agent(
+    name=<span class="st">"content_pipeline_orchestrator"</span>,
+    model=<span class="st">"gpt-4o"</span>,
+    instructions=<span class="st">"""You are the Content Pipeline Orchestrator.
+
+When given a topic, run this EXACT sequential pipeline:
+
+## Phase 1: Research
+- Delegate to topic_researcher with the topic
+- Wait for research to be saved to data/research.md
+
+## Phase 2: Writing
+- Delegate to content_writer
+- The writer will read research.md and produce draft.md
+
+## Phase 3: Review
+- Delegate to editor_reviewer
+- The editor will read draft.md and produce final_article.md
+
+## Phase 4: Delivery
+- Read data/final_article.md
+- Present the final article to the user
+- Show the editor's quality assessment
+
+IMPORTANT: Each phase MUST complete before starting the next.
+The pipeline is strictly sequential: Research → Write → Edit.
+"""</span>,
+    agents=[topic_researcher, content_writer, editor_reviewer],
+)
+
+
+<span class="cm"># ─── Run the Pipeline ───</span>
+
+<span class="kw">def</span> <span class="fn">create_content</span>(topic: <span class="ty">str</span>):
+    <span class="st">"""Run the content pipeline for a given topic."""</span>
+    <span class="bi">print</span>(<span class="st">f"\n{'='*60}"</span>)
+    <span class="bi">print</span>(<span class="st">f"Content Pipeline: {topic}"</span>)
+    <span class="bi">print</span>(<span class="st">f"{'='*60}\n"</span>)
+
+    result = Runner.<span class="fn">run_sync</span>(content_orchestrator, topic)
+    <span class="bi">print</span>(<span class="st">f"\n{result.final_output}"</span>)
+
+    <span class="cm"># Show generated files</span>
+    <span class="bi">print</span>(<span class="st">f"\n{'='*60}"</span>)
+    <span class="bi">print</span>(<span class="st">"Pipeline output files:"</span>)
+    <span class="kw">for</span> f <span class="kw">in</span> [<span class="st">"research.md"</span>, <span class="st">"draft.md"</span>, <span class="st">"final_article.md"</span>]:
+        path = DATA_DIR / f
+        <span class="kw">if</span> path.<span class="fn">exists</span>():
+            size = path.<span class="fn">stat</span>().st_size
+            <span class="bi">print</span>(<span class="st">f"  - {f} ({size:,} bytes)"</span>)
+
+    <span class="kw">return</span> result
+
+
+<span class="kw">if</span> __name__ == <span class="st">"__main__"</span>:
+    <span class="fn">create_content</span>(<span class="st">"The Rise of AI Agents: How Autonomous Systems Are Changing Software Development"</span>)
+
+    <span class="cm"># Try other topics:</span>
+    <span class="cm"># create_content("Why Every Developer Should Learn Prompt Engineering in 2025")</span>
+    <span class="cm"># create_content("The Hidden Costs of Technical Debt: A CTO's Guide")</span></code></pre>
+  </div>
+
+  <div class="os-command" data-mac="python3 lab6_content_pipeline.py" data-windows="python lab6_content_pipeline.py"><code></code></div>
+
+  <div class="expected-output">============================================================
+Content Pipeline: The Rise of AI Agents...
+============================================================
+
+[Phase 1: topic_researcher gathering key points...]
+[Phase 2: content_writer producing draft...]
+[Phase 3: editor_reviewer polishing final version...]
+
+---
+Editor's Note:
+Word count: 1,047 | Reading time: ~5 min | Quality: 8/10
+---
+
+# The Rise of AI Agents: How Autonomous Systems Are
+  Changing Software Development
+
+...
+
+Pipeline output files:
+  - research.md (1,234 bytes)
+  - draft.md (4,567 bytes)
+  - final_article.md (5,012 bytes)</div>
+
+  <h3>Suggested Additional Projects</h3>
+  <p>Now that you&rsquo;ve built three full systems, here are ideas to keep practicing:</p>
+
+  <table>
+    <thead><tr><th>Project</th><th>Agent Architecture</th><th>Complexity</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Code Review Bot</strong></td><td>Orchestrator + Reviewer + Security + Style</td><td>Medium</td></tr>
+      <tr><td><strong>Customer Support</strong></td><td>Router + FAQ + Escalation + Sentiment</td><td>Medium</td></tr>
+      <tr><td><strong>Travel Planner</strong></td><td>Planner + Flight + Hotel + Activity</td><td>High</td></tr>
+      <tr><td><strong>Competitive Intel</strong></td><td>Orchestrator + Company Researchers + Analyst + Reporter</td><td>High</td></tr>
+    </tbody>
+  </table>
+
+  <hr>
+
+  <!-- ================================================================ -->
+  <!-- Cheatsheet                                                       -->
+  <!-- ================================================================ -->
+  <h2 id="cheatsheet">Cheatsheet</h2>
+
+  <div class="section-check">
+    <input type="checkbox" id="m4-cheat">
+    <label for="m4-cheat">Mark cheatsheet reviewed</label>
+  </div>
+
+  <h3>Architecture Patterns (1&ndash;7)</h3>
+
+  <table>
+    <thead><tr><th>#</th><th>Pattern</th><th>Description</th><th>When to Use</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>1</strong></td>
+        <td>Simple Agent</td>
+        <td>Single LLM + tools</td>
+        <td>Simple tasks, Q&amp;A, single-domain</td>
+      </tr>
+      <tr>
+        <td><strong>2</strong></td>
+        <td>Agent + Planning</td>
+        <td>LLM + tools + todo list</td>
+        <td>Multi-step tasks that need structure</td>
+      </tr>
+      <tr>
+        <td><strong>3</strong></td>
+        <td>Agent + Filesystem</td>
+        <td>LLM + tools + read/write files</td>
+        <td>Tasks producing large outputs, reports</td>
+      </tr>
+      <tr>
+        <td><strong>4</strong></td>
+        <td>Multi-Agent Sequential</td>
+        <td>Agent A &rarr; Agent B &rarr; Agent C</td>
+        <td>Pipeline workflows (research &rarr; write &rarr; edit)</td>
+      </tr>
+      <tr>
+        <td><strong>5</strong></td>
+        <td>Multi-Agent Parallel</td>
+        <td>Orchestrator fans out to N agents</td>
+        <td>Independent data gathering, parallel research</td>
+      </tr>
+      <tr>
+        <td><strong>6</strong></td>
+        <td>Agent Pipeline</td>
+        <td>Sequential + file handoff between stages</td>
+        <td>Content creation, data processing chains</td>
+      </tr>
+      <tr>
+        <td><strong>7</strong></td>
+        <td>Full System</td>
+        <td>Orchestrator + parallel + sequential + filesystem</td>
+        <td>Complex enterprise applications</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>OpenAI / Agent Configuration</h3>
+  <pre><code><span class="cm"># ─── Basic Agent Setup ───</span>
+
+<span class="kw">from</span> agents <span class="kw">import</span> Agent, Runner
+
+agent = Agent(
+    name=<span class="st">"my_agent"</span>,
+    model=<span class="st">"gpt-4o"</span>,                <span class="cm"># or "gpt-4o-mini", "gpt-4-turbo"</span>
+    instructions=<span class="st">"Your system prompt here..."</span>,
+    tools=[tool1, tool2],          <span class="cm"># list of @tool functions</span>
+    agents=[sub1, sub2],           <span class="cm"># list of sub-agents (optional)</span>
+)
+
+<span class="cm"># Run synchronously</span>
+result = Runner.<span class="fn">run_sync</span>(agent, <span class="st">"user message"</span>)
+<span class="bi">print</span>(result.final_output)
+
+<span class="cm"># Run asynchronously</span>
+result = <span class="kw">await</span> Runner.<span class="fn">run</span>(agent, <span class="st">"user message"</span>)</code></pre>
+
+  <h3>Sub-Agent Definition Template</h3>
+  <pre><code><span class="cm"># ─── Sub-Agent Template ───</span>
+
+specialist_agent = Agent(
+    name=<span class="st">"specialist_agent"</span>,         <span class="cm"># unique name (snake_case)</span>
+    model=<span class="st">"gpt-4o"</span>,                  <span class="cm"># model to use</span>
+    instructions=<span class="st">"""You are a [Role Name].
+
+Your job:
+1. [First responsibility]
+2. [Second responsibility]
+3. [Third responsibility]
+
+Rules:
+- [Constraint 1]
+- [Constraint 2]
+
+Output format:
+- [How to format results]
+"""</span>,
+    tools=[tool_a, tool_b],          <span class="cm"># tools this agent can use</span>
+)
+
+<span class="cm"># ─── Register as sub-agent ───</span>
+
+orchestrator = Agent(
+    name=<span class="st">"orchestrator"</span>,
+    model=<span class="st">"gpt-4o"</span>,
+    instructions=<span class="st">"Coordinate the workflow..."</span>,
+    agents=[specialist_agent],       <span class="cm"># pass sub-agents here</span>
+)</code></pre>
+
+  <h3>Available Models</h3>
+  <table>
+    <thead><tr><th>Model</th><th>Speed</th><th>Quality</th><th>Cost</th><th>Best For</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>gpt-4o</code></td>
+        <td>Fast</td>
+        <td>Excellent</td>
+        <td>$$</td>
+        <td>Default choice for most agents</td>
+      </tr>
+      <tr>
+        <td><code>gpt-4o-mini</code></td>
+        <td>Very Fast</td>
+        <td>Good</td>
+        <td>$</td>
+        <td>Simple tasks, high volume, sub-agents</td>
+      </tr>
+      <tr>
+        <td><code>gpt-4-turbo</code></td>
+        <td>Moderate</td>
+        <td>Excellent</td>
+        <td>$$$</td>
+        <td>Complex reasoning, long context</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Built-in Tools Reference</h3>
+  <pre><code><span class="cm"># ─── Tool Definition with @tool Decorator ───</span>
+
+<span class="kw">from</span> langchain_core.tools <span class="kw">import</span> tool
+
+<span class="dc">@tool</span>
+<span class="kw">def</span> <span class="fn">my_tool</span>(param1: <span class="ty">str</span>, param2: <span class="ty">int</span> = <span class="nu">10</span>) -> <span class="ty">str</span>:
+    <span class="st">"""Description of what this tool does.
+    The LLM reads this docstring to decide when to use the tool.
+
+    Args:
+        param1: Description of first parameter
+        param2: Description of second parameter (default: 10)
+    """</span>
+    <span class="cm"># Your tool logic here</span>
+    <span class="kw">return</span> <span class="st">f"Result: {param1}, {param2}"</span>
+
+
+<span class="cm"># ─── Common Tool Patterns ───</span>
+
+<span class="dc">@tool</span>
+<span class="kw">def</span> <span class="fn">search</span>(query: <span class="ty">str</span>) -> <span class="ty">str</span>:
+    <span class="st">"""Search for information."""</span>
+    <span class="cm"># API call, database query, web search, etc.</span>
+    ...
+
+<span class="dc">@tool</span>
+<span class="kw">def</span> <span class="fn">calculator</span>(expression: <span class="ty">str</span>) -> <span class="ty">str</span>:
+    <span class="st">"""Evaluate a math expression."""</span>
+    <span class="kw">return</span> <span class="bi">str</span>(<span class="bi">eval</span>(expression))
+
+<span class="dc">@tool</span>
+<span class="kw">def</span> <span class="fn">read_file</span>(path: <span class="ty">str</span>) -> <span class="ty">str</span>:
+    <span class="st">"""Read a file from disk."""</span>
+    <span class="kw">return</span> Path(path).<span class="fn">read_text</span>()
+
+<span class="dc">@tool</span>
+<span class="kw">def</span> <span class="fn">write_file</span>(path: <span class="ty">str</span>, content: <span class="ty">str</span>) -> <span class="ty">str</span>:
+    <span class="st">"""Write content to a file."""</span>
+    Path(path).<span class="fn">write_text</span>(content)
+    <span class="kw">return</span> <span class="st">f"Wrote {len(content)} chars to {path}"</span></code></pre>
+
+  <h3>File Organization Convention</h3>
+  <pre><code><span class="cm"># ─── Recommended Project Structure ───</span>
+
+my_agent_project/
+├── main.py               <span class="cm"># Entry point, orchestrator</span>
+├── agents/
+│   ├── __init__.py
+│   ├── researcher.py     <span class="cm"># Research sub-agent</span>
+│   ├── analyst.py        <span class="cm"># Analysis sub-agent</span>
+│   └── writer.py         <span class="cm"># Writing sub-agent</span>
+├── tools/
+│   ├── __init__.py
+│   ├── search.py         <span class="cm"># Search tools</span>
+│   ├── database.py       <span class="cm"># Database tools</span>
+│   └── filesystem.py     <span class="cm"># File read/write tools</span>
+├── data/                 <span class="cm"># Agent file handoff directory</span>
+│   ├── research.md
+│   ├── analysis.md
+│   └── final_report.md
+├── .env                  <span class="cm"># API keys (never commit!)</span>
+├── requirements.txt
+└── README.md</code></pre>
+
+  <div class="callout callout-tip">
+    <div class="callout-title">Quick Reference: The 3 Core Imports</div>
+    <pre><code><span class="kw">from</span> langchain_core.tools <span class="kw">import</span> tool    <span class="cm"># Define tools with @tool</span>
+<span class="kw">from</span> agents <span class="kw">import</span> Agent                   <span class="cm"># Create agents</span>
+<span class="kw">from</span> agents <span class="kw">import</span> Runner                  <span class="cm"># Run agents</span></code></pre>
+  </div>
+
+  <hr>
+
+  <!-- ================================================================ -->
+  <!-- Course Wrap-Up                                                   -->
+  <!-- ================================================================ -->
+  <h2 id="wrapup">Course Wrap-Up</h2>
+
+  <div class="section-check">
+    <input type="checkbox" id="m4-wrap">
+    <label for="m4-wrap">Course complete!</label>
+  </div>
+
+  <h3>Congratulations!</h3>
+  <p>You&rsquo;ve completed the <strong>Agentic AI Masterclass</strong>. Let&rsquo;s recap the journey:</p>
+
+  <table>
+    <thead><tr><th>Module</th><th>What You Learned</th><th>Labs Built</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Module 1: Foundations</strong></td>
+        <td>Shallow vs. deep agents, 4 pillars, environment setup</td>
+        <td>Lab 1: Your First Agent</td>
+      </tr>
+      <tr>
+        <td><strong>Module 2: Building Blocks</strong></td>
+        <td>Tools, system prompts, planning, filesystem I/O</td>
+        <td>Lab 2: Research Agent<br>Lab 3: Planning Agent</td>
+      </tr>
+      <tr>
+        <td><strong>Module 3: Multi-Agent</strong></td>
+        <td>Sub-agents, delegation, orchestration, handoff patterns</td>
+        <td>Multi-agent demos &amp; exercises</td>
+      </tr>
+      <tr>
+        <td><strong>Module 4: Capstones</strong></td>
+        <td>Production-grade architectures, real-world applications</td>
+        <td>Lab 4: Financial Research<br>Lab 5: Text-to-SQL<br>Lab 6: Content Pipeline</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Key Takeaways</h3>
+  <ol>
+    <li><strong>Structure beats intelligence.</strong> A well-structured agent with clear system prompts outperforms a more powerful model with vague instructions.</li>
+    <li><strong>Decomposition is everything.</strong> Break complex tasks into sub-agents with focused roles. Each agent should do one thing well.</li>
+    <li><strong>The filesystem is your memory.</strong> Use file-based handoff to preserve context across agents. Never rely on a single conversation thread for complex work.</li>
+    <li><strong>Tools are the bridge.</strong> The <code>@tool</code> decorator lets you connect LLMs to any API, database, or service. The docstring is the interface.</li>
+    <li><strong>Safety first.</strong> Always validate inputs, restrict operations (SELECT-only for SQL), and add guardrails to your tools.</li>
+    <li><strong>Start simple, evolve.</strong> Begin with Pattern 1 (simple agent) and add complexity only when needed. Not every problem requires a multi-agent system.</li>
+  </ol>
+
+  <h3>What&rsquo;s Next?</h3>
+  <ul>
+    <li><strong>Build your own project</strong> &mdash; pick an idea from the suggested projects table or invent your own</li>
+    <li><strong>Add real APIs</strong> &mdash; replace simulated data with live data sources</li>
+    <li><strong>Deploy to production</strong> &mdash; containerize your agents, add monitoring, set up error handling</li>
+    <li><strong>Join the community</strong> &mdash; share what you build, learn from others, contribute to open source</li>
+  </ul>
+
+  <div class="callout callout-tip">
+    <div class="callout-title">Final Thought</div>
+    <p>The best way to learn agentic AI is to <strong>build things</strong>. You now have all the patterns, tools, and techniques you need. Go build something amazing.</p>
+  </div>
+
+  <!-- Page Nav -->
+  <div class="page-nav">
+    <a href="module3.html">
+      <span class="page-nav-label">Previous</span>
+      <span class="page-nav-title">&larr; Module 3: Multi-Agent Systems</span>
+    </a>
+  </div>
+
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agentic AI Masterclass — From Zero to Multi-Agent Systems</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- Top Bar -->
+<div class="topbar">
+  <button class="hamburger" aria-label="Toggle sidebar">&#9776;</button>
+  <a href="index.html" class="topbar-brand">Agentic AI Masterclass</a>
+  <div class="os-toggle">
+    <button data-os="mac">Mac / Linux</button>
+    <button data-os="windows">Windows</button>
+  </div>
+</div>
+
+<!-- Sidebar Overlay (mobile) -->
+<div class="sidebar-overlay"></div>
+
+<!-- Sidebar -->
+<nav class="sidebar">
+  <div class="sidebar-section">
+    <span class="sidebar-section-title">Course</span>
+    <a href="index.html" class="active">Home</a>
+    <a href="#prerequisites">Prerequisites</a>
+    <a href="#setup">Environment Setup</a>
+    <a href="#modules">Modules</a>
+    <a href="#what-youll-build">What You'll Build</a>
+  </div>
+  <div class="sidebar-section">
+    <span class="sidebar-section-title">Modules</span>
+    <a href="module1.html">1 &mdash; Foundations</a>
+    <a href="module2.html">2 &mdash; Building Blocks</a>
+    <a href="module3.html">3 &mdash; Multi-Agent</a>
+    <a href="module4.html">4 &mdash; Capstones</a>
+  </div>
+  <div class="sidebar-progress">
+    <div class="sidebar-progress-label">Progress: <span class="progress-pct">0%</span></div>
+    <div class="progress-bar"><div class="progress-bar-fill"></div></div>
+  </div>
+</nav>
+
+<!-- Main Content -->
+<div class="main">
+
+  <!-- Hero -->
+  <div class="hero">
+    <h1>Agentic AI Masterclass</h1>
+    <p class="subtitle">From Zero to Multi-Agent Systems &mdash; 3-Hour Hands-On Course</p>
+    <p class="text-dim">Build deep agents that plan, delegate, manage context, and persist memory using DeepAgents + OpenAI APIs.</p>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <div class="hero-stat-value">3h</div>
+        <div class="hero-stat-label">Course Length</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-value">4</div>
+        <div class="hero-stat-label">Modules</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-value">9</div>
+        <div class="hero-stat-label">Hands-on Labs</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-value">3</div>
+        <div class="hero-stat-label">Capstone Projects</div>
+      </div>
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- Philosophy -->
+  <blockquote>
+    <strong>"A plain LLM-in-a-tool-loop produces shallow agents that fail at long, multi-step tasks."</strong>
+    <br>&mdash; DeepAgents README
+  </blockquote>
+
+  <p>This course teaches you to build <strong>deep agents</strong> &mdash; systems that plan, delegate, manage context, and persist memory &mdash; using the open-source DeepAgents framework with OpenAI APIs. No LangSmith required.</p>
+
+  <hr>
+
+  <!-- Prerequisites -->
+  <h2 id="prerequisites">Prerequisites</h2>
+  <ul class="prereq-list">
+    <li><strong>Python 3.11+</strong> installed</li>
+    <li>An <strong>OpenAI API key</strong> (<a href="https://platform.openai.com/api-keys" target="_blank">get one here</a>)</li>
+    <li>Basic Python knowledge (functions, classes, async/await)</li>
+    <li>A terminal and code editor</li>
+  </ul>
+
+  <hr>
+
+  <!-- Environment Setup -->
+  <h2 id="setup">Environment Setup</h2>
+
+  <h3>Step 1: Create Project Directory</h3>
+  <div class="os-command" data-mac="mkdir agentic-ai-course && cd agentic-ai-course
+python3 -m venv .venv
+source .venv/bin/activate" data-windows="mkdir agentic-ai-course && cd agentic-ai-course
+python -m venv .venv
+.venv\Scripts\activate"><code></code></div>
+
+  <h3>Step 2: Install Dependencies</h3>
+  <pre><code>pip install deepagents "langchain-openai>=1.1.8" httpx</code></pre>
+
+  <div class="callout callout-info">
+    <div class="callout-title">Note</div>
+    We install <code>langchain-openai</code> explicitly since we're using OpenAI models. The core <code>deepagents</code> package defaults to Anthropic but fully supports OpenAI.
+  </div>
+
+  <h3>Step 3: Configure API Key</h3>
+  <div class="os-command" data-mac="export OPENAI_API_KEY=&quot;sk-your-key-here&quot;" data-windows="set OPENAI_API_KEY=sk-your-key-here"><code></code></div>
+
+  <p>Or create a <code>.env</code> file:</p>
+  <pre><code>OPENAI_API_KEY=sk-your-key-here</code></pre>
+
+  <h3>Step 4: Verify Installation</h3>
+  <pre><code><span class="cm"># test_setup.py</span>
+<span class="kw">from</span> deepagents <span class="kw">import</span> create_deep_agent
+<span class="kw">from</span> langchain_core.messages <span class="kw">import</span> HumanMessage
+
+<span class="cm"># Create the simplest possible agent</span>
+agent = <span class="fn">create_deep_agent</span>(
+    model=<span class="st">"openai:gpt-4o"</span>,
+    system_prompt=<span class="st">"You are a helpful assistant. Keep responses brief."</span>
+)
+
+<span class="cm"># Run it</span>
+result = agent.<span class="fn">invoke</span>(
+    {<span class="st">"messages"</span>: [<span class="fn">HumanMessage</span>(content=<span class="st">"Say hello and confirm you're working!"</span>)]},
+    config={<span class="st">"configurable"</span>: {<span class="st">"thread_id"</span>: <span class="st">"test-1"</span>}}
+)
+
+<span class="bi">print</span>(result[<span class="st">"messages"</span>][<span class="nu">-1</span>].content)</code></pre>
+
+  <div class="os-command" data-mac="python3 test_setup.py" data-windows="python test_setup.py"><code></code></div>
+
+  <div class="expected-output">Hello! I'm working and ready to help. What can I do for you?</div>
+
+  <hr>
+
+  <!-- Modules -->
+  <h2 id="modules">Course Modules</h2>
+
+  <div class="card-grid">
+    <div class="card">
+      <span class="module-badge">Module 1</span>
+      <span class="time-badge">45 min</span>
+      <h3>Foundations</h3>
+      <p>What are agents and why do shallow agents fail? The 4 Pillars of Deep Agents. Your first tool-calling agent.</p>
+      <a href="module1.html" class="card-link">Start Module 1 &rarr;</a>
+    </div>
+
+    <div class="card">
+      <span class="module-badge">Module 2</span>
+      <span class="time-badge">45 min</span>
+      <h3>Core Building Blocks</h3>
+      <p>Tools &amp; backends, planning with todos, context management, and building a research agent.</p>
+      <a href="module2.html" class="card-link">Start Module 2 &rarr;</a>
+    </div>
+
+    <div class="card">
+      <span class="module-badge">Module 3</span>
+      <span class="time-badge">45 min</span>
+      <h3>Multi-Agent Orchestration</h3>
+      <p>Sub-agent architecture, parallel execution, filesystem as communication bus, multi-agent Q&amp;A system.</p>
+      <a href="module3.html" class="card-link">Start Module 3 &rarr;</a>
+    </div>
+
+    <div class="card">
+      <span class="module-badge">Module 4</span>
+      <span class="time-badge">45 min</span>
+      <h3>Capstone Projects</h3>
+      <p>Financial Deep Research, Text-to-SQL Analytics, Automated Content Pipeline. Production-grade apps.</p>
+      <a href="module4.html" class="card-link">Start Module 4 &rarr;</a>
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- What You'll Build -->
+  <h2 id="what-youll-build">What You'll Build</h2>
+
+  <table>
+    <thead>
+      <tr><th>Lab</th><th>Description</th><th>Key Concepts</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Lab 0</strong></td>
+        <td>Environment setup &amp; verification</td>
+        <td>Install, configure, test</td>
+      </tr>
+      <tr>
+        <td><strong>Lab 1</strong></td>
+        <td>Hello Agent &mdash; calculator + clock tools</td>
+        <td><code>@tool</code>, <code>create_deep_agent()</code>, tool calling</td>
+      </tr>
+      <tr>
+        <td><strong>Lab 2</strong></td>
+        <td>Research Agent &mdash; search, notes, reports</td>
+        <td>Filesystem tools, planning, context offloading</td>
+      </tr>
+      <tr>
+        <td><strong>Lab 3a</strong></td>
+        <td>First Sub-Agent &mdash; orchestrator + researcher</td>
+        <td>Sub-agent delegation, context isolation</td>
+      </tr>
+      <tr>
+        <td><strong>Lab 3b</strong></td>
+        <td>Parallel Agents &mdash; 3 specialists in parallel</td>
+        <td>Parallel execution, specialist agents</td>
+      </tr>
+      <tr>
+        <td><strong>Lab 3c</strong></td>
+        <td>File Sharing &mdash; filesystem as message bus</td>
+        <td>Inter-agent communication, sequential pipeline</td>
+      </tr>
+      <tr>
+        <td><strong>Capstone 1</strong></td>
+        <td>Financial Deep Research System</td>
+        <td>4-agent pipeline, parallel + sequential phases</td>
+      </tr>
+      <tr>
+        <td><strong>Capstone 2</strong></td>
+        <td>Text-to-SQL Analytics Agent</td>
+        <td>Schema exploration, SQL generation, safety</td>
+      </tr>
+      <tr>
+        <td><strong>Capstone 3</strong></td>
+        <td>Automated Content Pipeline</td>
+        <td>Research &rarr; Write &rarr; Review pipeline</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <hr>
+
+  <!-- Key Takeaways -->
+  <h2>Key Takeaways</h2>
+  <ol>
+    <li><strong>Deep agents</strong> = Planning + Sub-agents + Filesystem + Prompts</li>
+    <li><strong>Context isolation</strong> prevents sub-agents from polluting each other</li>
+    <li>The <strong>filesystem</strong> is your async message bus between agents</li>
+    <li><strong>Middleware</strong> is the extensibility layer &mdash; every capability is a middleware</li>
+    <li>OpenAI models work as first-class citizens via <code>"openai:gpt-4o"</code></li>
+  </ol>
+
+  <hr>
+
+  <!-- Page Nav -->
+  <div class="page-nav">
+    <div></div>
+    <a href="module1.html" class="next">
+      <span class="page-nav-label">Next</span>
+      <span class="page-nav-title">Module 1: Foundations &rarr;</span>
+    </a>
+  </div>
+
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

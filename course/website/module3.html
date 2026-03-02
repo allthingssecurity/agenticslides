@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Module 3: Multi-Agent Orchestration — Agentic AI Masterclass</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- Top Bar -->
+<div class="topbar">
+  <button class="hamburger" aria-label="Toggle sidebar">&#9776;</button>
+  <a href="index.html" class="topbar-brand">Agentic AI Masterclass</a>
+  <div class="os-toggle">
+    <button data-os="mac">Mac / Linux</button>
+    <button data-os="windows">Windows</button>
+  </div>
+</div>
+
+<div class="sidebar-overlay"></div>
+
+<!-- Sidebar -->
+<nav class="sidebar">
+  <div class="sidebar-section">
+    <span class="sidebar-section-title">Module 3</span>
+    <a href="#section-3-1">3.1 Your First Sub-Agent</a>
+    <a href="#section-3-2">3.2 Parallel Sub-Agents</a>
+    <a href="#section-3-3">3.3 Filesystem as Communication Bus</a>
+    <a href="#section-3-4">3.4 Lab 3: Multi-Agent Q&amp;A</a>
+    <a href="#recap">Key Patterns Learned</a>
+  </div>
+  <div class="sidebar-section">
+    <span class="sidebar-section-title">All Modules</span>
+    <a href="index.html">Home</a>
+    <a href="module1.html">1 &mdash; Foundations</a>
+    <a href="module2.html">2 &mdash; Building Blocks</a>
+    <a href="module3.html" class="active">3 &mdash; Multi-Agent</a>
+    <a href="module4.html">4 &mdash; Capstones</a>
+  </div>
+  <div class="sidebar-progress">
+    <div class="sidebar-progress-label">Module Progress: <span class="progress-pct">0%</span></div>
+    <div class="progress-bar"><div class="progress-bar-fill"></div></div>
+  </div>
+</nav>
+
+<!-- Main -->
+<div class="main">
+
+  <span class="module-badge">Module 3</span>
+  <span class="time-badge">45 minutes</span>
+  <h1>Multi-Agent Orchestration</h1>
+  <p class="subtitle">Building Systems Where Agents Collaborate</p>
+
+  <div class="callout callout-info">
+    <div class="callout-title">Note</div>
+    This module is 90% code. Every concept is taught through a working example.
+  </div>
+
+  <hr>
+
+  <!-- Section 3.1 -->
+  <h2 id="section-3-1">3.1 &mdash; Your First Sub-Agent</h2>
+
+  <div class="section-check">
+    <input type="checkbox" id="m3-s1">
+    <label for="m3-s1">Mark section 3.1 complete</label>
+  </div>
+
+  <h3>The <code>task()</code> Tool</h3>
+  <p>In a multi-agent system, the <strong>orchestrator</strong> does not do work directly. Instead, it <strong>delegates</strong> by calling a built-in <code>task()</code> tool:</p>
+
+  <pre><code><span class="cm"># The orchestrator calls this internally when it decides to delegate</span>
+<span class="fn">task</span>(
+    description=<span class="st">"Research the latest trends in quantum computing"</span>,
+    subagent_type=<span class="st">"researcher"</span>
+)</code></pre>
+
+  <p>The framework handles the rest: it spins up the named sub-agent in an <strong>isolated context window</strong>, passes the description as the task, and returns the sub-agent's final answer to the orchestrator.</p>
+
+  <div class="callout callout-tip">
+    <div class="callout-title">Key Insight</div>
+    The orchestrator never sees the sub-agent's intermediate tool calls or reasoning. It only receives the final result. This is what keeps the orchestrator's context clean.
+  </div>
+
+  <h3>Lab 3a: Orchestrator + Researcher Sub-Agent</h3>
+
+  <div class="lab-header">
+    <h3>Lab 3a: Your First Sub-Agent</h3>
+    <p><strong>Goal:</strong> Build an orchestrator with NO tools of its own that delegates research to a specialist sub-agent.</p>
+    <p><strong>Time:</strong> 10 minutes</p>
+  </div>
+
+  <div class="lab-code-section">
+    <a href="#" class="download-btn" data-filename="lab3a_first_subagent.py">Download lab3a_first_subagent.py</a>
+
+    <h4>Step 1: Define the Web Search Tool</h4>
+    <pre><code><span class="cm"># lab3a_first_subagent.py</span>
+<span class="cm">"""
+LAB 3a: Your First Sub-Agent
+An orchestrator that delegates research to a specialist sub-agent.
+The orchestrator has NO tools — it can only delegate.
+"""</span>
+<span class="kw">import</span> httpx
+<span class="kw">from</span> langchain_core.tools <span class="kw">import</span> tool
+<span class="kw">from</span> langchain_core.messages <span class="kw">import</span> HumanMessage
+<span class="kw">from</span> deepagents <span class="kw">import</span> create_deep_agent
+
+<span class="dc">@tool</span>
+<span class="kw">def</span> <span class="fn">web_search</span>(query: <span class="ty">str</span>) -> <span class="ty">str</span>:
+    <span class="st">"""Search the web for information.
+
+    Args:
+        query: The search query string
+    """</span>
+    <span class="kw">try</span>:
+        response = httpx.<span class="fn">get</span>(
+            <span class="st">"https://api.duckduckgo.com/"</span>,
+            params={<span class="st">"q"</span>: query, <span class="st">"format"</span>: <span class="st">"json"</span>, <span class="st">"no_html"</span>: <span class="st">"1"</span>},
+            timeout=<span class="nu">10</span>
+        )
+        data = response.<span class="fn">json</span>()
+        results = []
+        <span class="kw">if</span> data.<span class="fn">get</span>(<span class="st">"Abstract"</span>):
+            results.<span class="fn">append</span>(<span class="st">f"Summary: {data['Abstract']}"</span>)
+        <span class="kw">for</span> topic <span class="kw">in</span> data.<span class="fn">get</span>(<span class="st">"RelatedTopics"</span>, [])[:<span class="nu">5</span>]:
+            <span class="kw">if</span> <span class="bi">isinstance</span>(topic, <span class="ty">dict</span>) <span class="kw">and</span> <span class="st">"Text"</span> <span class="kw">in</span> topic:
+                results.<span class="fn">append</span>(topic[<span class="st">"Text"</span>])
+        <span class="kw">return</span> <span class="st">"\n"</span>.<span class="fn">join</span>(results) <span class="kw">if</span> results <span class="kw">else</span> <span class="st">"No results found."</span>
+    <span class="kw">except</span> <span class="ty">Exception</span> <span class="kw">as</span> e:
+        <span class="kw">return</span> <span class="st">f"Search error: {e}"</span></code></pre>
+
+    <h4>Step 2: Define the Sub-Agent</h4>
+    <pre><code><span class="cm"># Define the researcher sub-agent specification</span>
+researcher_spec = {
+    <span class="st">"name"</span>: <span class="st">"researcher"</span>,
+    <span class="st">"description"</span>: <span class="st">"A research specialist that searches the web and summarizes findings"</span>,
+    <span class="st">"system_prompt"</span>: <span class="st">"""You are a research specialist agent.
+
+## Your Role
+- Search the web for information on the given topic
+- Synthesize findings into a clear, structured summary
+- Always cite what you found from search results
+
+## Rules
+- Use web_search for EVERY factual claim
+- Maximum 3 searches per task
+- Return a concise summary (under 300 words)
+- Structure output with bullet points"""</span>,
+    <span class="st">"tools"</span>: [web_search],
+    <span class="st">"model"</span>: <span class="st">"openai:gpt-4o-mini"</span>
+}</code></pre>
+
+    <h4>Step 3: Create the Orchestrator (No Tools!)</h4>
+    <pre><code><span class="cm"># The orchestrator has NO tools — it can ONLY delegate</span>
+orchestrator = <span class="fn">create_deep_agent</span>(
+    model=<span class="st">"openai:gpt-4o"</span>,
+    tools=[],  <span class="cm"># No tools! Forces delegation</span>
+    subagents=[researcher_spec],
+    system_prompt=<span class="st">"""You are an orchestration agent.
+
+## Your Role
+- You answer user questions by delegating to your sub-agents
+- You have NO tools of your own — you MUST delegate
+- You have one sub-agent: "researcher" — use it for any factual question
+
+## Workflow
+1. Receive user question
+2. Delegate to researcher sub-agent via task()
+3. Review the researcher's findings
+4. Deliver a polished final answer to the user"""</span>
+)</code></pre>
+
+    <h4>Step 4: Run It</h4>
+    <pre><code><span class="kw">def</span> <span class="fn">ask</span>(question: <span class="ty">str</span>):
+    <span class="st">"""Send a question to the orchestrator."""</span>
+    <span class="bi">print</span>(<span class="st">f"\n{'='*60}"</span>)
+    <span class="bi">print</span>(<span class="st">f"USER: {question}"</span>)
+    <span class="bi">print</span>(<span class="st">"="</span> * <span class="nu">60</span>)
+
+    result = orchestrator.<span class="fn">invoke</span>(
+        {<span class="st">"messages"</span>: [<span class="fn">HumanMessage</span>(content=question)]},
+        config={<span class="st">"configurable"</span>: {<span class="st">"thread_id"</span>: <span class="st">"lab3a"</span>}}
+    )
+
+    <span class="kw">for</span> msg <span class="kw">in</span> <span class="bi">reversed</span>(result[<span class="st">"messages"</span>]):
+        <span class="kw">if</span> msg.type == <span class="st">"ai"</span> <span class="kw">and</span> msg.content:
+            <span class="bi">print</span>(<span class="st">f"\nORCHESTRATOR: {msg.content}"</span>)
+            <span class="kw">return</span>
+
+<span class="kw">if</span> __name__ == <span class="st">"__main__"</span>:
+    <span class="fn">ask</span>(<span class="st">"What is quantum computing and what are its main applications?"</span>)</code></pre>
+  </div>
+
+  <h3>What Happens Under the Hood</h3>
+  <div class="diagram">Step 1: User sends question to ORCHESTRATOR
+         ↓
+Step 2: Orchestrator has no tools, decides to delegate
+         ↓
+Step 3: Orchestrator calls task(description="Research quantum...", subagent_type="researcher")
+         ↓
+Step 4: Framework creates RESEARCHER sub-agent with its own context
+         ↓
+Step 5: Researcher calls web_search("quantum computing applications")
+         Researcher calls web_search("quantum computing use cases 2025")
+         Researcher synthesizes findings into summary
+         ↓
+Step 6: Researcher's final summary is returned to ORCHESTRATOR
+         (all intermediate searches stay isolated)
+         ↓
+Step 7: Orchestrator formats and delivers polished answer to USER</div>
+
+  <div class="os-command" data-mac="python3 lab3a_first_subagent.py" data-windows="python lab3a_first_subagent.py"><code></code></div>
+
+  <hr>
+
+  <!-- Section 3.2 -->
+  <h2 id="section-3-2">3.2 &mdash; Parallel Sub-Agents</h2>
+
+  <div class="section-check">
+    <input type="checkbox" id="m3-s2">
+    <label for="m3-s2">Mark section 3.2 complete</label>
+  </div>
+
+  <h3>Why Parallel?</h3>
+  <p>When a complex question has <strong>independent aspects</strong>, you can research them all at the same time. The orchestrator launches multiple <code>task()</code> calls in a single response, and the framework runs them in <strong>parallel</strong>.</p>
+
+  <p>For example, the question "Should our startup use Rust or Go?" has three independent aspects:</p>
+  <ol>
+    <li><strong>Technical comparison</strong> &mdash; language features, performance, ecosystem</li>
+    <li><strong>Market analysis</strong> &mdash; adoption trends, job market, community</li>
+    <li><strong>Pros and cons</strong> &mdash; trade-offs for a startup context</li>
+  </ol>
+  <p>Three specialist agents can each tackle one aspect <strong>simultaneously</strong>.</p>
+
+  <div class="lab-header">
+    <h3>Lab 3b: Parallel Sub-Agents</h3>
+    <p><strong>Goal:</strong> Build an orchestrator that launches 3 specialist sub-agents in parallel, then synthesizes their findings.</p>
+    <p><strong>Time:</strong> 10 minutes</p>
+  </div>
+
+  <div class="lab-code-section">
+    <a href="#" class="download-btn" data-filename="lab3b_parallel_agents.py">Download lab3b_parallel_agents.py</a>
+
+    <pre><code><span class="cm"># lab3b_parallel_agents.py</span>
+<span class="cm">"""
+LAB 3b: Parallel Sub-Agents
+Three specialist agents research different aspects simultaneously.
+The orchestrator synthesizes their parallel findings into one answer.
+"""</span>
+<span class="kw">import</span> httpx
+<span class="kw">from</span> langchain_core.tools <span class="kw">import</span> tool
+<span class="kw">from</span> langchain_core.messages <span class="kw">import</span> HumanMessage
+<span class="kw">from</span> deepagents <span class="kw">import</span> create_deep_agent
+
+<span class="dc">@tool</span>
+<span class="kw">def</span> <span class="fn">web_search</span>(query: <span class="ty">str</span>) -> <span class="ty">str</span>:
+    <span class="st">"""Search the web for information.
+
+    Args:
+        query: The search query string
+    """</span>
+    <span class="kw">try</span>:
+        response = httpx.<span class="fn">get</span>(
+            <span class="st">"https://api.duckduckgo.com/"</span>,
+            params={<span class="st">"q"</span>: query, <span class="st">"format"</span>: <span class="st">"json"</span>, <span class="st">"no_html"</span>: <span class="st">"1"</span>},
+            timeout=<span class="nu">10</span>
+        )
+        data = response.<span class="fn">json</span>()
+        results = []
+        <span class="kw">if</span> data.<span class="fn">get</span>(<span class="st">"Abstract"</span>):
+            results.<span class="fn">append</span>(<span class="st">f"Summary: {data['Abstract']}"</span>)
+        <span class="kw">for</span> topic <span class="kw">in</span> data.<span class="fn">get</span>(<span class="st">"RelatedTopics"</span>, [])[:<span class="nu">5</span>]:
+            <span class="kw">if</span> <span class="bi">isinstance</span>(topic, <span class="ty">dict</span>) <span class="kw">and</span> <span class="st">"Text"</span> <span class="kw">in</span> topic:
+                results.<span class="fn">append</span>(topic[<span class="st">"Text"</span>])
+        <span class="kw">return</span> <span class="st">"\n"</span>.<span class="fn">join</span>(results) <span class="kw">if</span> results <span class="kw">else</span> <span class="st">"No results found."</span>
+    <span class="kw">except</span> <span class="ty">Exception</span> <span class="kw">as</span> e:
+        <span class="kw">return</span> <span class="st">f"Search error: {e}"</span>
+
+<span class="cm"># ── Sub-Agent 1: Technical Researcher ──</span>
+tech_researcher = {
+    <span class="st">"name"</span>: <span class="st">"tech_researcher"</span>,
+    <span class="st">"description"</span>: <span class="st">"Researches technical features, performance benchmarks, and ecosystem"</span>,
+    <span class="st">"system_prompt"</span>: <span class="st">"""You are a technical research specialist.
+
+## Your Role
+- Research technical aspects: language features, performance, libraries, tooling
+- Focus on objective, measurable comparisons
+- Cite specific benchmarks or technical specs when available
+
+## Rules
+- Maximum 3 web searches
+- Return structured bullet points
+- Keep response under 250 words"""</span>,
+    <span class="st">"tools"</span>: [web_search],
+    <span class="st">"model"</span>: <span class="st">"openai:gpt-4o-mini"</span>
+}
+
+<span class="cm"># ── Sub-Agent 2: Market Researcher ──</span>
+market_researcher = {
+    <span class="st">"name"</span>: <span class="st">"market_researcher"</span>,
+    <span class="st">"description"</span>: <span class="st">"Researches market adoption, job trends, and community activity"</span>,
+    <span class="st">"system_prompt"</span>: <span class="st">"""You are a market research specialist.
+
+## Your Role
+- Research market adoption, industry trends, job market demand
+- Focus on real-world usage, company adoption, community size
+- Look for growth trends and momentum
+
+## Rules
+- Maximum 3 web searches
+- Return structured bullet points
+- Keep response under 250 words"""</span>,
+    <span class="st">"tools"</span>: [web_search],
+    <span class="st">"model"</span>: <span class="st">"openai:gpt-4o-mini"</span>
+}
+
+<span class="cm"># ── Sub-Agent 3: Pros/Cons Analyst ──</span>
+pros_cons_analyst = {
+    <span class="st">"name"</span>: <span class="st">"pros_cons_analyst"</span>,
+    <span class="st">"description"</span>: <span class="st">"Analyzes trade-offs and produces a balanced pros/cons assessment"</span>,
+    <span class="st">"system_prompt"</span>: <span class="st">"""You are a trade-off analysis specialist.
+
+## Your Role
+- Research practical trade-offs for the given comparison
+- Produce a balanced pros/cons list for each option
+- Consider: learning curve, hiring, maintenance, scalability
+
+## Rules
+- Maximum 3 web searches
+- Format as clear Pros / Cons lists
+- Keep response under 250 words"""</span>,
+    <span class="st">"tools"</span>: [web_search],
+    <span class="st">"model"</span>: <span class="st">"openai:gpt-4o-mini"</span>
+}
+
+<span class="cm"># ── Orchestrator: launches all 3 in parallel ──</span>
+orchestrator = <span class="fn">create_deep_agent</span>(
+    model=<span class="st">"openai:gpt-4o"</span>,
+    tools=[],  <span class="cm"># No tools — forces delegation</span>
+    subagents=[tech_researcher, market_researcher, pros_cons_analyst],
+    system_prompt=<span class="st">"""You are an orchestration agent for technology comparisons.
+
+## Your Role
+- Break the user's question into 3 parallel research tracks
+- Delegate ALL THREE at the same time in a single response
+- Synthesize the results into a comprehensive, well-structured answer
+
+## Your Sub-Agents
+1. tech_researcher — for technical features and performance
+2. market_researcher — for adoption, trends, and job market
+3. pros_cons_analyst — for balanced trade-off analysis
+
+## Workflow
+1. Receive user question
+2. Launch ALL THREE sub-agents in PARALLEL (one task() call each)
+3. Wait for all results
+4. Synthesize into a final recommendation with sections:
+   - Technical Comparison
+   - Market Analysis
+   - Pros and Cons
+   - Recommendation"""</span>
+)
+
+<span class="kw">def</span> <span class="fn">ask</span>(question: <span class="ty">str</span>):
+    <span class="st">"""Send a question to the parallel orchestrator."""</span>
+    <span class="bi">print</span>(<span class="st">f"\n{'='*60}"</span>)
+    <span class="bi">print</span>(<span class="st">f"USER: {question}"</span>)
+    <span class="bi">print</span>(<span class="st">"="</span> * <span class="nu">60</span>)
+
+    result = orchestrator.<span class="fn">invoke</span>(
+        {<span class="st">"messages"</span>: [<span class="fn">HumanMessage</span>(content=question)]},
+        config={<span class="st">"configurable"</span>: {<span class="st">"thread_id"</span>: <span class="st">"lab3b"</span>}}
+    )
+
+    <span class="kw">for</span> msg <span class="kw">in</span> <span class="bi">reversed</span>(result[<span class="st">"messages"</span>]):
+        <span class="kw">if</span> msg.type == <span class="st">"ai"</span> <span class="kw">and</span> msg.content:
+            <span class="bi">print</span>(<span class="st">f"\nORCHESTRATOR:\n{msg.content}"</span>)
+            <span class="kw">return</span>
+
+<span class="kw">if</span> __name__ == <span class="st">"__main__"</span>:
+    <span class="fn">ask</span>(<span class="st">"Should our startup use Rust or Go for our backend services?"</span>)</code></pre>
+  </div>
+
+  <h3>Parallel Execution Diagram</h3>
+  <div class="diagram">                    ┌──────────────┐
+                    │ ORCHESTRATOR │
+                    └──────┬───────┘
+                           │
+              ┌────────────┼────────────┐
+              │            │            │
+              ▼            ▼            ▼
+     ┌────────────┐ ┌────────────┐ ┌────────────┐
+     │   TECH     │ │  MARKET    │ │ PROS/CONS  │
+     │ RESEARCHER │ │ RESEARCHER │ │  ANALYST   │
+     │            │ │            │ │            │
+     │ web_search │ │ web_search │ │ web_search │
+     │ web_search │ │ web_search │ │ web_search │
+     └─────┬──────┘ └─────┬──────┘ └─────┬──────┘
+           │              │              │
+           │  Technical   │   Market     │  Trade-off
+           │  findings    │   findings   │  analysis
+           │              │              │
+           └──────────────┼──────────────┘
+                          │
+                          ▼
+                 ┌────────────────┐
+                 │  ORCHESTRATOR  │
+                 │  synthesizes   │
+                 │  all 3 reports │
+                 └────────────────┘
+                          │
+                          ▼
+                   Final Answer</div>
+
+  <div class="os-command" data-mac="python3 lab3b_parallel_agents.py" data-windows="python lab3b_parallel_agents.py"><code></code></div>
+
+  <div class="callout callout-tip">
+    <div class="callout-title">Why Parallel Matters</div>
+    <p>Without parallel execution, 3 sub-agents running sequentially would take 3x as long. With parallel execution, they all run simultaneously and the total time equals the <strong>slowest</strong> agent, not the sum.</p>
+  </div>
+
+  <hr>
+
+  <!-- Section 3.3 -->
+  <h2 id="section-3-3">3.3 &mdash; Filesystem as Communication Bus</h2>
+
+  <div class="section-check">
+    <input type="checkbox" id="m3-s3">
+    <label for="m3-s3">Mark section 3.3 complete</label>
+  </div>
+
+  <h3>The Problem: How Do Agents Share Data?</h3>
+  <p>In sections 3.1 and 3.2, the orchestrator received sub-agent results directly through <code>task()</code> return values. But what about more complex pipelines where:</p>
+  <ul>
+    <li>Agent A produces <strong>large datasets</strong> that would overwhelm Agent B's context</li>
+    <li>Agents run in <strong>different phases</strong> and need to pass work products</li>
+    <li>You want an <strong>audit trail</strong> of intermediate results</li>
+  </ul>
+
+  <p>The answer: use the <strong>filesystem as a communication bus</strong>. Agent A writes files. Agent B reads them.</p>
+
+  <div class="diagram">/workspace/
+├── data/                    ← data_collector writes here
+│   ├── raw_metrics.json
+│   └── market_data.json
+└── analysis/                ← analyst reads /data/, writes here
+    └── final_analysis.md</div>
+
+  <div class="lab-header">
+    <h3>Lab 3c: File-Based Communication</h3>
+    <p><strong>Goal:</strong> Build a 2-agent pipeline where a data collector writes to <code>/data/</code> and an analyst reads from <code>/data/</code> and writes to <code>/analysis/</code>.</p>
+    <p><strong>Time:</strong> 10 minutes</p>
+  </div>
+
+  <div class="lab-code-section">
+    <a href="#" class="download-btn" data-filename="lab3c_file_sharing.py">Download lab3c_file_sharing.py</a>
+
+    <pre><code><span class="cm"># lab3c_file_sharing.py</span>
+<span class="cm">"""
+LAB 3c: Filesystem as Communication Bus
+Agent A (data_collector) writes data files.
+Agent B (analyst) reads those files and produces analysis.
+The filesystem IS the message bus between agents.
+"""</span>
+<span class="kw">import</span> os
+<span class="kw">import</span> json
+<span class="kw">import</span> math
+<span class="kw">import</span> httpx
+<span class="kw">from</span> langchain_core.tools <span class="kw">import</span> tool
+<span class="kw">from</span> langchain_core.messages <span class="kw">import</span> HumanMessage
+<span class="kw">from</span> deepagents <span class="kw">import</span> create_deep_agent
+
+<span class="cm"># ── Shared filesystem directories ──</span>
+DATA_DIR = <span class="st">"./workspace/data"</span>
+ANALYSIS_DIR = <span class="st">"./workspace/analysis"</span>
+os.<span class="fn">makedirs</span>(DATA_DIR, exist_ok=<span class="kw">True</span>)
+os.<span class="fn">makedirs</span>(ANALYSIS_DIR, exist_ok=<span class="kw">True</span>)
+
+<span class="cm"># ── Tools for the Data Collector ──</span>
+<span class="dc">@tool</span>
+<span class="kw">def</span> <span class="fn">web_search</span>(query: <span class="ty">str</span>) -> <span class="ty">str</span>:
+    <span class="st">"""Search the web for information.
+
+    Args:
+        query: The search query string
+    """</span>
+    <span class="kw">try</span>:
+        response = httpx.<span class="fn">get</span>(
+            <span class="st">"https://api.duckduckgo.com/"</span>,
+            params={<span class="st">"q"</span>: query, <span class="st">"format"</span>: <span class="st">"json"</span>, <span class="st">"no_html"</span>: <span class="st">"1"</span>},
+            timeout=<span class="nu">10</span>
+        )
+        data = response.<span class="fn">json</span>()
+        results = []
+        <span class="kw">if</span> data.<span class="fn">get</span>(<span class="st">"Abstract"</span>):
+            results.<span class="fn">append</span>(<span class="st">f"Summary: {data['Abstract']}"</span>)
+        <span class="kw">for</span> topic <span class="kw">in</span> data.<span class="fn">get</span>(<span class="st">"RelatedTopics"</span>, [])[:<span class="nu">5</span>]:
+            <span class="kw">if</span> <span class="bi">isinstance</span>(topic, <span class="ty">dict</span>) <span class="kw">and</span> <span class="st">"Text"</span> <span class="kw">in</span> topic:
+                results.<span class="fn">append</span>(topic[<span class="st">"Text"</span>])
+        <span class="kw">return</span> <span class="st">"\n"</span>.<span class="fn">join</span>(results) <span class="kw">if</span> results <span class="kw">else</span> <span class="st">"No results found."</span>
+    <span class="kw">except</span> <span class="ty">Exception</span> <span class="kw">as</span> e:
+        <span class="kw">return</span> <span class="st">f"Search error: {e}"</span>
+
+<span class="dc">@tool</span>
+<span class="kw">def</span> <span class="fn">write_data_file</span>(filename: <span class="ty">str</span>, content: <span class="ty">str</span>) -> <span class="ty">str</span>:
+    <span class="st">"""Write data to a file in the /data/ directory.
+
+    Args:
+        filename: Name of the file to create (e.g., "results.json")
+        content: The content to write to the file
+    """</span>
+    filepath = os.path.<span class="fn">join</span>(DATA_DIR, filename)
+    <span class="kw">with</span> <span class="bi">open</span>(filepath, <span class="st">"w"</span>) <span class="kw">as</span> f:
+        f.<span class="fn">write</span>(content)
+    <span class="kw">return</span> <span class="st">f"Wrote {len(content)} chars to {filepath}"</span>
+
+<span class="cm"># ── Tools for the Analyst ──</span>
+<span class="dc">@tool</span>
+<span class="kw">def</span> <span class="fn">read_data_file</span>(filename: <span class="ty">str</span>) -> <span class="ty">str</span>:
+    <span class="st">"""Read a data file from the /data/ directory.
+
+    Args:
+        filename: Name of the file to read (e.g., "results.json")
+    """</span>
+    filepath = os.path.<span class="fn">join</span>(DATA_DIR, filename)
+    <span class="kw">try</span>:
+        <span class="kw">with</span> <span class="bi">open</span>(filepath, <span class="st">"r"</span>) <span class="kw">as</span> f:
+            <span class="kw">return</span> f.<span class="fn">read</span>()
+    <span class="kw">except</span> <span class="ty">FileNotFoundError</span>:
+        <span class="kw">return</span> <span class="st">f"File not found: {filepath}"</span>
+
+<span class="dc">@tool</span>
+<span class="kw">def</span> <span class="fn">list_data_files</span>() -> <span class="ty">str</span>:
+    <span class="st">"""List all files in the /data/ directory."""</span>
+    files = os.<span class="fn">listdir</span>(DATA_DIR)
+    <span class="kw">if not</span> files:
+        <span class="kw">return</span> <span class="st">"No files in /data/ directory."</span>
+    <span class="kw">return</span> <span class="st">"Files in /data/:\n"</span> + <span class="st">"\n"</span>.<span class="fn">join</span>(<span class="st">f"  - {f}"</span> <span class="kw">for</span> f <span class="kw">in</span> files)
+
+<span class="dc">@tool</span>
+<span class="kw">def</span> <span class="fn">calculator</span>(expression: <span class="ty">str</span>) -> <span class="ty">str</span>:
+    <span class="st">"""Evaluate a mathematical expression.
+
+    Args:
+        expression: A math expression, e.g. "2 + 3 * 4" or "sqrt(144)"
+    """</span>
+    allowed_names = {k: v <span class="kw">for</span> k, v <span class="kw">in</span> math.__dict__.<span class="fn">items</span>() <span class="kw">if not</span> k.<span class="fn">startswith</span>(<span class="st">"__"</span>)}
+    allowed_names.<span class="fn">update</span>({<span class="st">"abs"</span>: <span class="bi">abs</span>, <span class="st">"round"</span>: <span class="bi">round</span>})
+    <span class="kw">try</span>:
+        result = <span class="bi">eval</span>(expression, {<span class="st">"__builtins__"</span>: {}}, allowed_names)
+        <span class="kw">return</span> <span class="st">f"Result: {result}"</span>
+    <span class="kw">except</span> <span class="ty">Exception</span> <span class="kw">as</span> e:
+        <span class="kw">return</span> <span class="st">f"Error: {e}"</span>
+
+<span class="dc">@tool</span>
+<span class="kw">def</span> <span class="fn">write_analysis_file</span>(filename: <span class="ty">str</span>, content: <span class="ty">str</span>) -> <span class="ty">str</span>:
+    <span class="st">"""Write analysis results to the /analysis/ directory.
+
+    Args:
+        filename: Name of the file to create (e.g., "report.md")
+        content: The analysis content to write
+    """</span>
+    filepath = os.path.<span class="fn">join</span>(ANALYSIS_DIR, filename)
+    <span class="kw">with</span> <span class="bi">open</span>(filepath, <span class="st">"w"</span>) <span class="kw">as</span> f:
+        f.<span class="fn">write</span>(content)
+    <span class="kw">return</span> <span class="st">f"Wrote analysis to {filepath}"</span>
+
+<span class="cm"># ── Sub-Agent Definitions ──</span>
+data_collector_spec = {
+    <span class="st">"name"</span>: <span class="st">"data_collector"</span>,
+    <span class="st">"description"</span>: <span class="st">"Searches the web and saves raw data to /data/ directory"</span>,
+    <span class="st">"system_prompt"</span>: <span class="st">"""You are a data collection specialist.
+
+## Your Role
+- Search the web for data on the given topic
+- Save ALL raw findings as structured JSON files in /data/
+- Each file should be a self-contained dataset
+
+## Rules
+- Use web_search to gather information
+- Use write_data_file to save results as JSON
+- Create separate files for different data types
+- Include metadata (source, query, timestamp) in each file"""</span>,
+    <span class="st">"tools"</span>: [web_search, write_data_file],
+    <span class="st">"model"</span>: <span class="st">"openai:gpt-4o-mini"</span>
+}
+
+analyst_spec = {
+    <span class="st">"name"</span>: <span class="st">"analyst"</span>,
+    <span class="st">"description"</span>: <span class="st">"Reads data from /data/, performs analysis, writes to /analysis/"</span>,
+    <span class="st">"system_prompt"</span>: <span class="st">"""You are a data analysis specialist.
+
+## Your Role
+- List and read all files in /data/
+- Analyze the data: find patterns, calculate stats, draw conclusions
+- Write your analysis to /analysis/ as a markdown report
+
+## Rules
+- ALWAYS start by listing files, then read each one
+- Use calculator for any numerical analysis
+- Write final analysis to /analysis/report.md
+- Include specific numbers and data points from the source files"""</span>,
+    <span class="st">"tools"</span>: [list_data_files, read_data_file, calculator, write_analysis_file],
+    <span class="st">"model"</span>: <span class="st">"openai:gpt-4o-mini"</span>
+}
+
+<span class="cm"># ── Orchestrator ──</span>
+orchestrator = <span class="fn">create_deep_agent</span>(
+    model=<span class="st">"openai:gpt-4o"</span>,
+    tools=[],
+    subagents=[data_collector_spec, analyst_spec],
+    system_prompt=<span class="st">"""You are a pipeline orchestration agent.
+
+## Your Role
+- Run a 2-phase data pipeline:
+  Phase 1: data_collector gathers and saves data to /data/
+  Phase 2: analyst reads /data/, analyzes, writes to /analysis/
+
+## CRITICAL: Phases must run SEQUENTIALLY
+- First delegate to data_collector and WAIT for completion
+- THEN delegate to analyst (who reads what data_collector wrote)
+- Finally, summarize the analyst's conclusions for the user"""</span>
+)
+
+<span class="kw">def</span> <span class="fn">ask</span>(question: <span class="ty">str</span>):
+    <span class="st">"""Send a question through the pipeline."""</span>
+    <span class="bi">print</span>(<span class="st">f"\n{'='*60}"</span>)
+    <span class="bi">print</span>(<span class="st">f"USER: {question}"</span>)
+    <span class="bi">print</span>(<span class="st">"="</span> * <span class="nu">60</span>)
+
+    result = orchestrator.<span class="fn">invoke</span>(
+        {<span class="st">"messages"</span>: [<span class="fn">HumanMessage</span>(content=question)]},
+        config={<span class="st">"configurable"</span>: {<span class="st">"thread_id"</span>: <span class="st">"lab3c"</span>}}
+    )
+
+    <span class="kw">for</span> msg <span class="kw">in</span> <span class="bi">reversed</span>(result[<span class="st">"messages"</span>]):
+        <span class="kw">if</span> msg.type == <span class="st">"ai"</span> <span class="kw">and</span> msg.content:
+            <span class="bi">print</span>(<span class="st">f"\nORCHESTRATOR:\n{msg.content}"</span>)
+            <span class="kw">break</span>
+
+    <span class="cm"># Show what files were created</span>
+    <span class="bi">print</span>(<span class="st">f"\n{'─'*40}"</span>)
+    <span class="bi">print</span>(<span class="st">"Files created during pipeline:"</span>)
+    <span class="kw">for</span> d <span class="kw">in</span> [DATA_DIR, ANALYSIS_DIR]:
+        <span class="kw">for</span> f <span class="kw">in</span> os.<span class="fn">listdir</span>(d):
+            filepath = os.path.<span class="fn">join</span>(d, f)
+            size = os.path.<span class="fn">getsize</span>(filepath)
+            <span class="bi">print</span>(<span class="st">f"  {filepath} ({size} bytes)"</span>)
+
+<span class="kw">if</span> __name__ == <span class="st">"__main__"</span>:
+    <span class="fn">ask</span>(<span class="st">"Research Python web frameworks and analyze which is best for a REST API"</span>)</code></pre>
+  </div>
+
+  <h3>Data Flow: File-Based Communication</h3>
+  <div class="diagram">Phase 1: DATA COLLECTION
+┌──────────────┐      ┌──────────────────────────────┐
+│ data_collector│ ──→  │ /workspace/data/              │
+│              │      │   frameworks.json              │
+│ web_search() │      │   performance_data.json        │
+│ write_data() │      │   community_stats.json         │
+└──────────────┘      └──────────────┬─────────────────┘
+                                     │
+                                     │ Files on disk
+                                     │ (persist between agents)
+                                     │
+Phase 2: ANALYSIS                    ▼
+┌──────────────┐      ┌──────────────────────────────┐
+│   analyst    │ ←──  │ /workspace/data/              │
+│              │      │   (reads all files)           │
+│ read_data()  │      └──────────────────────────────┘
+│ calculator() │
+│              │ ──→  ┌──────────────────────────────┐
+│ write_       │      │ /workspace/analysis/           │
+│  analysis()  │      │   report.md                    │
+└──────────────┘      └──────────────────────────────┘</div>
+
+  <div class="os-command" data-mac="python3 lab3c_file_sharing.py" data-windows="python lab3c_file_sharing.py"><code></code></div>
+
+  <div class="callout callout-info">
+    <div class="callout-title">Why Files Instead of Return Values?</div>
+    <ul>
+      <li><strong>Scalability</strong> &mdash; Return values go into the orchestrator's context window. Large datasets would overflow it. Files don't.</li>
+      <li><strong>Audit trail</strong> &mdash; Every intermediate artifact is saved to disk. You can inspect exactly what each agent produced.</li>
+      <li><strong>Decoupling</strong> &mdash; Agent A doesn't need to know about Agent B. It just writes to a directory. Any number of downstream agents can read from it.</li>
+    </ul>
+  </div>
+
+  <hr>
+
+  <!-- Section 3.4 -->
+  <h2 id="section-3-4">3.4 &mdash; Lab 3: Complete Multi-Agent Q&amp;A System</h2>
+
+  <div class="section-check">
+    <input type="checkbox" id="m3-s4">
+    <label for="m3-s4">Mark section 3.4 complete</label>
+  </div>
+
+  <div class="lab-header">
+    <h3>Lab 3: Multi-Agent Q&amp;A System</h3>
+    <p><strong>Goal:</strong> Build a complete multi-agent system that combines everything from this module: delegation, parallel execution, and file-based communication.</p>
+    <p><strong>Time:</strong> 15 minutes</p>
+  </div>
+
+  <p>This system has three agents working together:</p>
+  <ol>
+    <li><strong>Researcher Agent</strong> &mdash; searches the web, writes structured notes to <code>/research/</code></li>
+    <li><strong>Writer Agent</strong> &mdash; reads <code>/research/</code>, synthesizes into a polished report in <code>/output/</code></li>
+    <li><strong>Orchestrator</strong> &mdash; manages the workflow: analyze the question, launch research (in parallel if multiple topics), then hand off to the writer</li>
+  </ol>
+
+  <div class="lab-code-section">
+    <a href="#" class="download-btn" data-filename="lab3_multiagent_qa.py">Download lab3_multiagent_qa.py</a>
+
+    <pre><code><span class="cm"># lab3_multiagent_qa.py</span>
+<span class="cm">"""
+LAB 3: Complete Multi-Agent Q&amp;A System
+Combines: delegation, parallel execution, filesystem communication.
+
+Architecture:
+  ORCHESTRATOR (no tools)
+    ├── researcher_agent (web_search, write_file) → /research/
+    └── writer_agent (read_file, list_files, write_file) → /output/
+"""</span>
+<span class="kw">import</span> os
+<span class="kw">import</span> httpx
+<span class="kw">from</span> langchain_core.tools <span class="kw">import</span> tool
+<span class="kw">from</span> langchain_core.messages <span class="kw">import</span> HumanMessage
+<span class="kw">from</span> deepagents <span class="kw">import</span> create_deep_agent
+
+<span class="cm"># ── Setup directories ──</span>
+RESEARCH_DIR = <span class="st">"./workspace/research"</span>
+OUTPUT_DIR = <span class="st">"./workspace/output"</span>
+os.<span class="fn">makedirs</span>(RESEARCH_DIR, exist_ok=<span class="kw">True</span>)
+os.<span class="fn">makedirs</span>(OUTPUT_DIR, exist_ok=<span class="kw">True</span>)
+
+<span class="cm"># ═══════════════════════════════════════════════════════</span>
+<span class="cm"># TOOLS</span>
+<span class="cm"># ═══════════════════════════════════════════════════════</span>
+
+<span class="dc">@tool</span>
+<span class="kw">def</span> <span class="fn">web_search</span>(query: <span class="ty">str</span>) -> <span class="ty">str</span>:
+    <span class="st">"""Search the web for information.
+
+    Args:
+        query: The search query string
+    """</span>
+    <span class="kw">try</span>:
+        response = httpx.<span class="fn">get</span>(
+            <span class="st">"https://api.duckduckgo.com/"</span>,
+            params={<span class="st">"q"</span>: query, <span class="st">"format"</span>: <span class="st">"json"</span>, <span class="st">"no_html"</span>: <span class="st">"1"</span>},
+            timeout=<span class="nu">10</span>
+        )
+        data = response.<span class="fn">json</span>()
+        results = []
+        <span class="kw">if</span> data.<span class="fn">get</span>(<span class="st">"Abstract"</span>):
+            results.<span class="fn">append</span>(<span class="st">f"Summary: {data['Abstract']}"</span>)
+        <span class="kw">for</span> topic <span class="kw">in</span> data.<span class="fn">get</span>(<span class="st">"RelatedTopics"</span>, [])[:<span class="nu">5</span>]:
+            <span class="kw">if</span> <span class="bi">isinstance</span>(topic, <span class="ty">dict</span>) <span class="kw">and</span> <span class="st">"Text"</span> <span class="kw">in</span> topic:
+                results.<span class="fn">append</span>(topic[<span class="st">"Text"</span>])
+        <span class="kw">return</span> <span class="st">"\n"</span>.<span class="fn">join</span>(results) <span class="kw">if</span> results <span class="kw">else</span> <span class="st">"No results found."</span>
+    <span class="kw">except</span> <span class="ty">Exception</span> <span class="kw">as</span> e:
+        <span class="kw">return</span> <span class="st">f"Search error: {e}"</span>
+
+<span class="dc">@tool</span>
+<span class="kw">def</span> <span class="fn">write_research_file</span>(filename: <span class="ty">str</span>, content: <span class="ty">str</span>) -> <span class="ty">str</span>:
+    <span class="st">"""Write research notes to the /research/ directory.
+
+    Args:
+        filename: Name of the file (e.g., "topic_notes.md")
+        content: The research content to save
+    """</span>
+    filepath = os.path.<span class="fn">join</span>(RESEARCH_DIR, filename)
+    <span class="kw">with</span> <span class="bi">open</span>(filepath, <span class="st">"w"</span>) <span class="kw">as</span> f:
+        f.<span class="fn">write</span>(content)
+    <span class="kw">return</span> <span class="st">f"Saved research to {filepath} ({len(content)} chars)"</span>
+
+<span class="dc">@tool</span>
+<span class="kw">def</span> <span class="fn">list_research_files</span>() -> <span class="ty">str</span>:
+    <span class="st">"""List all files in the /research/ directory."""</span>
+    files = os.<span class="fn">listdir</span>(RESEARCH_DIR)
+    <span class="kw">if not</span> files:
+        <span class="kw">return</span> <span class="st">"No research files found."</span>
+    <span class="kw">return</span> <span class="st">"Research files:\n"</span> + <span class="st">"\n"</span>.<span class="fn">join</span>(<span class="st">f"  - {f}"</span> <span class="kw">for</span> f <span class="kw">in</span> files)
+
+<span class="dc">@tool</span>
+<span class="kw">def</span> <span class="fn">read_research_file</span>(filename: <span class="ty">str</span>) -> <span class="ty">str</span>:
+    <span class="st">"""Read a file from the /research/ directory.
+
+    Args:
+        filename: Name of the file to read
+    """</span>
+    filepath = os.path.<span class="fn">join</span>(RESEARCH_DIR, filename)
+    <span class="kw">try</span>:
+        <span class="kw">with</span> <span class="bi">open</span>(filepath, <span class="st">"r"</span>) <span class="kw">as</span> f:
+            <span class="kw">return</span> f.<span class="fn">read</span>()
+    <span class="kw">except</span> <span class="ty">FileNotFoundError</span>:
+        <span class="kw">return</span> <span class="st">f"File not found: {filename}"</span>
+
+<span class="dc">@tool</span>
+<span class="kw">def</span> <span class="fn">write_output_file</span>(filename: <span class="ty">str</span>, content: <span class="ty">str</span>) -> <span class="ty">str</span>:
+    <span class="st">"""Write the final report to the /output/ directory.
+
+    Args:
+        filename: Name of the output file (e.g., "report.md")
+        content: The final report content
+    """</span>
+    filepath = os.path.<span class="fn">join</span>(OUTPUT_DIR, filename)
+    <span class="kw">with</span> <span class="bi">open</span>(filepath, <span class="st">"w"</span>) <span class="kw">as</span> f:
+        f.<span class="fn">write</span>(content)
+    <span class="kw">return</span> <span class="st">f"Final report saved to {filepath} ({len(content)} chars)"</span>
+
+<span class="cm"># ═══════════════════════════════════════════════════════</span>
+<span class="cm"># SUB-AGENT DEFINITIONS</span>
+<span class="cm"># ═══════════════════════════════════════════════════════</span>
+
+researcher_agent = {
+    <span class="st">"name"</span>: <span class="st">"researcher"</span>,
+    <span class="st">"description"</span>: <span class="st">"Searches the web and writes structured research notes to /research/"</span>,
+    <span class="st">"system_prompt"</span>: <span class="st">"""You are a research specialist agent.
+
+## Your Role
+- Search the web for comprehensive information on the given topic
+- Organize findings into structured, well-sourced notes
+- Save all research to /research/ as markdown files
+
+## Workflow
+1. Search for the main topic (2-3 queries)
+2. Organize findings by subtopic
+3. Write a structured markdown file to /research/
+4. Include: key facts, data points, sources, and quotes
+
+## Rules
+- Maximum 4 web searches per task
+- Always save research notes — never just return them
+- Use descriptive filenames (e.g., "quantum_computing_overview.md")
+- Structure notes with headers, bullet points, and data"""</span>,
+    <span class="st">"tools"</span>: [web_search, write_research_file],
+    <span class="st">"model"</span>: <span class="st">"openai:gpt-4o-mini"</span>
+}
+
+writer_agent = {
+    <span class="st">"name"</span>: <span class="st">"writer"</span>,
+    <span class="st">"description"</span>: <span class="st">"Reads research from /research/ and writes a polished report to /output/"</span>,
+    <span class="st">"system_prompt"</span>: <span class="st">"""You are a professional writer agent.
+
+## Your Role
+- Read all research files from /research/
+- Synthesize them into a polished, well-structured report
+- Save the final report to /output/
+
+## Workflow
+1. List all files in /research/
+2. Read each research file
+3. Identify key themes, patterns, and insights
+4. Write a comprehensive report with:
+   - Executive summary (2-3 sentences)
+   - Main findings (organized by theme)
+   - Key data points and statistics
+   - Conclusion and recommendations
+5. Save to /output/report.md
+
+## Rules
+- Read ALL research files before writing
+- Never invent facts — only use what's in the research files
+- Write in a clear, professional tone
+- Target 400-600 words for the report"""</span>,
+    <span class="st">"tools"</span>: [list_research_files, read_research_file, write_output_file],
+    <span class="st">"model"</span>: <span class="st">"openai:gpt-4o-mini"</span>
+}
+
+<span class="cm"># ═══════════════════════════════════════════════════════</span>
+<span class="cm"># ORCHESTRATOR</span>
+<span class="cm"># ═══════════════════════════════════════════════════════</span>
+
+orchestrator = <span class="fn">create_deep_agent</span>(
+    model=<span class="st">"openai:gpt-4o"</span>,
+    tools=[],  <span class="cm"># No tools — pure delegation</span>
+    subagents=[researcher_agent, writer_agent],
+    system_prompt=<span class="st">"""You are the orchestrator of a multi-agent Q&amp;A system.
+
+## Your Sub-Agents
+1. researcher — searches web, saves notes to /research/
+2. writer — reads /research/, writes polished report to /output/
+
+## Workflow for EVERY question:
+1. ANALYZE the question — identify what needs to be researched
+2. RESEARCH — delegate to researcher agent(s)
+   - For simple topics: one researcher task
+   - For complex topics with multiple aspects: launch PARALLEL researcher tasks
+     (e.g., "Compare X and Y" → one task for X, one task for Y)
+3. WRITE — delegate to writer agent to synthesize research into a report
+4. DELIVER — summarize the final report for the user
+
+## Rules
+- ALWAYS follow the full workflow: analyze → research → write → deliver
+- Research phase MUST complete before writing phase begins
+- For multi-aspect questions, launch parallel researcher tasks
+- Your final message should be a concise summary with key takeaways"""</span>
+)
+
+<span class="cm"># ═══════════════════════════════════════════════════════</span>
+<span class="cm"># RUN IT</span>
+<span class="cm"># ═══════════════════════════════════════════════════════</span>
+
+<span class="kw">def</span> <span class="fn">ask</span>(question: <span class="ty">str</span>, thread_id: <span class="ty">str</span> = <span class="st">"lab3"</span>):
+    <span class="st">"""Send a question through the full multi-agent pipeline."""</span>
+    <span class="bi">print</span>(<span class="st">f"\n{'='*60}"</span>)
+    <span class="bi">print</span>(<span class="st">f"QUESTION: {question}"</span>)
+    <span class="bi">print</span>(<span class="st">"="</span> * <span class="nu">60</span>)
+
+    result = orchestrator.<span class="fn">invoke</span>(
+        {<span class="st">"messages"</span>: [<span class="fn">HumanMessage</span>(content=question)]},
+        config={<span class="st">"configurable"</span>: {<span class="st">"thread_id"</span>: thread_id}}
+    )
+
+    <span class="cm"># Print the orchestrator's final answer</span>
+    <span class="kw">for</span> msg <span class="kw">in</span> <span class="bi">reversed</span>(result[<span class="st">"messages"</span>]):
+        <span class="kw">if</span> msg.type == <span class="st">"ai"</span> <span class="kw">and</span> msg.content:
+            <span class="bi">print</span>(<span class="st">f"\nFINAL ANSWER:\n{msg.content}"</span>)
+            <span class="kw">break</span>
+
+    <span class="cm"># Show pipeline artifacts</span>
+    <span class="bi">print</span>(<span class="st">f"\n{'─'*40}"</span>)
+    <span class="bi">print</span>(<span class="st">"Pipeline artifacts:"</span>)
+    <span class="kw">for</span> d, label <span class="kw">in</span> [(RESEARCH_DIR, <span class="st">"research"</span>), (OUTPUT_DIR, <span class="st">"output"</span>)]:
+        <span class="kw">for</span> f <span class="kw">in</span> os.<span class="fn">listdir</span>(d):
+            fp = os.path.<span class="fn">join</span>(d, f)
+            <span class="bi">print</span>(<span class="st">f"  [{label}] {fp} ({os.path.getsize(fp)} bytes)"</span>)
+
+<span class="kw">if</span> __name__ == <span class="st">"__main__"</span>:
+    <span class="cm"># Test 1: Simple question (single researcher)</span>
+    <span class="fn">ask</span>(
+        <span class="st">"What is WebAssembly and why is it important for web development?"</span>,
+        thread_id=<span class="st">"simple-q"</span>
+    )
+
+    <span class="cm"># Test 2: Complex question (parallel researchers)</span>
+    <span class="fn">ask</span>(
+        <span class="st">"Compare React, Vue, and Svelte for building modern web applications. "</span>
+        <span class="st">"Consider performance, ecosystem, and learning curve."</span>,
+        thread_id=<span class="st">"complex-q"</span>
+    )</code></pre>
+  </div>
+
+  <h3>Expected Execution Flow</h3>
+
+  <h4>Simple Query: Single Researcher Path</h4>
+  <div class="diagram">User: "What is WebAssembly?"
+         │
+    ORCHESTRATOR
+         │ analyze: single topic → one researcher task
+         │
+         ▼
+    RESEARCHER
+         │ web_search("WebAssembly overview")
+         │ web_search("WebAssembly use cases web development")
+         │ write_research_file("webassembly_overview.md", ...)
+         │
+         ▼
+    ORCHESTRATOR
+         │ research complete → delegate to writer
+         │
+         ▼
+    WRITER
+         │ list_research_files()
+         │ read_research_file("webassembly_overview.md")
+         │ write_output_file("report.md", ...)
+         │
+         ▼
+    ORCHESTRATOR
+         │ summarize report for user
+         ▼
+    Final Answer</div>
+
+  <h4>Complex Query: Parallel Researcher Path</h4>
+  <div class="diagram">User: "Compare React, Vue, and Svelte"
+         │
+    ORCHESTRATOR
+         │ analyze: 3 aspects → 3 parallel researcher tasks
+         │
+         ├──────────────┬──────────────┐
+         ▼              ▼              ▼
+    RESEARCHER      RESEARCHER     RESEARCHER
+    "React"         "Vue"          "Svelte"
+         │              │              │
+         │ web_search   │ web_search   │ web_search
+         │ write_file   │ write_file   │ write_file
+         │              │              │
+         ▼              ▼              ▼
+    react_notes.md  vue_notes.md   svelte_notes.md
+         │              │              │
+         └──────────────┼──────────────┘
+                        │
+                   ORCHESTRATOR
+                        │ all research complete → delegate to writer
+                        ▼
+                      WRITER
+                        │ list_research_files() → 3 files
+                        │ read each file
+                        │ write_output_file("report.md", ...)
+                        ▼
+                   ORCHESTRATOR
+                        │ summarize report
+                        ▼
+                   Final Answer</div>
+
+  <div class="os-command" data-mac="python3 lab3_multiagent_qa.py" data-windows="python lab3_multiagent_qa.py"><code></code></div>
+
+  <div class="callout callout-tip">
+    <div class="callout-title">Inspect the Artifacts</div>
+    After running the lab, check the generated files to see exactly what each agent produced:
+    <pre><code><span class="cm"># See what the researcher wrote</span>
+cat ./workspace/research/*.md
+
+<span class="cm"># See the final report</span>
+cat ./workspace/output/report.md</code></pre>
+  </div>
+
+  <hr>
+
+  <!-- Recap -->
+  <h2 id="recap">Key Patterns Learned</h2>
+
+  <div class="section-check">
+    <input type="checkbox" id="m3-recap">
+    <label for="m3-recap">Module 3 complete</label>
+  </div>
+
+  <table>
+    <thead><tr><th>Pattern</th><th>How It Works</th><th>Use When</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Single delegation</strong></td>
+        <td><code>task(desc, subagent_type="x")</code></td>
+        <td>Simple subtask that one specialist can handle</td>
+      </tr>
+      <tr>
+        <td><strong>Parallel delegation</strong></td>
+        <td>Multiple <code>task()</code> calls in one response</td>
+        <td>Independent aspects that can be researched simultaneously</td>
+      </tr>
+      <tr>
+        <td><strong>File-based communication</strong></td>
+        <td>Agent A writes &rarr; Agent B reads</td>
+        <td>Data pipelines, large datasets, audit trails</td>
+      </tr>
+      <tr>
+        <td><strong>Specialist agents</strong></td>
+        <td>Different tools per sub-agent</td>
+        <td>Separation of concerns, focused expertise</td>
+      </tr>
+      <tr>
+        <td><strong>Orchestrator has no tools</strong></td>
+        <td>Forces delegation to sub-agents</td>
+        <td>Clean architecture, prevents orchestrator from doing work directly</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout callout-info">
+    <div class="callout-title">Architecture Rule of Thumb</div>
+    <ul>
+      <li><strong>Orchestrator</strong> = no tools, only delegates. Keeps context clean.</li>
+      <li><strong>Sub-agents</strong> = specialized tools, focused system prompts. Each does one thing well.</li>
+      <li><strong>Filesystem</strong> = the communication bus. Write to share, read to consume.</li>
+    </ul>
+  </div>
+
+  <!-- Page Nav -->
+  <div class="page-nav">
+    <a href="module2.html">
+      <span class="page-nav-label">Previous</span>
+      <span class="page-nav-title">&larr; Module 2: Building Blocks</span>
+    </a>
+    <a href="module4.html" class="next">
+      <span class="page-nav-label">Next</span>
+      <span class="page-nav-title">Module 4: Capstones &rarr;</span>
+    </a>
+  </div>
+
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
