@@ -25,7 +25,7 @@ STORE = InMemoryStore()
 def make_backend(runtime):
     """Route /memories/ to long-term store; keep normal files on local disk."""
     return CompositeBackend(
-        default=FilesystemBackend(root_dir=BASE_DIR),
+        default=FilesystemBackend(root_dir=BASE_DIR, virtual_mode=True),
         routes={"/memories/": StoreBackend(runtime)},
     )
 
@@ -71,6 +71,11 @@ if __name__ == "__main__":
     print(" LAB 7: Long-Term Memory Across Sessions")
     print(" Session A writes memory, Session B recalls it")
     print("=" * 68)
+    print(" Memory routing: /memories/* -> StoreBackend")
+    print(" Other paths: FilesystemBackend(root_dir=BASE_DIR)")
+    print(" Demo scope: cross-thread memory in this running process.")
+    print(" Note: '/user-profile.md' in low-level tool confirmations maps to")
+    print("       '/memories/user-profile.md' through backend routing.\n")
 
     ask_session(
         "session-a",

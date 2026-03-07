@@ -68,6 +68,25 @@ def _truncate(text: str, max_len: int = 120) -> str:
     return text
 
 
+def _content_to_text(content) -> str:
+    """Normalize model/tool content into readable text."""
+    if content is None:
+        return ""
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        parts = []
+        for item in content:
+            if isinstance(item, dict):
+                text = item.get("text")
+                if text:
+                    parts.append(str(text))
+            else:
+                parts.append(str(item))
+        return "\n".join(parts).strip()
+    return str(content)
+
+
 def _format_args(args: dict) -> str:
     """Format tool call arguments for display."""
     if not args:
@@ -137,7 +156,7 @@ def run_with_trace(agent, question: str, thread_id: str = "traced", max_retries:
     print(f"{DIM}{'─' * 50}{RESET}\n")
 
     final_response = ""
-    pending_tool_calls: dict[str, str] = {}
+    pending_tool_calls: dict[str, tuple[str, dict]] = {}
 
     config = {"configurable": {"thread_id": thread_id}}
     inp = {"messages": [HumanMessage(content=question)]}
@@ -157,7 +176,7 @@ def run_with_trace(agent, question: str, thread_id: str = "traced", max_retries:
                                 name = tc.get("name", "unknown")
                                 args = tc.get("args", {})
                                 tc_id = tc.get("id", "")
-                                pending_tool_calls[tc_id] = name
+                                pending_tool_calls[tc_id] = (name, args)
                                 label, color = _label_for_tool(name)
 
                                 if name == "task":
@@ -177,7 +196,7 @@ def run_with_trace(agent, question: str, thread_id: str = "traced", max_retries:
                                     arg_str = _format_args(args)
                                     print(f"  {color}[{label}]{RESET} {name}({arg_str})")
                         else:
-                            content = getattr(msg, "content", "")
+                            content = _content_to_text(getattr(msg, "content", ""))
                             if content:
                                 final_response = content
 
@@ -185,14 +204,18 @@ def run_with_trace(agent, question: str, thread_id: str = "traced", max_retries:
                     messages = event["tools"].get("messages", [])
                     for msg in messages:
                         tc_id = getattr(msg, "tool_call_id", "")
-                        tool_name = pending_tool_calls.get(tc_id, "")
-                        content = getattr(msg, "content", "")
+                        tool_name, tool_args = pending_tool_calls.get(tc_id, ("", {}))
+                        content = _content_to_text(getattr(msg, "content", ""))
                         label, color = _label_for_tool(tool_name)
 
                         if tool_name == "task":
                             print(f"  {GREEN}[SUB-AGENT DONE]{RESET} {_truncate(content, 100)}")
                         elif tool_name in ("write_file", "edit_file"):
-                            print(f"  {GREEN}[FILE WRITTEN]{RESET} {_truncate(content, 100)}")
+                            path = tool_args.get("path", tool_args.get("file_path", ""))
+                            if path:
+                                print(f"  {GREEN}[FILE WRITTEN]{RESET} {path}")
+                            else:
+                                print(f"  {GREEN}[FILE WRITTEN]{RESET} {_truncate(content, 100)}")
                         elif tool_name in ("ls", "glob", "grep"):
                             print(f"  {DIM}[RESULT] {_truncate(content, 80)}{RESET}")
                         else:
