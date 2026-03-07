@@ -1,0 +1,121 @@
+"""
+LAB 3B: Parallel Sub-Agents
+=============================
+3 specialists research simultaneously, then orchestrator synthesizes.
+"""
+from langchain_core.tools import tool
+from langchain_core.messages import HumanMessage
+from deepagents import create_deep_agent
+from trace_utils import run_with_trace, interactive_mode, resilient_web_search
+
+
+# TOOL
+@tool
+def web_search(query: str) -> str:
+    """Search the web for information.
+
+    Args:
+        query: Search query
+    """
+    return resilient_web_search(query)
+
+
+# SPECIALIST SUB-AGENTS
+subagents = [
+    {
+        "name": "tech_researcher",
+        "description": (
+            "Researches TECHNICAL aspects - architecture, implementation, "
+            "APIs, code-level details, technology stack."
+        ),
+        "system_prompt": (
+            "You are a technical research specialist.\n"
+            "Focus ONLY on architecture, implementation details, APIs, "
+            "and code-level comparisons.\n"
+            "Use web_search to find information. Be specific and technical.\n"
+            "Write your findings to /research/technical.md"
+        ),
+        "tools": [web_search],
+        "model": "openai:gpt-4o-mini",
+    },
+    {
+        "name": "market_researcher",
+        "description": (
+            "Researches MARKET aspects - adoption rates, competitors, "
+            "pricing, community size, ecosystem, jobs."
+        ),
+        "system_prompt": (
+            "You are a market research specialist.\n"
+            "Focus ONLY on adoption, community, competitors, "
+            "ecosystem, and job market.\n"
+            "Include numbers and data when available.\n"
+            "Write your findings to /research/market.md"
+        ),
+        "tools": [web_search],
+        "model": "openai:gpt-4o-mini",
+    },
+    {
+        "name": "pros_cons_analyst",
+        "description": (
+            "Analyzes STRENGTHS and WEAKNESSES - tradeoffs, best/worst "
+            "use cases, developer experience, learning curve."
+        ),
+        "system_prompt": (
+            "You are a critical analysis specialist.\n"
+            "Provide balanced pros/cons analysis.\n"
+            "Be honest about both strengths and weaknesses.\n"
+            "Include specific examples for each point.\n"
+            "Write your findings to /research/pros_cons.md"
+        ),
+        "tools": [web_search],
+        "model": "openai:gpt-4o-mini",
+    },
+]
+
+
+# ORCHESTRATOR
+agent = create_deep_agent(
+    model="openai:gpt-4o-mini",
+    tools=[],
+    subagents=subagents,
+    system_prompt="""You are an orchestrator that produces comprehensive analysis reports.
+
+## WORKFLOW
+1. Identify the topic and 3 research angles
+2. Launch ALL THREE sub-agents IN PARALLEL:
+   - tech_researcher for technical analysis
+   - market_researcher for market analysis
+   - pros_cons_analyst for strengths/weaknesses
+   Call all three task() tools in a SINGLE response for parallel execution!
+3. After all results return, read any files they wrote in /research/
+4. Synthesize into a unified report and write to /output/report.md
+5. Present the report to the user
+
+## CRITICAL: Launch all sub-agents at once for parallel execution!
+In your response, include multiple task() calls - one for each sub-agent.
+""",
+)
+
+
+# RUN IT
+if __name__ == "__main__":
+    print("=" * 60)
+    print(" LAB 3B: Parallel Sub-Agents")
+    print(" 3 specialists research simultaneously, then synthesize")
+    print("=" * 60)
+
+    question = (
+        "Comprehensive analysis: Rust vs Go for building "
+        "microservices in 2025"
+    )
+
+    print(f"\n QUERY: {question}")
+    print("\n Launching 3 parallel research agents...\n")
+
+    run_with_trace(agent, question, thread_id="parallel-lab")
+
+    print(f"\n{'=' * 60}")
+    print(" LAB 3B COMPLETE!")
+    print("=" * 60)
+
+    interactive_mode(agent, "Lab 3b: Parallel Agents")
