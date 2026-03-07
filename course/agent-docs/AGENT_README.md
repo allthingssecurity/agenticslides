@@ -21,7 +21,7 @@ Each module doc has a **copy-paste prompt** at the very top. The student:
 
 ## Course Overview
 
-**4 modules, 9 labs, progressive difficulty:**
+**5 modules, 11 labs, progressive difficulty:**
 
 | Module | Doc File | What Gets Built | Copy-Paste Prompt? |
 |--------|----------|-----------------|--------------------|
@@ -29,6 +29,7 @@ Each module doc has a **copy-paste prompt** at the very top. The student:
 | 2. Building Blocks | `02-building-blocks.md` | Web search + filesystem research agent | Yes |
 | 3. Multi-Agent | `03-multi-agent.md` | Orchestrator, parallel agents, file pipeline | Yes |
 | 4. Capstones | `04-capstones.md` | Financial system, SQL agent, content pipeline | Yes |
+| 5. Memory + Skills | `05-memory-skills.md` | Long-term memory demo + custom skills demo | Yes |
 
 **Plus:** `cheatsheet.md` — quick reference (agent can consult anytime)
 
@@ -42,6 +43,7 @@ Students should do modules in order:
 2. `02-building-blocks.md` — tools, planning, context
 3. `03-multi-agent.md` — sub-agents, parallel, pipelines
 4. `04-capstones.md` — production-grade apps
+5. `05-memory-skills.md` — dedicated memory/skills labs
 
 ---
 
@@ -82,3 +84,5 @@ If the agent gets stuck, reference implementations exist at:
 | Lab 4 | `course/labs/lab4_financial_research.py` |
 | Lab 5 | `course/labs/lab5_text_to_sql.py` |
 | Lab 6 | `course/labs/lab6_content_pipeline.py` |
+| Lab 7 | `course/labs/lab7_long_term_memory.py` |
+| Lab 8 | `course/labs/lab8_skills_agent.py` |
