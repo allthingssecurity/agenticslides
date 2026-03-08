@@ -1,0 +1,1224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deep Agents Course — Lab Walkthroughs</title>
+<style>
+/* ── Reset & Base ─────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: #1a1a2e; background: #f5f6fa; line-height: 1.6; display: flex; min-height: 100vh;
+}
+
+/* ── Sidebar ──────────────────────────────── */
+.sidebar {
+  width: 260px; min-width: 260px; background: #1a1a2e; color: #c7c7d8;
+  position: sticky; top: 0; height: 100vh; overflow-y: auto;
+  display: flex; flex-direction: column; z-index: 10;
+}
+.sidebar-header { padding: 24px 20px 16px; border-bottom: 1px solid #2d2d4a; }
+.sidebar-header h1 { font-size: 15px; color: #fff; font-weight: 700; letter-spacing: 0.5px; }
+.sidebar-header p { font-size: 11px; color: #8888a8; margin-top: 4px; }
+.sidebar nav { flex: 1; padding: 12px 0; }
+.sidebar nav a {
+  display: flex; align-items: center; gap: 10px; padding: 10px 20px;
+  color: #a0a0c0; text-decoration: none; font-size: 13px; transition: all 0.15s;
+  border-left: 3px solid transparent;
+}
+.sidebar nav a:hover { color: #fff; background: rgba(255,255,255,0.05); }
+.sidebar nav a.active { color: #6c63ff; border-left-color: #6c63ff; background: rgba(108,99,255,0.08); }
+.sidebar nav a .lab-num {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 20px; border-radius: 4px; font-size: 10px; font-weight: 700;
+  background: rgba(255,255,255,0.08); color: #8888a8; flex-shrink: 0;
+}
+.sidebar nav a.active .lab-num { background: rgba(108,99,255,0.2); color: #6c63ff; }
+.sidebar .module-label {
+  padding: 16px 20px 6px; font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 1.2px; color: #555578;
+}
+
+/* ── Main Content ─────────────────────────── */
+.main { flex: 1; padding: 40px 48px; max-width: 920px; }
+
+/* ── Lab Section ──────────────────────────── */
+.lab-section { margin-bottom: 56px; scroll-margin-top: 24px; }
+.lab-section h2 {
+  font-size: 26px; font-weight: 800; color: #1a1a2e; margin-bottom: 4px;
+  display: flex; align-items: center; gap: 12px;
+}
+.lab-section h2 .lab-tag {
+  font-size: 11px; font-weight: 700; background: #6c63ff; color: #fff;
+  padding: 3px 10px; border-radius: 4px; letter-spacing: 0.5px;
+}
+.lab-subtitle { font-size: 14px; color: #666; margin-bottom: 20px; }
+
+/* ── Subsection Headings ──────────────────── */
+.lab-section h3 {
+  font-size: 16px; font-weight: 700; color: #333; margin: 28px 0 10px;
+  padding-bottom: 6px; border-bottom: 2px solid #e8e8f0;
+}
+
+/* ── Badges / Pills ───────────────────────── */
+.badges { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; }
+.badge {
+  font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 12px;
+  white-space: nowrap;
+}
+.badge-tool { background: #e0f7fa; color: #00796b; }
+.badge-delegation { background: #f3e5f5; color: #7b1fa2; }
+.badge-parallel { background: #fff3e0; color: #e65100; }
+.badge-file { background: #e8f5e9; color: #2e7d32; }
+.badge-memory { background: #e3f2fd; color: #1565c0; }
+.badge-pipeline { background: #fce4ec; color: #c62828; }
+.badge-sql { background: #ede7f6; color: #4527a0; }
+.badge-skill { background: #fff8e1; color: #f57f17; }
+.badge-planning { background: #e0f2f1; color: #00695c; }
+.badge-safety { background: #fbe9e7; color: #bf360c; }
+
+/* ── Summary Box ──────────────────────────── */
+.summary-box {
+  background: #fff; border: 1px solid #e0e0ea; border-radius: 8px;
+  padding: 18px 22px; margin-bottom: 20px; font-size: 14px; color: #444;
+}
+
+/* ── Architecture Diagram ─────────────────── */
+.diagram {
+  background: #1a1a2e; color: #a5d6a7; border-radius: 8px; padding: 20px 24px;
+  font-family: "SF Mono", "Fira Code", "Cascadia Code", Consolas, monospace;
+  font-size: 13px; line-height: 1.5; overflow-x: auto; margin-bottom: 20px;
+  white-space: pre;
+}
+
+/* ── Code Blocks ──────────────────────────── */
+.code-section { margin-bottom: 20px; }
+.code-toggle {
+  display: flex; align-items: center; gap: 8px; background: none; border: none;
+  cursor: pointer; font-size: 13px; font-weight: 600; color: #6c63ff;
+  padding: 6px 0; user-select: none;
+}
+.code-toggle::before { content: "▸"; transition: transform 0.2s; display: inline-block; }
+.code-toggle.open::before { transform: rotate(90deg); }
+.code-block-wrap {
+  display: none; margin-top: 6px; border-radius: 8px; overflow: hidden;
+  border: 1px solid #e0e0ea;
+}
+.code-block-wrap.open { display: block; }
+.code-annotation {
+  background: #f0f0f8; padding: 10px 16px; font-size: 12px; color: #555;
+  border-bottom: 1px solid #e0e0ea; line-height: 1.5;
+}
+.code-block {
+  background: #fafafe; padding: 16px 20px; overflow-x: auto;
+  font-family: "SF Mono", "Fira Code", Consolas, monospace; font-size: 12.5px;
+  line-height: 1.6; color: #2d2d4a; white-space: pre;
+}
+/* Basic syntax highlighting via CSS classes */
+.code-block .kw { color: #7b1fa2; font-weight: 600; } /* keywords */
+.code-block .fn { color: #1565c0; }                    /* functions */
+.code-block .st { color: #2e7d32; }                    /* strings */
+.code-block .cm { color: #9e9e9e; font-style: italic;} /* comments */
+.code-block .dc { color: #e65100; }                    /* decorators */
+.code-block .nb { color: #00796b; }                    /* builtins */
+
+/* ── Takeaways ────────────────────────────── */
+.takeaways { list-style: none; padding: 0; }
+.takeaways li {
+  padding: 6px 0 6px 28px; position: relative; font-size: 14px; color: #333;
+}
+.takeaways li::before {
+  content: "✓"; position: absolute; left: 4px; color: #6c63ff; font-weight: 700;
+}
+
+/* ── Responsive ───────────────────────────── */
+@media (max-width: 900px) {
+  .sidebar { width: 220px; min-width: 220px; }
+  .main { padding: 24px 20px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════ SIDEBAR ═══════════ -->
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <h1>Deep Agents Course</h1>
+    <p>Lab Walkthroughs</p>
+  </div>
+  <nav>
+    <div class="module-label">Module 1 — Foundations</div>
+    <a href="#lab0"><span class="lab-num">0</span> Environment Setup</a>
+    <a href="#lab1"><span class="lab-num">1</span> First Agent</a>
+
+    <div class="module-label">Module 2 — Tools & Planning</div>
+    <a href="#lab2"><span class="lab-num">2</span> Research Agent</a>
+
+    <div class="module-label">Module 3 — Multi-Agent</div>
+    <a href="#lab3a"><span class="lab-num">3a</span> First Sub-Agent</a>
+    <a href="#lab3b"><span class="lab-num">3b</span> Parallel Agents</a>
+    <a href="#lab3c"><span class="lab-num">3c</span> File Sharing</a>
+
+    <div class="module-label">Module 4 — Capstones</div>
+    <a href="#lab4"><span class="lab-num">4</span> Financial Research</a>
+    <a href="#lab5"><span class="lab-num">5</span> Text-to-SQL</a>
+    <a href="#lab6"><span class="lab-num">6</span> Content Pipeline</a>
+
+    <div class="module-label">Module 5 — Memory & Skills</div>
+    <a href="#lab7"><span class="lab-num">7</span> Long-Term Memory</a>
+    <a href="#lab8"><span class="lab-num">8</span> Skills Agent</a>
+  </nav>
+</aside>
+
+<!-- ═══════════ MAIN CONTENT ═══════════ -->
+<div class="main">
+
+
+<!-- ═══════════════════════════════════════════════════════
+     LAB 0
+     ═══════════════════════════════════════════════════════ -->
+<section class="lab-section" id="lab0">
+  <h2><span class="lab-tag">LAB 0</span> Environment Setup</h2>
+  <p class="lab-subtitle">Module 1 &middot; Smoke test and verification</p>
+
+  <div class="badges">
+    <span class="badge badge-tool">Smoke Test</span>
+    <span class="badge badge-tool">Agent Creation</span>
+  </div>
+
+  <h3>What This Lab Does</h3>
+  <div class="summary-box">
+    Verifies your environment is ready: Python 3.11+, the <code>deepagents</code> and <code>langchain-openai</code> packages, and a valid OpenAI API key. Then it creates a minimal agent and confirms it can respond &mdash; a quick &ldquo;hello world&rdquo; for the course.
+  </div>
+
+  <h3>Architecture</h3>
+  <div class="diagram">
+┌──────────────────────────┐
+│     check_setup()        │  Checks: Python, packages, API key
+└──────────┬───────────────┘
+           │ all OK?
+           ▼
+┌──────────────────────────┐
+│     test_agent()         │  create_deep_agent() → invoke() → print
+└──────────────────────────┘</div>
+
+  <h3>Code Walkthrough</h3>
+
+  <div class="code-section">
+    <button class="code-toggle" onclick="toggle(this)">Agent creation &amp; smoke test</button>
+    <div class="code-block-wrap">
+      <div class="code-annotation">
+        The simplest possible agent &mdash; no tools, just a system prompt.
+        <code>invoke()</code> sends a message and returns the response.
+        The <code>thread_id</code> identifies the conversation for stateful follow-ups.
+      </div>
+      <div class="code-block"><span class="kw">from</span> deepagents <span class="kw">import</span> create_deep_agent
+<span class="kw">from</span> langchain_core.messages <span class="kw">import</span> HumanMessage
+
+agent = <span class="fn">create_deep_agent</span>(
+    model=<span class="st">"openai:gpt-4o-mini"</span>,
+    system_prompt=<span class="st">"You are a test agent. Respond with exactly: SETUP OK"</span>
+)
+
+result = agent.<span class="fn">invoke</span>(
+    {<span class="st">"messages"</span>: [<span class="fn">HumanMessage</span>(content=<span class="st">"Confirm setup"</span>)]},
+    config={<span class="st">"configurable"</span>: {<span class="st">"thread_id"</span>: <span class="st">"setup-test"</span>}}
+)</div>
+    </div>
+  </div>
+
+  <h3>What You Learn</h3>
+  <ul class="takeaways">
+    <li><code>create_deep_agent()</code> is the factory function for all agents</li>
+    <li>Every invocation needs a <code>thread_id</code> for conversation state</li>
+    <li>The simplest agent is just a model + system prompt, no tools</li>
+  </ul>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     LAB 1
+     ═══════════════════════════════════════════════════════ -->
+<section class="lab-section" id="lab1">
+  <h2><span class="lab-tag">LAB 1</span> Your First Agent</h2>
+  <p class="lab-subtitle">Module 1 &middot; Custom tools, tool calling, thread identity</p>
+
+  <div class="badges">
+    <span class="badge badge-tool">@tool Decorator</span>
+    <span class="badge badge-tool">Tool Calling</span>
+    <span class="badge badge-memory">Thread ID</span>
+  </div>
+
+  <h3>What This Lab Does</h3>
+  <div class="summary-box">
+    Builds an agent with two custom tools &mdash; a <strong>calculator</strong> and a <strong>clock</strong>. The agent decides <em>when</em> to call each tool based on the user's question. You'll see the LLM reason about whether math or time info is needed, then invoke the right tool automatically.
+  </div>
+
+  <h3>Architecture</h3>
+  <div class="diagram">
+┌──────────────┐      ┌────────────────┐
+│     User     │─────→│   Agent (LLM)  │
+└──────────────┘      └───┬────────┬───┘
+                          │        │
+                    decides which tool
+                          │        │
+                    ┌─────▼──┐  ┌──▼──────────┐
+                    │ calc() │  │ get_time()   │
+                    └────────┘  └──────────────┘</div>
+
+  <h3>Code Walkthrough</h3>
+
+  <div class="code-section">
+    <button class="code-toggle" onclick="toggle(this)">Defining tools with @tool</button>
+    <div class="code-block-wrap">
+      <div class="code-annotation">
+        The <code>@tool</code> decorator turns a plain Python function into something the LLM can call.
+        The docstring becomes the tool description the model reads to decide when to use it.
+        Args in the docstring define the parameter schema.
+      </div>
+      <div class="code-block"><span class="dc">@tool</span>
+<span class="kw">def</span> <span class="fn">calculator</span>(expression: <span class="nb">str</span>) -> <span class="nb">str</span>:
+    <span class="st">"""Evaluate a mathematical expression.
+    Supports: +, -, *, /, **, sqrt, sin, cos, log, pi, e
+
+    Args:
+        expression: A math expression, e.g. "2 + 3 * 4"
+    """</span>
+    allowed_names = {k: v <span class="kw">for</span> k, v <span class="kw">in</span> math.__dict__.<span class="fn">items</span>()
+                     <span class="kw">if not</span> k.<span class="fn">startswith</span>(<span class="st">"__"</span>)}
+    allowed_names.<span class="fn">update</span>({<span class="st">"abs"</span>: abs, <span class="st">"round"</span>: round})
+    result = <span class="nb">eval</span>(expression, {<span class="st">"__builtins__"</span>: {}}, allowed_names)
+    <span class="kw">return</span> <span class="st">f"Result: {result}"</span>
+
+<span class="dc">@tool</span>
+<span class="kw">def</span> <span class="fn">get_current_time</span>() -> <span class="nb">str</span>:
+    <span class="st">"""Get the current date and time."""</span>
+    <span class="kw">return</span> <span class="st">f"Current date/time: {datetime.now():%Y-%m-%d %H:%M:%S (%A)}"</span></div>
+    </div>
+  </div>
+
+  <div class="code-section">
+    <button class="code-toggle" onclick="toggle(this)">Creating the agent with tools</button>
+    <div class="code-block-wrap">
+      <div class="code-annotation">
+        Pass tools as a list to <code>create_deep_agent()</code>.
+        The system prompt tells the model <em>how</em> to use its tools (e.g., "always use calculator for math").
+      </div>
+      <div class="code-block">agent = <span class="fn">create_deep_agent</span>(
+    model=<span class="st">"openai:gpt-4o-mini"</span>,
+    tools=[calculator, get_current_time],
+    system_prompt=<span class="st">"""You are a helpful assistant with a calculator and clock.
+## Rules
+- For ANY math question, ALWAYS use the calculator tool
+- Show your work: state what you're calculating and why
+"""</span>
+)</div>
+    </div>
+  </div>
+
+  <h3>What You Learn</h3>
+  <ul class="takeaways">
+    <li><code>@tool</code> decorator &mdash; how to give agents capabilities</li>
+    <li><code>create_deep_agent()</code> &mdash; the factory function with <code>tools=</code> parameter</li>
+    <li>Tool calling &mdash; the LLM decides <em>when</em> and <em>how</em> to use each tool</li>
+    <li>Thread ID &mdash; conversation identity for stateful multi-turn chats</li>
+  </ul>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     LAB 2
+     ═══════════════════════════════════════════════════════ -->
+<section class="lab-section" id="lab2">
+  <h2><span class="lab-tag">LAB 2</span> Research Agent</h2>
+  <p class="lab-subtitle">Module 2 &middot; Web search, filesystem notes, planning</p>
+
+  <div class="badges">
+    <span class="badge badge-tool">Web Search</span>
+    <span class="badge badge-file">Built-in File I/O</span>
+    <span class="badge badge-planning">Planning (Todos)</span>
+    <span class="badge badge-memory">Context Offloading</span>
+  </div>
+
+  <h3>What This Lab Does</h3>
+  <div class="summary-box">
+    Creates a research agent that follows a structured workflow: <strong>plan</strong> research steps, <strong>search the web</strong>, <strong>write notes to files</strong>, and <strong>produce a polished report</strong>. Only <code>web_search</code> is passed explicitly &mdash; filesystem tools (<code>write_file</code>, <code>read_file</code>) and planning tools (<code>write_todos</code>) are <strong>built-in</strong> to the framework and available automatically. The key insight is <em>context offloading</em> &mdash; the agent saves research to files so it doesn't lose information when the conversation gets long.
+  </div>
+
+  <h3>Architecture</h3>
+  <div class="diagram">
+┌───────────────────────────────────────────────────┐
+│                  Research Agent                    │
+│                                                    │
+│  Explicit tool:                                    │
+│    web_search    → search for information          │
+│                                                    │
+│  Built-in tools (provided by framework):           │
+│    write_todos   → plan research steps             │
+│    write_file    → save notes to /research/        │
+│    read_file     → read back notes for synthesis   │
+│                                                    │
+│  Workflow:                                         │
+│    plan → search → write notes → synthesize report │
+└───────────────────────────────────────────────────┘
+
+Files created:
+  /research/topic_1.md     ← notes per topic
+  /research/sources.md     ← URLs and citations
+  /output/report.md        ← final polished report</div>
+
+  <h3>Code Walkthrough</h3>
+
+  <div class="code-section">
+    <button class="code-toggle" onclick="toggle(this)">System prompt with workflow &amp; file organization</button>
+    <div class="code-block-wrap">
+      <div class="code-annotation">
+        Note that <code>tools=[web_search]</code> only lists the custom tool. The framework automatically
+        provides built-in tools like <code>write_file</code>, <code>read_file</code>, and <code>write_todos</code>.
+        The system prompt references these built-in tools in its workflow. The rule
+        "write notes IMMEDIATELY after each search" prevents information loss when the context window fills up.
+      </div>
+      <div class="code-block">research_agent = <span class="fn">create_deep_agent</span>(
+    model=<span class="st">"openai:gpt-4o-mini"</span>,
+    tools=[web_search],
+    system_prompt=<span class="st">"""You are a research agent that produces well-organized reports.
+
+## WORKFLOW (ALWAYS follow this order)
+1. **Plan**: Use write_todos to break the research into 3-5 steps
+2. **Research**: Search for information (2-3 searches per topic)
+3. **Take Notes**: Write findings to /research/ as markdown files
+4. **Synthesize**: Read notes and write a final report to /output/report.md
+5. **Deliver**: Present a summary to the user with key findings
+
+## Research Quality Rules
+- Write notes IMMEDIATELY after each search — don't hold in memory
+- Always include source URLs
+- Distinguish facts from opinions
+"""</span>
+)</div>
+    </div>
+  </div>
+
+  <h3>What You Learn</h3>
+  <ul class="takeaways">
+    <li>Built-in tools &mdash; <code>write_file</code>, <code>read_file</code>, and <code>write_todos</code> come from the framework automatically</li>
+    <li>Only custom tools need <code>tools=[...]</code> &mdash; here, just <code>web_search</code></li>
+    <li>Context offloading &mdash; research saved to files, not just held in memory</li>
+    <li>Structured output &mdash; organized report at <code>/output/report.md</code></li>
+  </ul>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     LAB 3A
+     ═══════════════════════════════════════════════════════ -->
+<section class="lab-section" id="lab3a">
+  <h2><span class="lab-tag">LAB 3A</span> First Sub-Agent</h2>
+  <p class="lab-subtitle">Module 3 &middot; Orchestrator / worker delegation</p>
+
+  <div class="badges">
+    <span class="badge badge-delegation">Orchestrator / Worker</span>
+    <span class="badge badge-delegation">task() Delegation</span>
+    <span class="badge badge-memory">Context Isolation</span>
+  </div>
+
+  <h3>What This Lab Does</h3>
+  <div class="summary-box">
+    Introduces the <strong>orchestrator / sub-agent</strong> pattern. The orchestrator has <em>no tools</em> &mdash; it <em>must</em> delegate work to a <code>researcher</code> sub-agent that has web search. This forces clean separation: the orchestrator plans and synthesizes, while the sub-agent executes. Each sub-agent gets a fresh, isolated context.
+  </div>
+
+  <h3>Architecture</h3>
+  <div class="diagram">
+┌──────────────────────────────┐
+│       Orchestrator           │  No tools — must delegate
+│       (gpt-4o-mini)          │
+└──────────┬───────────────────┘
+           │ task(subagent_type="researcher")
+           ▼
+┌──────────────────────────────┐
+│    Researcher Sub-Agent      │  Has web_search tool
+│    (gpt-4o-mini)             │  Fresh isolated context
+└──────────┬───────────────────┘
+           │ final answer only
+           ▼
+     Orchestrator synthesizes
+     and presents to user</div>
+
+  <h3>Code Walkthrough</h3>
+
+  <div class="code-section">
+    <button class="code-toggle" onclick="toggle(this)">Defining a sub-agent</button>
+    <div class="code-block-wrap">
+      <div class="code-annotation">
+        Sub-agents are defined as dictionaries with <code>name</code>, <code>description</code>,
+        <code>system_prompt</code>, <code>tools</code>, and <code>model</code>. The orchestrator's
+        <code>tools=[]</code> forces it to use <code>task()</code> for all work.
+      </div>
+      <div class="code-block">agent = <span class="fn">create_deep_agent</span>(
+    model=<span class="st">"openai:gpt-4o-mini"</span>,
+    tools=[],  <span class="cm"># No tools — MUST delegate</span>
+    subagents=[
+        {
+            <span class="st">"name"</span>: <span class="st">"researcher"</span>,
+            <span class="st">"description"</span>: (
+                <span class="st">"Use this agent to search the web and gather "</span>
+                <span class="st">"information on any topic."</span>
+            ),
+            <span class="st">"system_prompt"</span>: (
+                <span class="st">"You are a research agent. Use web_search to find "</span>
+                <span class="st">"information.\nReturn a concise summary.\n"</span>
+                <span class="st">"Search 2-3 times for thorough coverage."</span>
+            ),
+            <span class="st">"tools"</span>: [web_search],
+            <span class="st">"model"</span>: <span class="st">"openai:gpt-4o-mini"</span>,
+        }
+    ],
+    system_prompt=<span class="st">"""You are an orchestrator agent.
+You CANNOT search the web yourself.
+You MUST delegate ALL research to the "researcher" sub-agent.
+
+## WORKFLOW
+1. Analyze the user's question
+2. Delegate: task(description="...", subagent_type="researcher")
+3. Receive findings
+4. Synthesize and present a clear answer"""</span>
+)</div>
+    </div>
+  </div>
+
+  <h3>What You Learn</h3>
+  <ul class="takeaways">
+    <li>Sub-agents get <strong>isolated context</strong> (no cross-contamination)</li>
+    <li>Only the sub-agent's <strong>final message</strong> returns (prevents context bloat)</li>
+    <li>The <code>task()</code> tool is how the orchestrator delegates work</li>
+    <li>Toolless orchestrators are forced into clean delegation patterns</li>
+  </ul>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     LAB 3B
+     ═══════════════════════════════════════════════════════ -->
+<section class="lab-section" id="lab3b">
+  <h2><span class="lab-tag">LAB 3B</span> Parallel Sub-Agents</h2>
+  <p class="lab-subtitle">Module 3 &middot; Three specialists running simultaneously</p>
+
+  <div class="badges">
+    <span class="badge badge-parallel">Parallel Execution</span>
+    <span class="badge badge-delegation">Specialist Agents</span>
+    <span class="badge badge-delegation">Synthesis</span>
+    <span class="badge badge-file">File Sharing</span>
+  </div>
+
+  <h3>What This Lab Does</h3>
+  <div class="summary-box">
+    The orchestrator launches <strong>three specialist sub-agents in parallel</strong> &mdash; a tech researcher, a market researcher, and a pros/cons analyst. All three run simultaneously (multiple <code>task()</code> calls in a single LLM response), then the orchestrator synthesizes their independent findings into a unified report.
+  </div>
+
+  <h3>Architecture</h3>
+  <div class="diagram">
+              ┌────────────────────────┐
+              │     Orchestrator       │
+              └──┬────────┬────────┬───┘
+                 │        │        │     ← 3 task() calls in ONE response
+          ┌──────▼──┐ ┌───▼────┐ ┌─▼──────────┐
+          │  tech   │ │ market │ │  pros_cons  │   All run in
+          │researcher│ │researcher│ │  analyst  │   PARALLEL
+          └────┬────┘ └───┬────┘ └─────┬──────┘
+               │          │            │
+               ▼          ▼            ▼
+          /research/  /research/   /research/
+          technical.md market.md   pros_cons.md
+               │          │            │
+               └──────────┼────────────┘
+                          ▼
+                Orchestrator reads all
+                → synthesizes report</div>
+
+  <h3>Code Walkthrough</h3>
+
+  <div class="code-section">
+    <button class="code-toggle" onclick="toggle(this)">Specialist sub-agent definitions</button>
+    <div class="code-block-wrap">
+      <div class="code-annotation">
+        Each specialist has a focused <code>description</code> and <code>system_prompt</code>.
+        The orchestrator's system prompt says "call all three task() tools in a SINGLE response"
+        which triggers parallel execution.
+      </div>
+      <div class="code-block">subagents = [
+    {
+        <span class="st">"name"</span>: <span class="st">"tech_researcher"</span>,
+        <span class="st">"description"</span>: <span class="st">"Researches TECHNICAL aspects — architecture, "</span>
+                      <span class="st">"APIs, code-level details."</span>,
+        <span class="st">"tools"</span>: [web_search],
+        <span class="st">"model"</span>: <span class="st">"openai:gpt-4o-mini"</span>,
+    },
+    {
+        <span class="st">"name"</span>: <span class="st">"market_researcher"</span>,
+        <span class="st">"description"</span>: <span class="st">"Researches MARKET aspects — adoption, ecosystem, "</span>
+                      <span class="st">"pricing, jobs."</span>,
+        <span class="st">"tools"</span>: [web_search],
+        ...
+    },
+    {
+        <span class="st">"name"</span>: <span class="st">"pros_cons_analyst"</span>,
+        <span class="st">"description"</span>: <span class="st">"Analyzes STRENGTHS and WEAKNESSES — tradeoffs, "</span>
+                      <span class="st">"best/worst use cases."</span>,
+        <span class="st">"tools"</span>: [web_search],
+        ...
+    },
+]</div>
+    </div>
+  </div>
+
+  <div class="code-section">
+    <button class="code-toggle" onclick="toggle(this)">Orchestrator triggering parallel execution</button>
+    <div class="code-block-wrap">
+      <div class="code-annotation">
+        The key line: "Call all three task() tools in a SINGLE response for parallel execution!"
+        When the LLM emits multiple tool calls in one response, they run concurrently.
+      </div>
+      <div class="code-block">system_prompt=<span class="st">"""You are an orchestrator that produces comprehensive reports.
+
+## WORKFLOW
+1. Identify the topic and 3 research angles
+2. Launch ALL THREE sub-agents IN PARALLEL:
+   - tech_researcher for technical analysis
+   - market_researcher for market analysis
+   - pros_cons_analyst for strengths/weaknesses
+   Call all three task() tools in a SINGLE response!
+3. After all results return, read files in /research/
+4. Synthesize into a unified report
+"""</span></div>
+    </div>
+  </div>
+
+  <h3>What You Learn</h3>
+  <ul class="takeaways">
+    <li>Parallel execution &mdash; multiple <code>task()</code> calls in one LLM response</li>
+    <li>Specialist agents &mdash; each focuses on a single domain for deeper results</li>
+    <li>Synthesis &mdash; the orchestrator combines all perspectives into a unified report</li>
+    <li>File sharing &mdash; agents write to <code>/research/</code>, orchestrator reads</li>
+  </ul>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     LAB 3C
+     ═══════════════════════════════════════════════════════ -->
+<section class="lab-section" id="lab3c">
+  <h2><span class="lab-tag">LAB 3C</span> Filesystem as Communication Bus</h2>
+  <p class="lab-subtitle">Module 3 &middot; Sequential pipeline, file-based handoff</p>
+
+  <div class="badges">
+    <span class="badge badge-file">File-Based Communication</span>
+    <span class="badge badge-pipeline">Sequential Pipeline</span>
+    <span class="badge badge-tool">Calculator Tool</span>
+  </div>
+
+  <h3>What This Lab Does</h3>
+  <div class="summary-box">
+    Demonstrates the <strong>filesystem as a message bus</strong> between agents. A <code>data_collector</code> writes structured data to <code>/data/</code>, then an <code>analyst</code> reads those files, performs calculations, and writes results to <code>/analysis/</code>. The orchestrator reads the final analysis and presents it. Each agent only knows about files, not other agents.
+  </div>
+
+  <h3>Architecture</h3>
+  <div class="diagram">
+  data_collector          analyst            orchestrator
+  ┌──────────┐       ┌──────────────┐       ┌──────────┐
+  │ Generates │       │ Reads /data/ │       │ Reads    │
+  │ data      │──────→│ Calculates   │──────→│/analysis/│
+  │ tables    │ files │ Writes       │ files │ Presents │
+  └──────────┘       │ /analysis/   │       │ to user  │
+                     └──────────────┘       └──────────┘
+
+  /data/cloud_pricing.md  →  /analysis/results.md  →  user</div>
+
+  <h3>Code Walkthrough</h3>
+
+  <div class="code-section">
+    <button class="code-toggle" onclick="toggle(this)">Pipeline sub-agents with file I/O</button>
+    <div class="code-block-wrap">
+      <div class="code-annotation">
+        The <code>data_collector</code> creates structured markdown tables. The <code>analyst</code>
+        reads those files and has a <code>calculate</code> tool for math. The orchestrator's
+        system prompt defines the sequential workflow: "FIRST data_collector, THEN analyst, FINALLY you."
+      </div>
+      <div class="code-block">subagents = [
+    {
+        <span class="st">"name"</span>: <span class="st">"data_collector"</span>,
+        <span class="st">"description"</span>: <span class="st">"Collects and structures raw data. "</span>
+                      <span class="st">"Writes to /data/ as markdown tables."</span>,
+        <span class="st">"system_prompt"</span>: <span class="st">"""Write data as MARKDOWN TABLES to /data/[topic].md
+Always include headers and units. Other agents will read your output!"""</span>,
+        <span class="st">"tools"</span>: [],
+    },
+    {
+        <span class="st">"name"</span>: <span class="st">"analyst"</span>,
+        <span class="st">"description"</span>: <span class="st">"Reads data from /data/, performs calculations, "</span>
+                      <span class="st">"writes conclusions to /analysis/."</span>,
+        <span class="st">"system_prompt"</span>: <span class="st">"""Read data files from /data/.
+Calculate with the calculate tool.
+Write analysis to /analysis/results.md
+ALWAYS show your calculation steps!"""</span>,
+        <span class="st">"tools"</span>: [calculate],
+    },
+]
+
+<span class="cm"># Orchestrator's workflow (sequential):</span>
+<span class="cm"># 1. FIRST: data_collector → /data/</span>
+<span class="cm"># 2. THEN:  analyst → /analysis/</span>
+<span class="cm"># 3. FINALLY: read /analysis/ → present to user</span></div>
+    </div>
+  </div>
+
+  <h3>What You Learn</h3>
+  <ul class="takeaways">
+    <li>The filesystem is the message bus &mdash; agents communicate through files</li>
+    <li>Pipeline pattern: produce &rarr; consume &rarr; produce &rarr; consume</li>
+    <li>Each agent only knows about files, not about other agents directly</li>
+    <li>Data persists in files even after conversation summarization</li>
+  </ul>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     LAB 4
+     ═══════════════════════════════════════════════════════ -->
+<section class="lab-section" id="lab4">
+  <h2><span class="lab-tag">LAB 4</span> Financial Deep Research</h2>
+  <p class="lab-subtitle">Module 4 &middot; Capstone &mdash; 4-agent multi-phase orchestration</p>
+
+  <div class="badges">
+    <span class="badge badge-parallel">Parallel + Sequential</span>
+    <span class="badge badge-delegation">4 Specialist Agents</span>
+    <span class="badge badge-file">File Communication</span>
+    <span class="badge badge-pipeline">Multi-Phase</span>
+    <span class="badge badge-tool">Financial Tools</span>
+  </div>
+
+  <h3>What This Lab Does</h3>
+  <div class="summary-box">
+    A production-grade financial analysis system with <strong>4 specialist agents</strong> running in a <strong>phased workflow</strong>. Phase 1 launches <code>market_data_agent</code> and <code>news_analyst</code> in parallel. Phase 2 sends results to <code>finance_analyst</code> for quantitative analysis. Phase 3 has <code>report_writer</code> synthesize everything into a professional investment report.
+  </div>
+
+  <h3>Architecture</h3>
+  <div class="diagram">
+               ┌─────────────────────────────┐
+               │        ORCHESTRATOR          │
+               └──┬──────────────────────┬────┘
+                  │                      │
+    ═══ Phase 1: Data Collection (PARALLEL) ═══
+                  │                      │
+         ┌───────▼───────┐    ┌──────────▼────────┐
+         │ market_data   │    │   news_analyst     │
+         │ get_stock_data│    │ search_financial   │
+         │ → /data/market│    │ → /data/news/      │
+         └───────┬───────┘    └──────────┬────────┘
+                 │                       │
+    ═══ Phase 2: Analysis (SEQUENTIAL) ═════════
+                 └───────────┬───────────┘
+                    ┌────────▼─────────┐
+                    │ finance_analyst   │
+                    │ calc metrics     │
+                    │ → /data/analysis/│
+                    └────────┬─────────┘
+                             │
+    ═══ Phase 3: Report (SEQUENTIAL) ═══════════
+                    ┌────────▼─────────┐
+                    │  report_writer   │
+                    │  reads all /data/│
+                    │  → /report/      │
+                    └──────────────────┘</div>
+
+  <h3>Code Walkthrough</h3>
+
+  <div class="code-section">
+    <button class="code-toggle" onclick="toggle(this)">Financial metrics calculator tool</button>
+    <div class="code-block-wrap">
+      <div class="code-annotation">
+        A domain-specific tool that computes intrinsic value (DCF), risk scores, and valuation status.
+        The agent passes JSON with stock data and a <code>calculate</code> array specifying which metrics to compute.
+      </div>
+      <div class="code-block"><span class="dc">@tool</span>
+<span class="kw">def</span> <span class="fn">calculate_financial_metrics</span>(data_json: <span class="nb">str</span>) -> <span class="nb">str</span>:
+    <span class="st">"""Calculate financial metrics from JSON data.
+    Args:
+        data_json: JSON with eps, growth_rate, price, beta, pe_ratio...
+                   Include 'calculate' array: ['intrinsic_value',
+                   'risk_score', 'valuation_status']
+    """</span>
+    data = json.<span class="fn">loads</span>(data_json)
+    results = {}
+
+    <span class="kw">if</span> <span class="st">"intrinsic_value"</span> <span class="kw">in</span> data.get(<span class="st">"calculate"</span>, []):
+        <span class="cm"># DCF-style valuation</span>
+        future_eps = eps * ((1 + growth) ** years)
+        terminal_value = future_eps * terminal_pe
+        present_value = terminal_value / ((1 + discount) ** years)
+        results[<span class="st">"intrinsic_value_estimate"</span>] = <span class="nb">round</span>(present_value, 2)
+
+    <span class="kw">if</span> <span class="st">"risk_score"</span> <span class="kw">in</span> calc:
+        <span class="cm"># Beta + P/E based risk scoring</span>
+        risk = 0
+        risk += 3 <span class="kw">if</span> beta > 1.5 <span class="kw">else</span> (2 <span class="kw">if</span> beta > 1.0 <span class="kw">else</span> 1)
+        risk += 3 <span class="kw">if</span> pe > 50 <span class="kw">else</span> (2 <span class="kw">if</span> pe > 30 <span class="kw">else</span> 1)
+        results[<span class="st">"risk_score"</span>] = <span class="st">f"{risk}/6 ({level})"</span></div>
+    </div>
+  </div>
+
+  <div class="code-section">
+    <button class="code-toggle" onclick="toggle(this)">4-agent orchestrator with phased workflow</button>
+    <div class="code-block-wrap">
+      <div class="code-annotation">
+        The orchestrator's system prompt defines three phases. Phase 1 launches two agents in parallel.
+        Phases 2 and 3 are sequential, each depending on files from the previous phase.
+      </div>
+      <div class="code-block">financial_system = <span class="fn">create_deep_agent</span>(
+    model=<span class="st">"openai:gpt-4o-mini"</span>,
+    tools=[],
+    subagents=[market_data_agent, news_analyst_agent,
+               finance_analyst_agent, report_writer_agent],
+    system_prompt=<span class="st">"""You are the lead orchestrator of a financial research system.
+
+### Phase 1: Data Collection (PARALLEL)
+Launch SIMULTANEOUSLY:
+- market_data_agent: "Fetch stock data for [SYMBOL(s)]"
+- news_analyst: "Research latest news for [COMPANY]"
+
+### Phase 2: Quantitative Analysis (after Phase 1)
+- finance_analyst: "Read /data/market/, perform valuation & risk"
+
+### Phase 3: Report Generation (after Phase 2)
+- report_writer: "Read all /data/, write investment report"
+
+## RULES
+- Phase 1 runs IN PARALLEL (multiple task() calls in one response)
+- Phase 2 waits for Phase 1
+- Phase 3 waits for Phase 2
+"""</span>
+)</div>
+    </div>
+  </div>
+
+  <h3>What You Learn</h3>
+  <ul class="takeaways">
+    <li>Multi-phase orchestration &mdash; parallel Phase 1, then sequential Phases 2 &amp; 3</li>
+    <li>4 specialist agents with different tools and models</li>
+    <li>Domain-specific tools (stock data, financial metrics calculator)</li>
+    <li>File-based communication across all phases (<code>/data/</code> &rarr; <code>/report/</code>)</li>
+    <li>Structured output &mdash; professional investment report format</li>
+  </ul>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     LAB 5
+     ═══════════════════════════════════════════════════════ -->
+<section class="lab-section" id="lab5">
+  <h2><span class="lab-tag">LAB 5</span> Text-to-SQL Analytics</h2>
+  <p class="lab-subtitle">Module 4 &middot; Capstone &mdash; Natural language to SQL</p>
+
+  <div class="badges">
+    <span class="badge badge-sql">Schema Exploration</span>
+    <span class="badge badge-sql">NL-to-SQL</span>
+    <span class="badge badge-safety">Read-Only Safety</span>
+    <span class="badge badge-tool">Database Tools</span>
+  </div>
+
+  <h3>What This Lab Does</h3>
+  <div class="summary-box">
+    An analytics agent that converts <strong>plain English questions into SQL queries</strong>, executes them against a sample e-commerce database (products, customers, orders), and explains results in business terms. The agent first explores the schema, then generates SQL, and enforces <strong>read-only safety</strong> &mdash; only SELECT queries are allowed.
+  </div>
+
+  <h3>Architecture</h3>
+  <div class="diagram">
+   "What are our top 5 products by revenue?"
+              │
+              ▼
+   ┌────────────────────────┐
+   │     SQL Agent (LLM)    │
+   └──┬──────────────┬──────┘
+      │              │
+┌─────▼──────┐ ┌─────▼────────┐
+│explore_    │ │ run_sql_     │
+│schema()    │ │ query()      │
+│            │ │              │
+│ Returns    │ │ SELECT only! │
+│ tables,    │ │ Blocks DROP, │
+│ columns,   │ │ DELETE, etc. │
+│ samples    │ │ Returns      │
+└────────────┘ │ formatted    │
+               │ table        │
+               └──────────────┘
+
+Database: SQLite with 3 tables
+  products  (15 items)
+  customers (200 records)
+  orders    (1000 transactions)</div>
+
+  <h3>Code Walkthrough</h3>
+
+  <div class="code-section">
+    <button class="code-toggle" onclick="toggle(this)">Safe SQL execution with read-only guard</button>
+    <div class="code-block-wrap">
+      <div class="code-annotation">
+        The <code>run_sql_query</code> tool blocks all write operations. It checks for
+        SELECT-only queries and explicitly blocks DROP, DELETE, INSERT, UPDATE, ALTER, etc.
+        Results are formatted as aligned tables for readable output.
+      </div>
+      <div class="code-block"><span class="dc">@tool</span>
+<span class="kw">def</span> <span class="fn">run_sql_query</span>(query: <span class="nb">str</span>) -> <span class="nb">str</span>:
+    <span class="st">"""Execute a READ-ONLY SQL query. Only SELECT allowed."""</span>
+    stripped = query.strip().rstrip(<span class="st">";"</span>).strip()
+    <span class="kw">if not</span> stripped.upper().<span class="fn">startswith</span>(<span class="st">"SELECT"</span>):
+        <span class="kw">return</span> <span class="st">"ERROR: Only SELECT queries are allowed for safety."</span>
+
+    <span class="cm"># Block write operations even in subqueries</span>
+    dangerous = [<span class="st">"DROP "</span>, <span class="st">"DELETE "</span>, <span class="st">"INSERT "</span>, <span class="st">"UPDATE "</span>,
+                 <span class="st">"ALTER "</span>, <span class="st">"CREATE "</span>, <span class="st">"TRUNCATE "</span>]
+    <span class="kw">for</span> d <span class="kw">in</span> dangerous:
+        <span class="kw">if</span> d <span class="kw">in</span> stripped.upper():
+            <span class="kw">return</span> <span class="st">f"ERROR: {d.strip()} operations are not allowed."</span>
+
+    <span class="cm"># Execute and format results as aligned table</span>
+    conn = sqlite3.<span class="fn">connect</span>(DB_PATH)
+    c = conn.<span class="fn">cursor</span>()
+    c.<span class="fn">execute</span>(stripped)
+    rows = c.<span class="fn">fetchall</span>()
+    <span class="cm"># ... format as aligned columns ...</span></div>
+    </div>
+  </div>
+
+  <div class="code-section">
+    <button class="code-toggle" onclick="toggle(this)">Schema explorer tool</button>
+    <div class="code-block-wrap">
+      <div class="code-annotation">
+        <code>explore_schema</code> returns all tables, columns with types, foreign keys,
+        and 3 sample rows. The agent calls this FIRST so it knows the database structure
+        before writing SQL.
+      </div>
+      <div class="code-block"><span class="dc">@tool</span>
+<span class="kw">def</span> <span class="fn">explore_schema</span>() -> <span class="nb">str</span>:
+    <span class="st">"""Get the complete database schema — all tables, columns,
+    types, relationships, and sample data.
+    Call this FIRST before writing SQL."""</span>
+    conn = sqlite3.<span class="fn">connect</span>(DB_PATH)
+    c = conn.<span class="fn">cursor</span>()
+    c.<span class="fn">execute</span>(<span class="st">"SELECT name FROM sqlite_master WHERE type='table'"</span>)
+    tables = [row[0] <span class="kw">for</span> row <span class="kw">in</span> c.<span class="fn">fetchall</span>()]
+
+    <span class="kw">for</span> table <span class="kw">in</span> tables:
+        c.<span class="fn">execute</span>(<span class="st">f"PRAGMA table_info({table})"</span>)  <span class="cm"># columns</span>
+        c.<span class="fn">execute</span>(<span class="st">f"PRAGMA foreign_key_list({table})"</span>)  <span class="cm"># FKs</span>
+        c.<span class="fn">execute</span>(<span class="st">f"SELECT * FROM {table} LIMIT 3"</span>)  <span class="cm"># samples</span></div>
+    </div>
+  </div>
+
+  <h3>What You Learn</h3>
+  <ul class="takeaways">
+    <li>Schema auto-exploration &mdash; the agent discovers the database structure</li>
+    <li>Natural language to SQL translation with proper JOINs and aggregations</li>
+    <li>Safety constraints &mdash; only SELECT queries allowed, write ops blocked</li>
+    <li>Business interpretation &mdash; results explained in plain English</li>
+    <li>Domain-specific prompt engineering for SQL best practices</li>
+  </ul>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     LAB 6
+     ═══════════════════════════════════════════════════════ -->
+<section class="lab-section" id="lab6">
+  <h2><span class="lab-tag">LAB 6</span> Content Pipeline</h2>
+  <p class="lab-subtitle">Module 4 &middot; Bonus &mdash; Sequential pipeline with quality control</p>
+
+  <div class="badges">
+    <span class="badge badge-pipeline">Sequential Pipeline</span>
+    <span class="badge badge-delegation">3 Specialist Agents</span>
+    <span class="badge badge-safety">Quality Control</span>
+    <span class="badge badge-file">File Handoffs</span>
+  </div>
+
+  <h3>What This Lab Does</h3>
+  <div class="summary-box">
+    A <strong>3-stage content creation pipeline</strong>: a <code>topic_researcher</code> searches the web and writes research notes, a <code>content_writer</code> reads those notes and drafts an article, and an <code>editor_reviewer</code> fact-checks the draft against the original research, writes feedback, and produces a polished final version.
+  </div>
+
+  <h3>Architecture</h3>
+  <div class="diagram">
+┌──────────────┐    ┌──────────────┐    ┌──────────────┐
+│  RESEARCHER  │───→│   WRITER     │───→│   EDITOR     │
+│  web_search  │    │  reads notes │    │  fact-checks  │
+│  → /research/│    │  → /drafts/  │    │  → /review/   │
+└──────────────┘    └──────────────┘    │  → /final/    │
+                                        └──────────────┘
+
+Files:
+  /research/notes.md   ← raw research with sources
+  /drafts/article.md   ← first draft
+  /review/feedback.md  ← editorial feedback (rating + issues)
+  /final/article.md    ← polished final article</div>
+
+  <h3>Code Walkthrough</h3>
+
+  <div class="code-section">
+    <button class="code-toggle" onclick="toggle(this)">Editor with quality control checklist</button>
+    <div class="code-block-wrap">
+      <div class="code-annotation">
+        The editor reads <em>both</em> the draft and the original research notes to fact-check.
+        It follows a 7-point checklist (accuracy, structure, engagement, clarity, completeness,
+        SEO, grammar) and produces both feedback and an improved final version.
+      </div>
+      <div class="code-block">{
+    <span class="st">"name"</span>: <span class="st">"editor_reviewer"</span>,
+    <span class="st">"description"</span>: <span class="st">"Senior editor. Reviews /drafts/ for quality and accuracy."</span>,
+    <span class="st">"system_prompt"</span>: <span class="st">"""You are a senior content editor.
+
+JOB:
+1. Read the draft from /drafts/article.md
+2. Read original research from /research/notes.md (to fact-check)
+3. Write detailed feedback to /review/feedback.md
+4. Write IMPROVED final version to /final/article.md
+
+REVIEW CHECKLIST:
+□ Accuracy — claims match research notes?
+□ Structure — logical flow, clear headings?
+□ Engagement — strong hook, interesting examples?
+□ Clarity — jargon explained, sentences concise?
+□ Completeness — all key points from research covered?
+□ SEO — title, meta description, headers good?
+□ Grammar — clean, professional writing?
+"""</span>,
+    <span class="st">"tools"</span>: [],
+}</div>
+    </div>
+  </div>
+
+  <h3>What You Learn</h3>
+  <ul class="takeaways">
+    <li>Sequential pipeline &mdash; each stage requires the previous stage's output</li>
+    <li>Quality control loop &mdash; editor fact-checks against original research</li>
+    <li>Separation of concerns &mdash; research, writing, and editing are distinct roles</li>
+    <li>File-based handoffs create a clean audit trail of the process</li>
+  </ul>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     LAB 7
+     ═══════════════════════════════════════════════════════ -->
+<section class="lab-section" id="lab7">
+  <h2><span class="lab-tag">LAB 7</span> Long-Term Memory</h2>
+  <p class="lab-subtitle">Module 5 &middot; Cross-session memory with CompositeBackend</p>
+
+  <div class="badges">
+    <span class="badge badge-memory">Cross-Session Memory</span>
+    <span class="badge badge-memory">CompositeBackend</span>
+    <span class="badge badge-memory">StoreBackend Routing</span>
+    <span class="badge badge-memory">MemorySaver</span>
+  </div>
+
+  <h3>What This Lab Does</h3>
+  <div class="summary-box">
+    Demonstrates <strong>durable memory that persists across sessions</strong>. In Session A, the user tells the agent their name and preferences, which get saved to <code>/memories/user-profile.md</code>. In Session B (a different <code>thread_id</code>), the agent recalls those preferences. The magic is <code>CompositeBackend</code> which routes <code>/memories/</code> to a <code>StoreBackend</code> while other files use the normal filesystem.
+  </div>
+
+  <h3>Architecture</h3>
+  <div class="diagram">
+            ┌─────────────────────────────────────┐
+            │          CompositeBackend             │
+            │                                       │
+            │  /memories/*  ──→  StoreBackend       │  ← durable, cross-session
+            │                    (InMemoryStore)    │
+            │                                       │
+            │  everything else → FilesystemBackend  │  ← normal file I/O
+            └─────────────────────────────────────┘
+
+  Session A (thread: "session-a")       Session B (thread: "session-b")
+  ┌─────────────────────────┐           ┌─────────────────────────┐
+  │ "My name is Alex.       │           │ "What do you remember   │
+  │  I prefer bullet        │           │  about my preferences?" │
+  │  summaries."            │           │                         │
+  │                         │           │ Agent reads /memories/  │
+  │ Agent writes            │           │ user-profile.md         │
+  │ /memories/user-profile  │           │ → recalls Alex's prefs  │
+  └─────────────────────────┘           └─────────────────────────┘</div>
+
+  <h3>Code Walkthrough</h3>
+
+  <div class="code-section">
+    <button class="code-toggle" onclick="toggle(this)">CompositeBackend with routing</button>
+    <div class="code-block-wrap">
+      <div class="code-annotation">
+        <code>CompositeBackend</code> routes file paths to different backends. Here, <code>/memories/</code>
+        is routed to <code>StoreBackend</code> (backed by <code>InMemoryStore</code>) so memories
+        persist across thread IDs. Normal files use <code>FilesystemBackend</code>.
+      </div>
+      <div class="code-block"><span class="kw">from</span> deepagents.backends.composite <span class="kw">import</span> CompositeBackend
+<span class="kw">from</span> deepagents.backends.filesystem <span class="kw">import</span> FilesystemBackend
+<span class="kw">from</span> deepagents.backends.store <span class="kw">import</span> StoreBackend
+<span class="kw">from</span> langgraph.checkpoint.memory <span class="kw">import</span> MemorySaver
+<span class="kw">from</span> langgraph.store.memory <span class="kw">import</span> InMemoryStore
+
+CHECKPOINTER = <span class="fn">MemorySaver</span>()
+STORE = <span class="fn">InMemoryStore</span>()
+
+<span class="kw">def</span> <span class="fn">make_backend</span>(runtime):
+    <span class="st">"""Route /memories/ to long-term store; normal files to disk."""</span>
+    <span class="kw">return</span> <span class="fn">CompositeBackend</span>(
+        default=<span class="fn">FilesystemBackend</span>(root_dir=BASE_DIR, virtual_mode=<span class="nb">True</span>),
+        routes={<span class="st">"/memories/"</span>: <span class="fn">StoreBackend</span>(runtime)},
+    )
+
+memory_agent = <span class="fn">create_deep_agent</span>(
+    model=<span class="st">"openai:gpt-4o-mini"</span>,
+    tools=[],
+    backend=make_backend,
+    store=STORE,
+    checkpointer=CHECKPOINTER,
+    system_prompt=<span class="st">"""You are a personal assistant with long-term memory.
+At start, read /memories/user-profile.md.
+When user shares preferences, update memory IMMEDIATELY."""</span>
+)</div>
+    </div>
+  </div>
+
+  <h3>What You Learn</h3>
+  <ul class="takeaways">
+    <li>Cross-session memory &mdash; different <code>thread_id</code>s share the same <code>/memories/</code></li>
+    <li><code>CompositeBackend</code> routes paths to different storage backends</li>
+    <li><code>StoreBackend</code> provides durable storage decoupled from conversation</li>
+    <li><code>MemorySaver</code> + <code>InMemoryStore</code> for checkpointing and persistence</li>
+  </ul>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     LAB 8
+     ═══════════════════════════════════════════════════════ -->
+<section class="lab-section" id="lab8">
+  <h2><span class="lab-tag">LAB 8</span> Skills Agent</h2>
+  <p class="lab-subtitle">Module 5 &middot; Custom SKILL.md files and skill-driven workflows</p>
+
+  <div class="badges">
+    <span class="badge badge-skill">Custom Skills</span>
+    <span class="badge badge-skill">SKILL.md Files</span>
+    <span class="badge badge-skill">Skill Loading</span>
+    <span class="badge badge-file">FilesystemBackend</span>
+  </div>
+
+  <h3>What This Lab Does</h3>
+  <div class="summary-box">
+    Shows how to create <strong>custom skills</strong> as <code>SKILL.md</code> files and load them into an agent. The agent has three skills: <em>release-notes</em>, <em>risk-assessment</em>, and <em>executive-brief</em>. When given a task, the agent identifies which skill(s) match, reads the <code>SKILL.md</code> file for instructions, and follows them exactly to produce structured output.
+  </div>
+
+  <h3>Architecture</h3>
+  <div class="diagram">
+  /skills/lab8/
+  ├── release-notes/SKILL.md      ← Groups changes into categories
+  ├── risk-assessment/SKILL.md    ← Severity/likelihood scoring
+  └── executive-brief/SKILL.md    ← Leadership decision brief
+
+  ┌──────────────────────────────────────┐
+  │            Skills Agent              │
+  │                                      │
+  │  1. Identify matching skill(s)       │
+  │  2. Read SKILL.md instructions       │
+  │  3. Follow skill template exactly    │
+  │  4. Produce structured output        │
+  └──────────────────────────────────────┘</div>
+
+  <h3>Code Walkthrough</h3>
+
+  <div class="code-section">
+    <button class="code-toggle" onclick="toggle(this)">Skills agent with skill loading</button>
+    <div class="code-block-wrap">
+      <div class="code-annotation">
+        The <code>skills=["/skills/lab8/"]</code> parameter tells the agent where to find skill
+        definitions. Each skill is a directory with a <code>SKILL.md</code> file that contains
+        the instructions, output format, and checklist for that skill.
+      </div>
+      <div class="code-block"><span class="kw">from</span> deepagents <span class="kw">import</span> create_deep_agent
+<span class="kw">from</span> deepagents.backends.filesystem <span class="kw">import</span> FilesystemBackend
+
+skills_agent = <span class="fn">create_deep_agent</span>(
+    model=<span class="st">"openai:gpt-4o-mini"</span>,
+    tools=[],
+    backend=<span class="fn">FilesystemBackend</span>(root_dir=BASE_DIR),
+    skills=[<span class="st">"/skills/lab8/"</span>],  <span class="cm"># Load skills from this directory</span>
+    system_prompt=<span class="st">"""You are a release-planning assistant.
+
+## SKILLS WORKFLOW
+1. Identify whether the request matches loaded skills.
+2. Read the relevant SKILL.md file(s) before answering.
+3. Follow the skill instructions exactly.
+4. Start output with: Skills Used: &lt;skill-names&gt;
+
+## OUTPUT REQUIREMENTS
+- Clear structure with headings
+- Include assumptions and open risks
+- End with a concrete next-step checklist
+"""</span>
+)</div>
+    </div>
+  </div>
+
+  <div class="code-section">
+    <button class="code-toggle" onclick="toggle(this)">Example: invoking a multi-skill task</button>
+    <div class="code-block-wrap">
+      <div class="code-annotation">
+        This prompt triggers multiple skills: release-notes for change categorization,
+        risk-assessment for the auth token and payment webhook changes, and executive-brief
+        for the VP Engineering summary.
+      </div>
+      <div class="code-block"><span class="fn">ask</span>(
+    <span class="st">"Prepare a release readiness brief for version 2.8.\n"</span>
+    <span class="st">"Changes: switched auth token handling, added async job retries, "</span>
+    <span class="st">"migrated payment webhook parser, fixed dashboard caching bug.\n"</span>
+    <span class="st">"Audience: VP Engineering and Product leadership."</span>
+)</div>
+    </div>
+  </div>
+
+  <h3>What You Learn</h3>
+  <ul class="takeaways">
+    <li>Custom <code>SKILL.md</code> files define reusable agent behaviors</li>
+    <li>Skill loading &mdash; agents discover and read skill definitions at runtime</li>
+    <li>Skill-driven workflows &mdash; the agent selects and follows the right skill</li>
+    <li>Structured output with assumptions, risks, and checklists</li>
+    <li>Multiple skills can be combined for a single complex task</li>
+  </ul>
+</section>
+
+
+</div><!-- /.main -->
+
+<script>
+// Toggle code sections
+function toggle(btn) {
+  btn.classList.toggle('open');
+  const wrap = btn.nextElementSibling;
+  wrap.classList.toggle('open');
+}
+
+// Highlight active sidebar link on scroll
+const sections = document.querySelectorAll('.lab-section');
+const navLinks = document.querySelectorAll('.sidebar nav a');
+
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      navLinks.forEach(a => a.classList.remove('active'));
+      const id = entry.target.id;
+      const link = document.querySelector(`.sidebar nav a[href="#${id}"]`);
+      if (link) link.classList.add('active');
+    }
+  });
+}, { rootMargin: '-20% 0px -60% 0px' });
+
+sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
